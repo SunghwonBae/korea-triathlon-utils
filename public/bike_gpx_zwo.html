@@ -69,7 +69,20 @@
             .stats-container { grid-template-columns: 1fr; }
             .button-group { flex-direction: column; }
             .button { width: 100%; }
+
+            /* 모달 모바일 최적화 */
+            .modal-content { margin: 20% auto; width: 90%; padding: 20px; max-height: 75vh; }
+            .modal-content div { font-size: 0.85rem !important; line-height: 1.5 !important; }
+            .modal-content h3 { font-size: 1.1rem !important; }
+            .modal-content h4 { font-size: 0.95rem !important; margin-top: 15px !important; }
+            .modal button { height: 40px !important; font-size: 0.9rem !important; margin-top: 15px !important; padding: 0 !important; }
         }
+
+        /* 가이드 모달 디자인 개선 */
+        .guide-box { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ddd; }
+        .guide-box h4 { margin: 0 0 8px 0; font-size: 1rem; }
+        .guide-box p, .guide-box li { font-size: 0.9rem; color: #444; margin: 4px 0; line-height: 1.5; }
+        .guide-box ul, .guide-box ol { padding-left: 20px; margin: 5px 0; }
     </style>
 </head>
 <body>
@@ -174,21 +187,22 @@
 
     <div id="gModal" class="modal">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
                 <h3 style="margin: 0;">📋 ZWO 컨버터 설정 가이드</h3>
                 <span onclick="closeModal()" style="font-size: 24px; cursor: pointer; color: #999;">&times;</span>
             </div>
-            <div style="font-size: 0.95rem; line-height: 1.7;">
-                <h4 style="color: var(--zwift-orange); margin-bottom: 5px;">1. 기본 설정 (Rider data)</h4>
+            <div class="guide-box" style="border-left-color: var(--zwift-orange);">
+                <h4 style="color: var(--zwift-orange);">1. 기본 설정 (Rider data)</h4>
                 <p>• <b>FTP:</b> 정확한 파워를 입력해야 훈련 강도가 맞습니다.</p>
                 <p>• <b>Target intensity factor (IF):</b> <b>0.8</b> 정도가 가장 적당합니다.</p>
                 <p>• <b>Mass:</b> 라이더와 자전거 무게를 각각 입력하세요.</p>
-                <h4 style="color: var(--zwift-orange); margin-top: 15px; margin-bottom: 5px;">2. 고급 설정 (Advanced)</h4>
+            </div>
+            <div class="guide-box" style="border-left-color: #555;">
+                <h4 style="color: #333;">2. 고급 설정 (Advanced)</h4>
                 <p>• <b>CdA (공기저항):</b> 보통 0.3을 사용합니다.</p>
                 <p>• <b>Drivetrain loss:</b> 기어 손실 파워(약 3%)입니다.</p>
                 <p>• <b>Warm-up:</b> 시작 전 10분간의 몸풀기 구간 추가 여부입니다.</p>
             </div>
-            <button class="btn-primary" onclick="closeModal()" style="width:100%; margin-top:20px; height: 45px;">확인했습니다</button>
         </div>
     </div>
 
@@ -198,39 +212,29 @@
                 <h3 style="margin: 0;">📖 ZWO 파일 배포 가이드</h3>
                 <span onclick="closeDeployGuideModal()" style="font-size: 24px; cursor: pointer; color: #999;">&times;</span>
             </div>
-            <div style="font-size: 0.95rem; line-height: 1.7;">
-                <h4 style="color: var(--mywhoosh-yellow); margin-bottom: 5px;">🟡 MyWhoosh 파일 배포 </h4>
+            
+            <div class="guide-box" style="border-left-color: var(--mywhoosh-yellow);">
+                <h4 style="color: #d4a017;">🟡 MyWhoosh 파일 배포</h4>
                 <p>즈위프트 파일(.zwo)을 구하셨다면, 마이우쉬가 설치된 PC의 아래 경로에 복사해서 넣으시면 됩니다.</p>
                 <p><b>경로:</b> <code style="background:#eee; padding: 2px 5px; border-radius:4px;">C:\Users\[사용자명]\Documents\MyWhoosh\Workouts</code></p>
-                <p>또는 <code>내 문서 &gt; MyWhoosh &gt; Workouts</code> 폴더를 찾으시면 됩니다.</p>
-                <p><b>주의사항:</b> 폴더가 없다면 직접 <code>Workouts</code>라는 이름으로 폴더를 만드셔도 됩니다.</p>
                 
-                <h4 style="color: var(--mywhoosh-yellow); margin-top: 20px; margin-bottom: 5px;">동기화 확인 방법</h4>
-                <ol style="padding-left: 20px; margin-top: 10px;">
-                    <li>위 경로에 .zwo 파일을 넣습니다.</li>
-                    <li>마이우쉬 게임을 실행합니다.</li>
-                    <li>워크아웃(Workouts) 메뉴로 들어갑니다.</li>
-                    <li>좌측 카테고리 리스트에서 "Custom" 또는 "Imported" 탭을 클릭합니다.</li>
-                    <li>방금 넣은 파일의 제목이 리스트에 뜨는지 확인합니다.</li>
-                </ol>
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">
+                    <strong>📱 모바일/태블릿 유저 팁</strong>
+                    <ul style="margin-top:5px;">
+                        <li><b>PC 경유:</b> PC버전에서 한번 로드하면 클라우드 동기화됨</li>
+                        <li><b>웹 에디터:</b> MyWhoosh 공식 웹사이트 에디터로 Import 가능</li>
+                    </ul>
+                </div>
+            </div>
 
-                <h4 style="color: var(--mywhoosh-yellow); margin-top: 20px; margin-bottom: 5px;">모바일/태블릿(iOS, Android) 유저라면?</h4>
-                <p>모바일 기기는 PC처럼 폴더에 직접 접근하기가 까다롭습니다. 그래서 마이우쉬는 다음과 같은 우회 방법을 권장합니다.</p>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li><b>PC에서 먼저 넣기:</b> PC 마이우쉬에서 한 번이라도 로컬 파일을 넣어 실행하면, 계정 클라우드에 저장되어 동일 계정으로 로그인한 태블릿이나 스마트폰에서도 해당 워크아웃이 나타납니다.</li>
-                    <li><b>공식 웹 에디터 이용:</b> MyWhoosh Workout Editor에 파일을 업로드(Import)하는 것이 모바일 유저에게는 가장 빠른 "동기화" 방법입니다.</li>
-                </ul>
-
-                <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-
-                <h4 style="color: var(--zwift-orange); margin-top: 20px; margin-bottom: 5px;">🟠 즈위프트 파일 배포 (로컬 동기화)</h4>
+            <div class="guide-box" style="border-left-color: var(--zwift-orange);">
+                <h4 style="color: var(--zwift-orange);">🟠 즈위프트 파일 배포</h4>
                 <p>마이우쉬는 클라우드 기반이지만, 즈위프트는 PC의 특정 폴더에 파일이 생기면 그걸 서버로 올리는 방식입니다.</p>
-                <ul style="padding-left: 20px; margin-top: 10px;">
-                    <li><b>동기화 원리:</b> PC나 Mac에서 <code>\Documents\Zwift\Workouts</code> 폴더에 .zwo 파일을 넣고 게임을 실행하면, 즈위프트 서버가 이를 감지하여 본인 계정의 클라우드에 저장합니다.</li>
-                    <li><b>결과:</b> 한 번 PC에서 인식시키면, 나중에 아이패드나 애플TV로 접속해도 'Custom Workouts' 카테고리에 해당 워크아웃이 나타납니다.</li>
+                <ul style="margin-top:5px;">
+                    <li><b>경로:</b> <code>\Documents\Zwift\Workouts</code></li>
+                    <li>PC에서 인식시키면, 추후 아이패드/애플TV 등에서도 'Custom Workouts'에 자동 동기화됩니다.</li>
                 </ul>
             </div>
-            <button class="btn-primary" onclick="closeDeployGuideModal()" style="width:100%; margin-top:20px; height: 45px;">확인했습니다</button>
         </div>
     </div>
 
@@ -399,8 +403,18 @@
             a.download = "Optimized_" + fName; a.click();
         };
 
-        document.getElementById('ftpInput').oninput = updateDisplay;
-        document.getElementById('weightInput').oninput = updateDisplay;
+        // 초기 로드 시 로컬 스토리지 값 불러오기
+        if(localStorage.getItem('zwo_ftp')) document.getElementById('ftpInput').value = localStorage.getItem('zwo_ftp');
+        if(localStorage.getItem('zwo_weight')) document.getElementById('weightInput').value = localStorage.getItem('zwo_weight');
+
+        document.getElementById('ftpInput').oninput = function() {
+            localStorage.setItem('zwo_ftp', this.value);
+            updateDisplay();
+        };
+        document.getElementById('weightInput').oninput = function() {
+            localStorage.setItem('zwo_weight', this.value);
+            updateDisplay();
+        };
     </script>
 </body>
 </html>
