@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>업힐 분석기</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+        :root { --primary: #e67e22; --danger: #d63031; --success: #27ae60; --bg: #f8f9fa; }
+
+        /* 비주얼 & 상태창 */
+        .visual-container { height: 160px; background: #e0f7fa; position: relative; border-radius: 15px; overflow: hidden; margin-bottom: 20px; display: flex; align-items: flex-end; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .road { width: 200%; height: 500px; background: #555; position: absolute; bottom: -450px; transform-origin: center; transition: 0.5s; border-top: 4px dashed #fff; }
+        .bike { font-size: 45px; position: relative; z-index: 5; bottom: 10px; transition: 0.5s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        
+        .status-board { background: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 25px; border: 1px solid #ffe0b2; box-shadow: 0 4px 15px rgba(230, 126, 34, 0.1); }
+        .main-res { font-size: 2.5em; font-weight: 800; color: var(--primary); margin: 10px 0; letter-spacing: -1px; }
+        #course-tag { font-size: 1.1em; margin-bottom: 5px; }
+
+        /* 입력 그리드 */
+        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .group { display: flex; flex-direction: column; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: transform 0.2s; }
+        .group:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        label { font-size: 0.9em; font-weight: 700; margin-bottom: 10px; color: #555; display: flex; justify-content: space-between; align-items: center; }
+        label span { color: var(--primary); font-size: 1.2em; font-weight: 800; }
+        
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--primary); height: 6px; border-radius: 3px; }
+        input[type="number"], select, input[type="text"] { padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; font-size: 1rem; width: 100%; box-sizing: border-box; }
+        input[type="number"]:focus, select:focus { outline: none; border-color: var(--primary); }
+
+        /* 직접 입력 섹션 */
+        .custom-row { display: flex; gap: 10px; margin-top: 10px; }
+        .add-btn { background: #2d3436; color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; white-space: nowrap; }
+        .add-btn:hover { background: #000; }
+
+        /* 결과 테이블 */
+        .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95em; background: #fff; min-width: 500px; }
+        th { background: #f8f9fa; padding: 15px; border-bottom: 2px solid #dee2e6; color: #444; font-weight: 700; }
+        td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #f1f1f1; color: #333; }
+        tr.active-row { background: #fff3e0 !important; border-left: 4px solid var(--primary); }
+        tr.active-row td { font-weight: bold; color: #d35400; }
+        tr.clickable { transition: background 0.1s; }
+        tr.clickable:hover { background: #f8f9fa; cursor: pointer; }
+        
+        .rpm-bad { color: var(--danger); font-weight: bold; background: #fff5f5; border-radius: 4px; padding: 2px 6px; }
+        .rpm-good { color: var(--success); font-weight: bold; background: #e8f5e9; border-radius: 4px; padding: 2px 6px; }
+        .highlight-box { border: 2px solid var(--primary) !important; background: #fff9f5; }
+        
+        .hint { font-size: 0.85em; color: #888; margin-top: 8px; text-align: right; margin-bottom: 5px; }
+
+        /* 모바일 최적화 */
+        @media (max-width: 768px) {
+            .setup-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .group { grid-column: 1 / -1; }
+            .half-mobile { grid-column: auto; }
+            .visual-container { height: 140px; }
+            .bike { font-size: 35px; }
+            .main-res { font-size: 2em; }
+            .status-board { padding: 15px; }
+            
+            th, td { padding: 10px 8px; font-size: 0.85em; }
+            .custom-row { flex-direction: row; }
+            input[type="number"], select { font-size: 0.9rem; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>🏔️ 업힐 분석기</h1>
+    </div>
+
+    <div class="visual-container">
+        <div id="road" class="road"></div>
+        <div id="bike" class="bike">🚴</div>
+    </div>
+
+    <div class="status-board">
+        <div id="course-tag" style="font-weight:bold; color:var(--primary);">코스 분석 중...</div>
+        <div class="main-res"><span id="speed-display">0.0</span> km/h</div>
+        <div id="current-gear-info" style="font-size: 0.9em; color: #666;">기준 기어: 34-34T (1.00)</div>
+    </div>
+
+    <div class="setup-grid">
+        <div class="group" style="grid-column: 1 / -1;">
+            <label>경사도 설정 <span id="val-slope">7</span>%</label>
+            <input type="range" id="slope" min="0" max="25" step="0.5" value="7" oninput="run('slope')">
+        </div>
+
+        <div class="group highlight-box">
+            <label>목표 파워 (Watt) <span id="val-power">200</span>W</label>
+            <input type="range" id="power" min="50" max="800" step="5" value="200" oninput="run('power')">
+        </div>
+
+        <div class="group highlight-box">
+            <label>목표 케이던스 (RPM) <span id="val-cadence">80</span>rpm</label>
+            <input type="range" id="cadence" min="30" max="120" step="1" value="80" oninput="run('cadence')">
+        </div>
+
+        <div class="group half-mobile"><label>자전거 무게 (kg)</label><input type="number" id="bikeW" value="8.5" oninput="run()"></div>
+        <div class="group half-mobile"><label>내 몸무게 (kg)</label><input type="number" id="riderW" value="75" oninput="run()"></div>
+        <div class="group half-mobile">
+            <label>휠 규격</label>
+            <select id="wheel" onchange="run()">
+                <option value="2105">700c x 25mm</option>
+                <option value="2136">700c x 28mm</option>
+                <option value="2155">700c x 30mm</option>
+                <option value="1938">650c x 23mm</option>
+                <option value="2100">650b x 28mm</option>
+            </select>
+        </div>
+        <div class="group half-mobile">
+            <label>현재 기준 기어비</label>
+            <input type="text" id="baseGearDisplay" value="1.00 (34-34T)" disabled style="background:#eee; text-align:center; font-weight:bold;">
+            <input type="hidden" id="baseGearVal" value="1.0">
+        </div>
+        <div class="group">
+            <label>✨ 내 언덕 기어 직접 추가</label>
+            <div class="custom-row">
+                <input type="number" id="cF" placeholder="앞(T)">
+                <input type="number" id="cR" placeholder="뒤(T)">
+                <button class="add-btn" onclick="addGear()">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <h3>⚙️ 기어비 분석 리스트 (클릭하여 기준으로 설정)</h3>
+    <div class="hint">* 표의 행을 클릭하면 해당 기어비로 슬라이더가 동기화됩니다.</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>기어 종류</th>
+                    <th>조합 (F-R)</th>
+                    <th>기어비</th>
+                    <th>필요 케이던스</th>
+                </tr>
+            </thead>
+            <tbody id="res-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let GEAR_PRESETS = [
+    { cat: "컴팩트", name: "생존", f: 34, r: 34 },
+    { cat: "컴팩트", name: "표준", f: 34, r: 32 },
+    { cat: "컴팩트", name: "중급", f: 34, r: 30 },
+    { cat: "컴팩트", name: "상급", f: 34, r: 28 },
+    { cat: "미드컴팩", name: "생존", f: 36, r: 34 },
+    { cat: "미드컴팩", name: "표준", f: 36, r: 30 },
+    { cat: "미드컴팩", name: "상급", f: 36, r: 28 },
+    { cat: "스탠다드", name: "기본", f: 39, r: 28 },
+    { cat: "전문가", name: "TT", f: 56, r: 28 },
+    { cat: "전문가", name: "초고속", f: 60, r: 28 }
+];
+
+function addGear() {
+    const f = parseInt(document.getElementById('cF').value);
+    const r = parseInt(document.getElementById('cR').value);
+    if(f && r) {
+        GEAR_PRESETS.push({ cat: "직접입력", name: "커스텀", f: f, r: r });
+        document.getElementById('cF').value = ""; document.getElementById('cR').value = "";
+        run();
+    }
+}
+
+// 클릭 시 기준 기어비를 변경하는 함수
+function setAsBase(ratio, label) {
+    document.getElementById('baseGearVal').value = ratio;
+    document.getElementById('baseGearDisplay').value = `${ratio.toFixed(2)} (${label})`;
+    document.getElementById('current-gear-info').innerText = `기준 기어: ${label} (${ratio.toFixed(2)})`;
+    run('cadence'); // 케이던스 고정 상태에서 파워 역산
+}
+
+function run(mode) {
+    const slope = parseFloat(document.getElementById('slope').value);
+    const bikeW = parseFloat(document.getElementById('bikeW').value);
+    const riderW = parseFloat(document.getElementById('riderW').value);
+    const wheel = parseInt(document.getElementById('wheel').value);
+    const baseRatio = parseFloat(document.getElementById('baseGearVal').value);
+    const totalW = bikeW + riderW;
+    const g = 9.81;
+    const Crr = 0.005;
+    const rad = Math.atan(slope/100);
+
+    let power = parseFloat(document.getElementById('power').value);
+    let cadence = parseFloat(document.getElementById('cadence').value);
+
+    if (mode === 'cadence') {
+        const v_kmh = (baseRatio * wheel * cadence * 60) / 1000000;
+        const v_ms = v_kmh / 3.6;
+        power = totalW * g * v_ms * (Math.sin(rad) + Crr);
+        document.getElementById('power').value = Math.min(800, Math.round(power));
+    } else {
+        let v_ms = power / (totalW * g * (Math.sin(rad) + Crr));
+        let kmh = Math.max(0, v_ms * 3.6);
+        cadence = (kmh * 1000000) / (baseRatio * wheel * 60);
+        document.getElementById('cadence').value = Math.min(120, Math.round(cadence));
+    }
+
+    // UI 업데이트
+    document.getElementById('val-slope').innerText = slope;
+    document.getElementById('val-power').innerText = document.getElementById('power').value;
+    document.getElementById('val-cadence').innerText = document.getElementById('cadence').value;
+    
+    const deg = rad * (180/Math.PI);
+    document.getElementById('road').style.transform = `rotate(-${deg}deg)`;
+    document.getElementById('bike').style.transform = `rotate(-${deg}deg)`;
+
+    const currentPower = parseFloat(document.getElementById('power').value);
+    let final_v_ms = currentPower / (totalW * g * (Math.sin(rad) + Crr));
+    let final_kmh = Math.max(0, final_v_ms * 3.6);
+    document.getElementById('speed-display').innerText = final_kmh.toFixed(1);
+
+    // 코스 태그
+    const courseTag = document.getElementById('course-tag');
+    let cName = "평지";
+    if (slope >= 11) cName = "화악산급 (고통)";
+    else if (slope >= 7) cName = "북악/대관령급 (중급)";
+    else if (slope >= 4) cName = "남산급 (표준)";
+    courseTag.innerText = "유사 코스: " + cName;
+
+    // 테이블 렌더링
+    const tbody = document.getElementById('res-body');
+    tbody.innerHTML = "";
+    GEAR_PRESETS.forEach(g => {
+        const ratio = g.f / g.r;
+        const rpm = (final_kmh * 1000000) / (ratio * wheel * 60);
+        const rpmClass = rpm < 60 ? 'rpm-bad' : (rpm >= 70 && rpm <= 95 ? 'rpm-good' : '');
+        const isActive = ratio.toFixed(2) === baseRatio.toFixed(2) ? "active-row" : "";
+        
+        tbody.innerHTML += `
+            <tr class="clickable ${isActive}" onclick="setAsBase(${ratio}, '${g.f}-${g.r}T')">
+                <td>${g.cat}</td>
+                <td>${g.f}-${g.r}T (${g.name})</td>
+                <td>${ratio.toFixed(2)}</td>
+                <td class="${rpmClass}">${Math.round(rpm)} RPM</td>
+            </tr>`;
+    });
+}
+run();
+</script>
+</body>
+</html>
