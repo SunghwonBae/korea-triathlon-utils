@@ -154,7 +154,14 @@ export default function MainIndex() {
             padding: 60px 10px 100px;
             border-radius: 0 0 20px 20px;
           }
-          .header-content h1 { font-size: 1.6rem; letter-spacing: -0.05em; }
+          .header-content h1 { 
+            font-size: 1.6rem; 
+            letter-spacing: -0.05em;
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+            inset: 13px auto auto 50px !important;
+          }
           .subtitle { font-size: 1rem; }
           .mobile-br { display: block; }
           .menu-grid { grid-template-columns: 1fr; gap: 15px; }
