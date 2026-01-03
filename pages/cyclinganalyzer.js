@@ -8,6 +8,7 @@ export default function CyclingAnalyzer() {
   const [isReportOpen, setIsReportOpen] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLinkOpen, setIsLinkOpen] = useState(true);
+  const [isUtilsOpen, setIsUtilsOpen] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -103,12 +104,12 @@ export default function CyclingAnalyzer() {
         <ul className="menu-list">
           <li><a href="/" onClick={(e) => safeNav(e, '/')} className="menu-link">🏠 홈으로</a></li>
           <li className="menu-folder">
-            <div className="menu-link folder-header" style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <div className="menu-link folder-header" onClick={() => setIsUtilsOpen(!isUtilsOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <span>🧮 Utils</span>
-              <span className="arrow" style={{transform: 'rotate(180deg)', transition: 'transform 0.3s'}}>▼</span>
+              <span className="arrow" style={{transform: isUtilsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
             </div>
             {/* 하위 메뉴 펼쳐진 상태로 고정 */}
-            <ul className="submenu-list" style={{display: 'block', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
+            <ul className="submenu-list" style={{display: isUtilsOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
               <li><a href="/ironman_calculator.html" onClick={(e) => safeNav(e, '/ironman_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️ 킹코스 완주시간</a></li>
               <li><a href="/gelwater_calculator.html" onClick={(e) => safeNav(e, '/gelwater_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌 보급 계산</a></li>
               <li><a href="/bike_calculator.html" onClick={(e) => safeNav(e, '/bike_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 싸이클 기어비 케이던스</a></li>
