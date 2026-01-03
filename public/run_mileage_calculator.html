@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>러닝 - 월간 마일리지 배분에 따른 주간 스케줄러</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="stylesheet" href="bucheonTriStyle.css">
     <script src="menu_full_handler.js" defer></script>
     <style>
@@ -71,7 +73,7 @@
     </div>
 
     <div class="selector-guide">
-        <span class="status-dot" style="background:#fff"></span> 일반 | <span class="status-dot" style="background:#4b4b4b"></span> 휴식 | <span class="status-dot" style="background:#007AFF"></span> LSD
+        <span class="status-dot" style="background:#fff"></span> 일반 | <span class="status-dot" style="background:#4b4b4b"></span> 휴식 | <span class="status-dot" style="background:#007AFF"></span> LSD &nbsp;&nbsp;&nbsp;(한번클릭:휴식, 두번클릭:LSD, 세번클릭:일반)
     </div>
 
     <div class="day-grid" id="dayGrid">
@@ -87,7 +89,7 @@
     <div class="input-row">
         <div class="input-group"><label>이전달 거리(km)</label><input type="number" id="prevDist" value="220"></div>
         <div class="input-group"><label>목표 거리(km)</label><input type="number" id="targetDist" value="300"></div>
-        <div class="input-group"><label>풀코스 목표(시:분)</label><input type="text" id="goalTime" placeholder="3:30"></div>
+        <div class="input-group"><label>풀코스 목표(시:분)</label><input type="text" id="goalTime" value="3:30"></div>
     </div>
 
     <button id="generate-btn" onclick="generatePlan()">스케줄 및 페이스 생성</button>

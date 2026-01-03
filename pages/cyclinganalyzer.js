@@ -5,6 +5,9 @@ export default function CyclingAnalyzer() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isLinkOpen, setIsLinkOpen] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -78,11 +81,17 @@ export default function CyclingAnalyzer() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Head><title>사이클 구간 분석기 | 부천트라이</title></Head>
+      <Head>
+        <title>📊 사이클 구간평속 리포트 생성</title>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="google" content="notranslate" />
+      </Head>
 
       <div className="header-section">
         <button id="menuToggle" className="menu-btn" aria-label="메뉴 열기">☰</button>
-        <h1>📊 사이클 구간 분석기</h1>
+        <h1>📊 사이클 구간평속 리포트 생성</h1>
       </div>
 
       <div id="menuOverlay" className="menu-overlay"></div>
@@ -92,6 +101,7 @@ export default function CyclingAnalyzer() {
           <button id="menuClose" className="menu-close-btn">✕</button>
         </div>
         <ul className="menu-list">
+          <li><a href="/" onClick={(e) => safeNav(e, '/')} className="menu-link">🏠 홈으로</a></li>
           <li className="menu-folder">
             <div className="menu-link folder-header" style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <span>🧮 Utils</span>
@@ -99,42 +109,260 @@ export default function CyclingAnalyzer() {
             </div>
             {/* 하위 메뉴 펼쳐진 상태로 고정 */}
             <ul className="submenu-list" style={{display: 'block', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
-              <li><a href="/ironman_calculator.html" onClick={(e) => safeNav(e, '/ironman_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️킹코스 완주시간</a></li>
-              <li><a href="/gelwater_calculator.html" onClick={(e) => safeNav(e, '/gelwater_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌보급 계산</a></li>
-              <li><a href="/bike_calculator.html" onClick={(e) => safeNav(e, '/bike_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴싸이클 기어비 케이던스</a></li>
-              <li><a href="/bike_gpx_zwo.html" onClick={(e) => safeNav(e, '/bike_gpx_zwo.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴.gpx to .zwo 워크아웃생성</a></li>
-              <li><a href="/cyclinganalyzer" onClick={(e) => safeNav(e, '/cyclinganalyzer')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#0A317E', borderLeft: '5px solid #0A317E', backgroundColor: '#eef2ff'}}>📊싸이클구간 평속 분석리포트</a></li>
-              <li><a href="/running_calculator.html" onClick={(e) => safeNav(e, '/running_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃런 보폭 회전수</a></li>
-              <li><a href="/runpace_calculator.html" onClick={(e) => safeNav(e, '/runpace_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃런 페이스</a></li>
-              <li><a href="/run_mileage_calculator.html" onClick={(e) => safeNav(e, '/run_mileage_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃런 마일리지</a></li>
+              <li><a href="/ironman_calculator.html" onClick={(e) => safeNav(e, '/ironman_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️ 킹코스 완주시간</a></li>
+              <li><a href="/gelwater_calculator.html" onClick={(e) => safeNav(e, '/gelwater_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌 보급 계산</a></li>
+              <li><a href="/bike_calculator.html" onClick={(e) => safeNav(e, '/bike_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 싸이클 기어비 케이던스</a></li>
+              <li><a href="/bike_gpx_zwo.html" onClick={(e) => safeNav(e, '/bike_gpx_zwo.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 .gpx to .zwo 워크아웃생성</a></li>
+              <li><a href="/cyclinganalyzer" onClick={(e) => safeNav(e, '/cyclinganalyzer')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#0A317E', borderLeft: '5px solid #0A317E', backgroundColor: '#eef2ff'}}>📊 싸이클구간 평속 분석리포트</a></li>
+              <li><a href="/running_calculator.html" onClick={(e) => safeNav(e, '/running_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 보폭 회전수</a></li>
+              <li><a href="/runpace_calculator.html" onClick={(e) => safeNav(e, '/runpace_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 페이스</a></li>
+              <li><a href="/run_mileage_calculator.html" onClick={(e) => safeNav(e, '/run_mileage_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 마일리지</a></li>
             </ul>
           </li>
-          <li><a href="/" onClick={(e) => safeNav(e, '/')} className="menu-link">🏠 홈으로</a></li>
+          <li className="menu-folder">
+            <div className="menu-link folder-header" onClick={() => setIsLinkOpen(!isLinkOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <span>🔗 링크</span>
+              <span className="arrow" style={{transform: isLinkOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
+            </div>
+            <ul className="submenu-list" style={{display: isLinkOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
+              <li><a href="https://cafe.naver.com/ktriathlonservice" target="_blank" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>KTS</a></li>
+              <li><a href="https://www.triathlon.or.kr/" target="_blank" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>철인3종협회</a></li>
+            </ul>
+          </li>
         </ul>
-        <div className="menu-footer">
-            <img src="powered_by_strava.png" alt="Powered by Strava" />
-        </div>
       </nav>
 
       <main className="main-content">
         <div className="card">
-          <div className="emoji">🏁</div>
-          <h1>Cycling Analyzer</h1>
-          <p>엑셀 파일을 업로드하여 구간 리포트를 생성하세요.</p>
-          <div className="file-input"><input type="file" accept=".xlsx, .csv" onChange={(e) => setFile(e.target.files[0])} /></div>
-          <button onClick={handleUpload} disabled={loading} className={loading ? "btn-off" : "btn-on"}>
-            {loading ? "분석 중..." : "리포트 생성"}
+          <div className="card-header">
+            <div className="icon-circle">🚴</div>
+            <h2>사이클 구간 평속 분석</h2>
+            <p className="desc">파일(.xlsx, .csv)을 업로드하면<br/>구간별 평속을 바탕으로 분석해 드립니다.</p>
+            <a href="/2025_구례IRONMAN_홍길동클럽_싸이클_구간기록.xlsx" download className="sample-link">
+              📥 샘플 파일 다운로드
+            </a>
+          </div>
+
+          <div className="upload-section">
+            <input 
+              type="file" 
+              id="fileInput" 
+              accept=".xlsx, .csv" 
+              onChange={(e) => setFile(e.target.files[0])} 
+              style={{display: 'none'}}
+            />
+            <label htmlFor="fileInput" className={`upload-box ${file ? 'has-file' : ''}`}>
+              {file ? (
+                <div className="file-info">
+                  <span className="file-icon">📄</span>
+                  <div className="file-text">
+                    <span className="file-name">{file.name}</span>
+                    <span className="file-size">{(file.size / 1024).toFixed(1)} KB</span>
+                  </div>
+                  <span className="change-badge">변경</span>
+                </div>
+              ) : (
+                <div className="upload-placeholder">
+                  <span className="upload-icon">☁️</span>
+                  <span className="upload-main-text">파일 선택하기</span>
+                  <span className="upload-sub-text">또는 여기로 파일을 끌어오세요</span>
+                </div>
+              )}
+            </label>
+          </div>
+
+          <button onClick={handleUpload} disabled={loading || !file} className={`action-btn ${loading ? 'loading' : ''}`}>
+            {loading ? (
+              <>
+                <span className="spinner"></span> 분석 중...
+              </>
+            ) : (
+              "분석 리포트 생성"
+            )}
           </button>
         </div>
+
+        <div className="guide-section">
+          <h3>📁 엑셀 업로드 양식 가이드</h3>
+          <p>
+            업로드할 엑셀 파일은 상단 헤더에 <strong>[구간 (km)]</strong>가 필수이며,<br/>
+            우측으로 선수 이름, 아래로 구간 거리별 평속이 배치되어야 합니다.
+          </p>
+          <div className="guide-images" style={{marginBottom: '60px'}}>
+            <img 
+              src="/upload_sample.PNG" 
+              alt="엑셀 업로드 양식 예시" 
+              onClick={() => setSelectedImage('/upload_sample.PNG')}
+              className="upload-sample-img"
+            />
+          </div>
+
+          <div className="accordion-header" onClick={() => setIsReportOpen(!isReportOpen)}>
+            <h3>📊 분석 리포트 예시</h3>
+            <span className={`accordion-arrow ${isReportOpen ? 'open' : ''}`}>▼</span>
+          </div>
+
+          {isReportOpen && (
+            <div className="accordion-content">
+              <p>업로드 후 생성되는 리포트에는 다음과 같은 분석 차트가 제공됩니다.</p>
+              <div className="guide-images report-gallery">
+                <img src="/report_chart_01.PNG" alt="분석 리포트 예시 1" onClick={() => setSelectedImage('/report_chart_01.PNG')} />
+                <img src="/report_chart_02.PNG" alt="분석 리포트 예시 2" onClick={() => setSelectedImage('/report_chart_02.PNG')} />
+                <img src="/report_chart_03.PNG" alt="분석 리포트 예시 3" onClick={() => setSelectedImage('/report_chart_03.PNG')} />
+                <img src="/report_chart_04.PNG" alt="분석 리포트 예시 4" onClick={() => setSelectedImage('/report_chart_04.PNG')} />
+                <img src="/report_chart_05.PNG" alt="분석 리포트 예시 5" onClick={() => setSelectedImage('/report_chart_05.PNG')} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {selectedImage && (
+          <div className="lightbox" onClick={() => setSelectedImage(null)}>
+            <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+              <img src={selectedImage} alt="확대 이미지" />
+              <button className="close-lightbox" onClick={() => setSelectedImage(null)}>✕</button>
+            </div>
+          </div>
+        )}
       </main>
 
       <style jsx>{`
         /* bucheonTriStyle.css에서 제공하지 않는 로컬 스타일만 유지 */
-        .main-content { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 100%; }
-        .file-input { margin: 20px 0; }
-        .btn-on { width: 100%; padding: 15px; background: #0A317E; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-off { width: 100%; padding: 15px; background: #cbd5e1; color: white; border: none; border-radius: 12px; cursor: not-allowed; }
+        .main-content { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 60px 20px; gap: 60px; }
+        .card { 
+          background: white; 
+          padding: 40px; 
+          border-radius: 24px; 
+          box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+          text-align: center; 
+          max-width: 420px; 
+          width: 100%; 
+          border: 1px solid rgba(0,0,0,0.02);
+        }
+        .icon-circle {
+          width: 60px; height: 60px; background: #eef2ff; border-radius: 50%; 
+          display: flex; align-items: center; justify-content: center; 
+          font-size: 30px; margin: 0 auto 20px;
+        }
+        .card-header h2 { margin: 0 0 10px; color: #1f2937; font-size: 1.5rem; font-weight: 800; }
+        .desc { color: #6b7280; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; }
+        
+        .sample-link {
+          display: inline-block;
+          margin-bottom: 30px;
+          color: #6b7280;
+          font-size: 0.85rem;
+          text-decoration: none;
+          background: #f3f4f6;
+          padding: 6px 14px;
+          border-radius: 100px;
+          font-weight: 500;
+          transition: all 0.2s;
+        }
+        .sample-link:hover { background: #e5e7eb; color: #0A317E; }
+        
+        .upload-box {
+          display: block;
+          border: 2px dashed #e5e7eb;
+          border-radius: 16px;
+          padding: 30px 20px;
+          cursor: pointer;
+          transition: all 0.2s;
+          background: #f9fafb;
+          margin-bottom: 25px;
+        }
+        .upload-box:hover { border-color: #0A317E; background: #f0fdfa; }
+        .upload-box.has-file { border-style: solid; border-color: #0A317E; background: #eef2ff; padding: 20px; }
+        
+        .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .upload-icon { font-size: 2rem; margin-bottom: 5px; opacity: 0.7; }
+        .upload-main-text { font-weight: 600; color: #374151; }
+        .upload-sub-text { font-size: 0.8rem; color: #9ca3af; }
+
+        .file-info { display: flex; align-items: center; gap: 15px; text-align: left; }
+        .file-icon { font-size: 1.5rem; }
+        .file-text { flex: 1; overflow: hidden; }
+        .file-name { display: block; font-weight: 600; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-size { font-size: 0.8rem; color: #6b7280; }
+        .change-badge { font-size: 0.75rem; background: white; padding: 4px 8px; border-radius: 12px; color: #0A317E; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .action-btn { width: 100%; padding: 16px; background: #0A317E; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(10, 49, 126, 0.2); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .action-btn:hover:not(:disabled) { background: #1e40af; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(10, 49, 126, 0.3); }
+        .action-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .guide-section { max-width: 800px; width: 100%; text-align: center; }
+        .guide-section h3 { font-size: 1.5rem; font-weight: 700; color: #1f2937; margin-bottom: 15px; }
+        .guide-section p { color: #6b7280; margin-bottom: 30px; font-size: 1rem; }
+        
+        .accordion-header { display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; padding: 10px; border-radius: 12px; transition: background-color 0.2s; user-select: none; }
+        .accordion-header:hover { background-color: #f3f4f6; }
+        .accordion-header h3 { margin: 0; }
+        .accordion-arrow { font-size: 1.2rem; color: #6b7280; transition: transform 0.3s ease; }
+        .accordion-arrow.open { transform: rotate(180deg); }
+        .accordion-content { animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .guide-images { display: flex; flex-direction: column; gap: 30px; align-items: center; }
+        .guide-images img { 
+          width: 50%; 
+          height: auto; 
+          border-radius: 20px; 
+          box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+          border: 1px solid rgba(0,0,0,0.05);
+          transition: transform 0.3s ease;
+          cursor: pointer;
+        }
+        .guide-images img:hover {
+          transform: scale(1.05);
+        }
+
+        .lightbox {
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.85); z-index: 2000;
+          display: flex; align-items: center; justify-content: center;
+          animation: fadeIn 0.2s ease-out;
+          padding: 20px;
+        }
+        .lightbox-content { position: relative; max-width: 95%; max-height: 95%; display: flex; justify-content: center; }
+        .lightbox-content img { max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); object-fit: contain; }
+        .close-lightbox {
+          position: absolute; top: -40px; right: 0;
+          background: none; border: none; color: white; font-size: 2rem; cursor: pointer; padding: 0; line-height: 1;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* 데스크탑 기본 스타일 */
+        .guide-images .upload-sample-img { width: 35%; }
+
+        /* 모바일 스타일 */
+        @media (max-width: 640px) {
+          .header-section h1 { font-size: 1.4rem !important; }
+          .card-header h2 { font-size: 1.3rem; }
+          .desc { font-size: 0.9rem; }
+          .guide-section h3 { font-size: 1.2rem; }
+          .guide-section p { font-size: 0.9rem; }
+
+          .guide-images .upload-sample-img { width: 90%; }
+
+          .report-gallery {
+            flex-direction: row;
+            overflow-x: auto;
+            justify-content: flex-start;
+            width: 100vw;
+            margin-left: -20px;
+            padding: 10px 20px 30px;
+            scroll-snap-type: x mandatory;
+            gap: 15px;
+          }
+          .report-gallery img {
+            width: 85%;
+            flex-shrink: 0;
+            scroll-snap-align: center;
+          }
+        }
       `}</style>
     </div>
   );

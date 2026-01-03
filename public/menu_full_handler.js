@@ -19,6 +19,7 @@ async function loadAndInitializeMenu() {
         // 2. 메뉴 기능 및 로그인 상태 초기화
         initializeMenuController();
         initializeMenuAccordion(); // 아코디언 기능 초기화 추가
+        highlightCurrentMenu();    // 현재 페이지 하이라이트 및 폴더 펼치기
         
         isMenuReady = true;
 
@@ -130,12 +131,10 @@ function initializeMenuAccordion() {
             const arrow = header.querySelector('.arrow');
             const isOpen = submenu.style.display === 'block';
 
-            // 1. 모든 서브메뉴 닫기 (하나만 열리게 하기 위함)
-            document.querySelectorAll('.submenu-list').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.folder-header .arrow').forEach(el => el.style.transform = 'rotate(0deg)');
-
-            // 2. 클릭한 메뉴가 닫혀있었다면 열기
-            if (!isOpen) {
+            if (isOpen) {
+                submenu.style.display = 'none';
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            } else {
                 submenu.style.display = 'block';
                 if (arrow) arrow.style.transform = 'rotate(180deg)';
             }
@@ -143,21 +142,54 @@ function initializeMenuAccordion() {
     });
 }
 
-// 데이터를 담을 전역 객체
-window.RUNNING_DATA = {
-    vdotTable: null
-};
+// =========================================================
+// 5. 현재 페이지 하이라이트 및 상위 메뉴 펼치기
+// =========================================================
+function highlightCurrentMenu() {
+    const path = window.location.pathname;
+    const page = path.split("/").pop(); // 예: ironman_calculator.html
 
-async function loadVdotData() {
-    try {
-        const response = await fetch('/api/vdot');
-        window.RUNNING_DATA.vdotTable = await response.json();
-        console.log('VDOT 데이터 로드 완료');
-        
-    } catch (err) {
-        console.error('VDOT 로드 실패:', err);
-    }
+    const links = document.querySelectorAll('.slide-menu .menu-link');
+    
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href) return;
+
+        // 현재 페이지와 링크가 일치하는지 확인 (루트 경로 포함)
+        if (href === path || (page && href === page) || (href === '/' && (path === '/' || page === 'index.html'))) {
+            // 스타일 적용 (cyclinganalyzer.js와 동일)
+            link.style.fontWeight = 'bold';
+            link.style.color = '#0A317E';
+            link.style.borderLeft = '5px solid #0A317E';
+            link.style.backgroundColor = '#eef2ff';
+
+            // 상위 메뉴(폴더)가 있다면 펼치기
+            const parentSubmenu = link.closest('.submenu-list');
+            if (parentSubmenu) {
+                parentSubmenu.style.display = 'block';
+                const folderHeader = parentSubmenu.parentElement.querySelector('.folder-header');
+                const arrow = folderHeader?.querySelector('.arrow');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            }
+        }
+    });
 }
 
-// 페이지 로드 시 실행
-loadVdotData();
+// // 데이터를 담을 전역 객체
+// window.RUNNING_DATA = {
+//     vdotTable: null
+// };
+
+// async function loadVdotData() {
+//     try {
+//         const response = await fetch('/api/vdot');
+//         window.RUNNING_DATA.vdotTable = await response.json();
+//         console.log('VDOT 데이터 로드 완료');
+        
+//     } catch (err) {
+//         console.error('VDOT 로드 실패:', err);
+//     }
+// }
+
+// // 페이지 로드 시 실행
+// loadVdotData();

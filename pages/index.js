@@ -21,6 +21,8 @@ export default function MainIndex() {
     <div className="main-container">
       <Head>
         <title>Korea Triathlon Utils</title>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/site.webmanifest" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -46,7 +48,7 @@ export default function MainIndex() {
       </section>
 
       <footer className="main-footer">
-        <p>© 2025 Korea Triathlon Utils. All rights reserved.</p>
+        <p>2026 Korea Triathlon Utils. 🄯 Copyleft. Powered by 부천트라이 배성훤.</p>
       </footer>
 
       <style jsx>{`
@@ -71,6 +73,7 @@ export default function MainIndex() {
           margin: 0 0 15px 0;
           letter-spacing: -0.02em;
           text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          color: #ffffff;
         }
         .subtitle {
           font-size: 1.1rem;
