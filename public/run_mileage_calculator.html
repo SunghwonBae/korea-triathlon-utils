@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>러닝 - 월간 마일리지 배분에 따른 주간 스케줄러</title>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+
+        /* 가이드 영역 */
+        .guide-box { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e9ecef; }
+        .guide-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #495057; }
+        .guide-list { margin: 0; padding: 0; list-style: none; font-size: 0.85rem; }
+        .guide-item { margin-bottom: 5px; display: flex; align-items: center; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .training-guide { background: #fff; border: 1px dashed #007AFF; border-radius: 12px; padding: 12px; margin-bottom: 20px; font-size: 0.85rem; }
+
+        /* 요일 선택기 */
+        .selector-guide { background: #fff; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 0.85rem; border: 1px solid #eee; }
+        .status-dot { width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; border: 1px solid #ddd; display: inline-block; vertical-align: middle; }
+        .day-grid { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 25px; }
+        .day-box { flex: 1; text-align: center; padding: 15px 0; background: #fff; border: 2px solid #eee; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; user-select: none; }
+        .status-none { background: #fff; color: #444; border-color: #eee; }
+        .status-rest { background: #4b4b4b; color: #fff; border-color: #4b4b4b; }
+        .status-lsd { background: #007AFF; color: #fff; border-color: #007AFF; }
+
+        /* 입력 영역 */
+        .input-row { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .input-group { flex: 1; min-width: 140px; }
+        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; color: #555; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
+
+        button#generate-btn { width: 100%; padding: 16px; background: #222; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        
+        /* 결과 영역 */
+        .result-header { margin-top: 25px; padding: 15px; border-radius: 10px; font-size: 1rem;  text-align: center; display: none; font-weight: bold; }
+        .danger { background: #ffebee; color: #c62828; }
+        .warning { background: #fff3e0; color: #ef6c00; }
+        .safe { background: #e8f5e9; color: #2e7d32; }
+
+        .week-card { margin-top: 20px; border: 1px solid #eee; border-radius: 15px; overflow: hidden; display: none; background: #fff; }
+        .week-title { background: #f8f9fa; padding: 12px 20px; font-size: 1rem;  font-weight: bold; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem; }
+        th { background: #fafafa; color: #888; font-size: 0.85rem; }
+        .sat { color: #007AFF; } .sun { color: #d32f2f; }
+        .pace-val { font-size: 0.8rem; color: #666; display: block; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>러닝 - 월간 마일리지 배분에 따른 주간 스케줄러</h1>
+    </div>
+    
+    <div class="guide-box">
+        <div class="guide-title">💡 증량 폭 가이드 (전월 대비)</div>
+        <ul class="guide-list">
+            <li class="guide-item"><span class="dot" style="background:#2e7d32"></span> <strong>15% 이내:</strong> 부상 위험이 적은 안전한 증량</li>
+            <li class="guide-item"><span class="dot" style="background:#ef6c00"></span> <strong>15~30%:</strong> 공격적인 증량 (휴식 필수)</li>
+            <li class="guide-item"><span class="dot" style="background:#c62828"></span> <strong>30% 초과:</strong> 고위험 증량 (신체 신호 주의)</li>
+        </ul>
+    </div>
+
+    <div class="training-guide">
+        <strong>🏃‍♂️ 잭 다니엘스 훈련 원칙:</strong><br>
+        Easy(조깅/LSD): 심폐기초 | Threshold(포인트): 유산소 역치 향상
+    </div>
+
+    <div class="selector-guide">
+        <span class="status-dot" style="background:#fff"></span> 일반 | <span class="status-dot" style="background:#4b4b4b"></span> 휴식 | <span class="status-dot" style="background:#007AFF"></span> LSD
+    </div>
+
+    <div class="day-grid" id="dayGrid">
+        <div class="day-box status-none" onclick="toggleDay(this)">월</div>
+        <div class="day-box status-none" onclick="toggleDay(this)">화</div>
+        <div class="day-box status-none" onclick="toggleDay(this)">수</div>
+        <div class="day-box status-none" onclick="toggleDay(this)">목</div>
+        <div class="day-box status-none" onclick="toggleDay(this)">금</div>
+        <div class="day-box status-none" onclick="toggleDay(this)">토</div>
+        <div class="day-box status-lsd" onclick="toggleDay(this)">일</div>
+    </div>
+
+    <div class="input-row">
+        <div class="input-group"><label>이전달 거리(km)</label><input type="number" id="prevDist" value="220"></div>
+        <div class="input-group"><label>목표 거리(km)</label><input type="number" id="targetDist" value="300"></div>
+        <div class="input-group"><label>풀코스 목표(시:분)</label><input type="text" id="goalTime" placeholder="3:30"></div>
+    </div>
+
+    <button id="generate-btn" onclick="generatePlan()">스케줄 및 페이스 생성</button>
+
+    <div id="statusHeader" class="result-header"></div>
+    <div id="planContainer"></div>
+</div>
+
+<script>
+    // 요일 선택 토글 기능
+    function toggleDay(el) {
+        if (el.classList.contains('status-none')) {
+            el.classList.replace('status-none', 'status-rest');
+        } else if (el.classList.contains('status-rest')) {
+            document.querySelectorAll('.day-box').forEach(box => {
+                if(box.classList.contains('status-lsd')) box.className = 'day-box status-none';
+            });
+            el.classList.add('status-lsd');
+            el.classList.remove('status-rest');
+        } else {
+            el.classList.replace('status-lsd', 'status-none');
+        }
+    }
+
+    // 업로드된 vdot.json 데이터를 기반으로 구성된 참조 테이블
+    const vdotData = [
+        {"vdot": 85, "S": "2:01:10", "E": 200, "T": 166},
+        {"vdot": 84, "S": "2:02:24", "E": 203, "T": 168},
+        {"vdot": 83, "S": "2:03:40", "E": 205, "T": 169},
+        {"vdot": 82, "S": "2:04:57", "E": 206, "T": 171},
+        {"vdot": 81, "S": "2:06:17", "E": 208, "T": 173},
+        {"vdot": 80, "S": "2:07:38", "E": 211, "T": 174},
+        {"vdot": 79, "S": "2:09:02", "E": 213, "T": 176},
+        {"vdot": 78, "S": "2:10:27", "E": 215, "T": 178},
+        {"vdot": 77, "S": "2:11:54", "E": 217, "T": 180},
+        {"vdot": 76, "S": "2:13:23", "E": 220, "T": 182},
+        {"vdot": 75, "S": "2:14:55", "E": 222, "T": 184},
+        {"vdot": 74, "S": "2:16:29", "E": 225, "T": 186},
+        {"vdot": 73, "S": "2:18:05", "E": 227, "T": 188},
+        {"vdot": 72, "S": "2:19:44", "E": 230, "T": 190},
+        {"vdot": 71, "S": "2:21:26", "E": 232, "T": 192},
+        {"vdot": 70, "S": "2:23:10", "E": 235, "T": 194},
+        {"vdot": 69, "S": "2:24:57", "E": 238, "T": 196},
+        {"vdot": 68, "S": "2:26:47", "E": 241, "T": 199},
+        {"vdot": 67, "S": "2:28:40", "E": 243, "T": 201},
+        {"vdot": 66, "S": "2:30:36", "E": 248, "T": 204},
+        {"vdot": 65, "S": "2:32:35", "E": 250, "T": 206},
+        {"vdot": 64, "S": "2:34:38", "E": 253, "T": 209},
+        {"vdot": 63, "S": "2:36:44", "E": 256, "T": 212},
+        {"vdot": 62, "S": "2:38:54", "E": 260, "T": 214},
+        {"vdot": 61, "S": "2:41:08", "E": 263, "T": 217},
+        {"vdot": 60, "S": "2:43:25", "E": 266, "T": 220},
+        {"vdot": 59, "S": "2:45:47", "E": 270, "T": 223},
+        {"vdot": 58, "S": "2:48:14", "E": 274, "T": 225},
+        {"vdot": 57, "S": "2:50:45", "E": 278, "T": 230},
+        {"vdot": 56, "S": "2:53:20", "E": 281, "T": 233},
+        {"vdot": 55, "S": "2:56:01", "E": 286, "T": 236},
+        {"vdot": 54, "S": "2:58:47", "E": 290, "T": 240},
+        {"vdot": 53, "S": "3:01:39", "E": 295, "T": 244},
+        {"vdot": 52, "S": "3:04:36", "E": 299, "T": 247},
+        {"vdot": 51, "S": "3:07:39", "E": 304, "T": 251},
+        {"vdot": 50, "S": "3:10:49", "E": 308, "T": 255},
+        {"vdot": 49, "S": "3:14:06", "E": 313, "T": 260},
+        {"vdot": 48, "S": "3:17:29", "E": 319, "T": 264},
+        {"vdot": 47, "S": "3:21:00", "E": 324, "T": 269},
+        {"vdot": 46, "S": "3:24:39", "E": 330, "T": 273},
+        {"vdot": 45, "S": "3:28:26", "E": 336, "T": 278},
+        {"vdot": 44, "S": "3:32:23", "E": 341, "T": 283},
+        {"vdot": 43, "S": "3:36:28", "E": 348, "T": 289},
+        {"vdot": 42, "S": "3:40:43", "E": 355, "T": 294},
+        {"vdot": 41, "S": "3:45:09", "E": 361, "T": 300},
+        {"vdot": 40, "S": "3:49:45", "E": 368, "T": 306},
+        {"vdot": 39, "S": "3:54:34", "E": 376, "T": 313},
+        {"vdot": 38, "S": "3:59:35", "E": 383, "T": 319},
+        {"vdot": 37, "S": "4:04:50", "E": 391, "T": 326},
+        {"vdot": 36, "S": "4:10:19", "E": 400, "T": 333},
+        {"vdot": 35, "S": "4:16:03", "E": 409, "T": 341},
+        {"vdot": 34, "S": "4:22:03", "E": 418, "T": 348},
+        {"vdot": 33, "S": "4:28:22", "E": 428, "T": 356},
+        {"vdot": 32, "S": "4:34:59", "E": 438, "T": 365},
+        {"vdot": 31, "S": "4:41:57", "E": 449, "T": 375},
+        {"vdot": 30, "S": "4:49:17", "E": 460, "T": 384}
+    ];
+
+    function getPaces(timeStr) {
+        if (!timeStr || !timeStr.includes(':')) return null;
+        const [h, m] = timeStr.split(':').map(Number);
+        const totalMin = h * 60 + m;
+
+        // 마라톤 시간(분)으로 변환하여 비교용 데이터 생성
+        const table = vdotData.map(d => {
+            const [sh, sm, ss] = d.S.split(':').map(Number);
+            return { min: sh * 60 + sm + (ss / 60), E: d.E, T: d.T };
+        });
+
+        let tPaceSec, ePaceSec;
+
+        // 구간 보간법 적용
+        if (totalMin <= table[0].min) {
+            tPaceSec = table[0].T;
+            ePaceSec = table[0].E;
+        } else if (totalMin >= table[table.length - 1].min) {
+            tPaceSec = table[table.length - 1].T;
+            ePaceSec = table[table.length - 1].E;
+        } else {
+            for (let i = 0; i < table.length - 1; i++) {
+                const start = table[i];
+                const end = table[i + 1];
+                if (totalMin >= start.min && totalMin <= end.min) {
+                    const ratio = (totalMin - start.min) / (end.min - start.min);
+                    tPaceSec = start.T + ratio * (end.T - start.T);
+                    ePaceSec = start.E + ratio * (end.E - start.E);
+                    break;
+                }
+            }
+        }
+
+        const formatPace = (sec) => {
+            const min = Math.floor(sec / 60);
+            const s = Math.round(sec % 60);
+            return `${min}:${s < 10 ? '0' + s : s}`;
+        };
+
+        return { easy: formatPace(ePaceSec), threshold: formatPace(tPaceSec) };
+    }
+
+    // 나머지 generatePlan 로직은 이전과 동일하게 유지
+    function generatePlan() {
+        const prev = parseFloat(document.getElementById('prevDist').value);
+        const target = parseFloat(document.getElementById('targetDist').value);
+        const paces = getPaces(document.getElementById('goalTime').value);
+        
+        const dayBoxes = document.querySelectorAll('.day-box');
+        let restDays = [], lsdDay = -1;
+        dayBoxes.forEach((box, idx) => {
+            if (box.classList.contains('status-rest')) restDays.push(idx);
+            if (box.classList.contains('status-lsd')) lsdDay = idx;
+        });
+
+        if (lsdDay === -1) { alert("LSD 요일을 지정해주세요."); return; }
+
+        const rate = ((target - prev) / prev * 100).toFixed(1);
+        const statusHeader = document.getElementById('statusHeader');
+        statusHeader.style.display = 'block';
+        statusHeader.className = 'result-header ' + (rate > 30 ? 'danger' : rate > 15 ? 'warning' : 'safe');
+        statusHeader.innerHTML = `증량 폭: ${rate}% (${target}km 목표) ${paces ? ` | VDOT 데이터 적용됨` : ''}`;
+
+        const weekWeights = [0.22, 0.26, 0.30, 0.22]; 
+        const weekLabels = ["(적응기)", "(강도 향상)", "(피크 주간)", "(조정 및 회복)"];
+        const dayNames = ["월", "화", "수", "목", "금", "토", "일"];
+        const planContainer = document.getElementById('planContainer');
+        planContainer.innerHTML = '';
+
+        weekWeights.forEach((wWeight, i) => {
+            const weekTotal = target * wWeight;
+            let baseWeights = [1.2, 1.2, 0.8, 1.2, 1.2, 1.2, 1.2]; 
+            baseWeights[lsdDay] = 2.5;
+
+            let activeSum = 0;
+            baseWeights.forEach((bw, idx) => { if (!restDays.includes(idx)) activeSum += bw; });
+
+            let html = `<div class="week-card" style="display:block">
+                <div class="week-title">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>${i+1}주차 ${weekLabels[i]}</span>
+                        <span style="color:#007AFF">${weekTotal.toFixed(1)}km</span>
+                    </div>
+                </div>
+                <table><thead><tr><th>요일</th><th>구분</th><th>거리 및 페이스</th></tr></thead><tbody>`;
+
+            dayNames.forEach((day, j) => {
+                const isRest = restDays.includes(j);
+                const isLsd = (j === lsdDay);
+                const isPoint = (!isRest && !isLsd && j === 2); 
+
+                let type = isRest ? "휴식" : isLsd ? "LSD" : isPoint ? "포인트" : "조깅";
+                let dist = isRest ? "-" : (weekTotal * (baseWeights[j] / activeSum)).toFixed(1) + "km";
+                let paceInfo = (paces && !isRest) ? `<span class="pace-val" style="font-size:0.8rem; color:#666; display:block;">Pace: ${isPoint ? paces.threshold : paces.easy}</span>` : "";
+
+                let dayCls = (j === 5) ? "sat" : (j === 6) ? "sun" : "";
+                let typeStyle = isLsd ? "color:#007AFF; font-weight:bold;" : isPoint ? "color:#e67e22; font-weight:bold;" : "";
+
+                html += `<tr><td class="${dayCls}">${day}</td><td style="${typeStyle}">${type}</td><td class="dist-val">${dist}${paceInfo}</td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+            planContainer.innerHTML += html;
+        });
+    }
+</script>
+</body>
+</html>

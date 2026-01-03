@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<workout_file>
+  <author>What's on Zwift</author>
+  <name>&#xBD80;&#xCC9C;&#xD2B8;&#xB77C;&#xC774; &#xD300;&#xD6C8;&#xB828; &#xB77C;&#xC774;&#xB529;</name>
+  <description>This workout was created on whatsonzwift.com based on &#xBD80;&#xCC9C;&#xD2B8;&#xB77C;&#xC774; &#xD300;&#xD6C8;&#xB828; &#xB77C;&#xC774;&#xB529;. Please note that although the workout represents the course for the entered rider and bike characteristics, in Zwift the speed and distance will not match due to course differences.
+
+Course details: 51.06 km, 179 m elevation
+Time to complete: 1h51m23s (27.5 km/h avg.)
+Workout details: 143.8 W avg. (2.05 W/kg), NP=148.6 W, IF=0.75, VI=1.03
+</description>
+  <sportType/>
+  <tags>
+    <tag name="course"/>
+  </tags>
+  <workout>
+    <SteadyState Duration="116" Power="1.046088062834"/>
+    <SteadyState Duration="18" Power="0.71860208690576"/>
+    <SteadyState Duration="450" Power="0.71403913559246"/>
+    <SteadyState Duration="22" Power="0.75998768425056"/>
+    <SteadyState Duration="20" Power="0.71799865800302"/>
+    <SteadyState Duration="143" Power="0.71248598362306"/>
+    <SteadyState Duration="21" Power="0.74524203640483"/>
+    <SteadyState Duration="86" Power="0.70299968777139"/>
+    <SteadyState Duration="66" Power="0.82646615439096"/>
+    <SteadyState Duration="106" Power="0.71256100214165"/>
+    <SteadyState Duration="23" Power="0.75229130118661"/>
+    <SteadyState Duration="129" Power="0.71724893630836"/>
+    <SteadyState Duration="36" Power="0.84301199907393"/>
+    <SteadyState Duration="20" Power="0.73760578536912"/>
+    <SteadyState Duration="9" Power="0.50624496727148"/>
+    <SteadyState Duration="992" Power="0.71765219897418"/>
+    <SteadyState Duration="323" Power="0.71373714846897"/>
+    <SteadyState Duration="48" Power="0.92525911553194"/>
+    <SteadyState Duration="28" Power="0.79539050945728"/>
+    <SteadyState Duration="23" Power="0.6090940487278"/>
+    <SteadyState Duration="110" Power="0.71704748984719"/>
+    <SteadyState Duration="31" Power="0.68369322991584"/>
+    <SteadyState Duration="24" Power="0.76584709240252"/>
+    <SteadyState Duration="58" Power="0.72570194804067"/>
+    <SteadyState Duration="27" Power="0.65980187306493"/>
+    <SteadyState Duration="11" Power="0.58860559209447"/>
+    <SteadyState Duration="20" Power="0.74542139616731"/>
+    <SteadyState Duration="604" Power="0.71659815465724"/>
+    <SteadyState Duration="21" Power="0.74542139616731"/>
+    <SteadyState Duration="282" Power="0.73396312571068"/>
+    <SteadyState Duration="30" Power="0.80435969543501"/>
+    <SteadyState Duration="54" Power="0.94903814410001"/>
+    <SteadyState Duration="39" Power="0.87329524283183"/>
+    <SteadyState Duration="39" Power="0.73041363758812"/>
+    <SteadyState Duration="20" Power="0.56818709147965"/>
+    <SteadyState Duration="65" Power="0.74811800671975"/>
+    <SteadyState Duration="202" Power="0.9350510833897"/>
+    <SteadyState Duration="13" Power="0.62610017131938"/>
+    <SteadyState Duration="29" Power="0.80242186072342"/>
+    <SteadyState Duration="19" Power="0.72666031387582"/>
+    <SteadyState Duration="60" Power="0.55789208095107"/>
+    <SteadyState Duration="76" Power="0.63845711076795"/>
+    <SteadyState Duration="26" Power="0.77802874599656"/>
+    <SteadyState Duration="858" Power="0.71259634850754"/>
+    <SteadyState Duration="27" Power="0.78924063156074"/>
+    <SteadyState Duration="13" Power="0.64012054738249"/>
+    <SteadyState Duration="21" Power="0.75340510949604"/>
+    <SteadyState Duration="169" Power="0.7210245173743"/>
+    <SteadyState Duration="32" Power="0.69410002080313"/>
+    <SteadyState Duration="22" Power="0.75282687870197"/>
+    <SteadyState Duration="16" Power="0.68964183562511"/>
+    <SteadyState Duration="21" Power="0.74514878306209"/>
+    <SteadyState Duration="127" Power="0.71517336698403"/>
+    <SteadyState Duration="88" Power="0.75150894758052"/>
+    <SteadyState Duration="221" Power="0.84620739404451"/>
+    <SteadyState Duration="50" Power="0.92306554499377"/>
+    <SteadyState Duration="91" Power="0.90526953474161"/>
+    <SteadyState Duration="17" Power="0.70792798660186"/>
+    <SteadyState Duration="12" Power="0.60820340372266"/>
+    <SteadyState Duration="34" Power="0.84075472950065"/>
+    <SteadyState Duration="13" Power="0.61712610556525"/>
+    <SteadyState Duration="16" Power="0.44559228702182"/>
+    <SteadyState Duration="9" Power="0.53243455289218"/>
+    <SteadyState Duration="44" Power="0.67299859843221"/>
+    <SteadyState Duration="32" Power="0.81749833911901"/>
+    <SteadyState Duration="49" Power="0.93137295229589"/>
+    <SteadyState Duration="19" Power="0.72471589834313"/>
+    <SteadyState Duration="15" Power="0.67283633157793"/>
+    <SteadyState Duration="10" Power="0.60012585642047"/>
+    <SteadyState Duration="9" Power="0.50756561844712"/>
+    <SteadyState Duration="83" Power="0.65961358421018"/>
+    <SteadyState Duration="20" Power="0.72850830980919"/>
+    <SteadyState Duration="6" Power="0.67890646276748"/>
+  </workout>
+</workout_file>

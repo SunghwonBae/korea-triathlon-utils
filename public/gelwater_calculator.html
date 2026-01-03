@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>에너지 & 수분 보급 시뮬레이터</title>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+
+    <style>
+        :root { --primary-color: #f39c12; --water-color: #3498db; --gel-color: #e74c3c; }
+        .hl-cell { background-color: #fff9c4 !important; font-weight: bold; outline: 2px solid #f39c12; color: #d35400; }
+        .hl-header { background-color: #ffe082 !important; }
+        .summary-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .summary-card { background: #fff; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid var(--primary-color); }
+        .summary-card.water { border-top-color: var(--water-color); }
+        .summary-card.gel { border-top-color: var(--gel-color); }
+        .summary-card h3 { font-size: 0.85em; color: #7f8c8d; margin-bottom: 5px; }
+        .summary-card b { font-size: 1.5em; color: #2c3e50; }
+        .warning-text { display: block; font-size: 11px; color: #e74c3c; margin-top: 5px; font-weight: bold; }
+
+        .controls { background: #fff; padding: 20px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .control-group label { font-weight: 700; display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .value-display { color: var(--primary-color); font-weight: 800; }
+        
+        .guide-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .info-box { background: #f8f9fa; border-left: 4px solid #adb5bd; padding: 10px; font-size: 0.85em; line-height: 1.6; }
+        .standard-guide { background: #fff3e0; border-radius: 8px; padding: 12px; border: 1px solid #ffe0b2; }
+        .sweat-guide { background: #e3f2fd; border-radius: 8px; padding: 12px; border: 1px solid #bbdefb; }
+        
+        input[type=range] { width: 100%; accent-color: var(--primary-color); cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; background: #fff; }
+        th, td { border: 1px solid #dee2e6; padding: 8px 2px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>🍌 보급 시뮬레이터 </h1>
+    </div>
+
+    <div class="info-box">
+        <strong>💡 보급 전략 가이드:</strong><br>
+        - <b>소비자원 리포트:</b> 파워젤 1포당 탄수화물 함량(2~29g)이 다르니 꼭 확인하세요.<br>
+        - <b>현실적 배분:</b> 전체 에너지의 60%를 젤로, 나머지는 스포츠 음료/고형식으로 섭취하는 것이 위장에 안전합니다.<br>시중 스포츠 음료 500ml에는 약 30g의 탄수화물이 들어있습니다. 물 대신 음료만 잘 마셔도 파워젤 10개 분량을 대체할 수 있습니다.
+    </div>
+
+    <div class="guide-container">
+        <div class="standard-guide">
+            <strong>🏆 70kg / 12시간 완주 기준:</strong> 시간당 60g 섭취 시 총 720g (현실적 젤 섭취 약 17~20개 + 음료)
+        </div>
+        <div class="sweat-guide">
+            <strong>💧 땀 손실량 가이드:</strong> 서늘함(0.5L) / 보통(0.8~1.2L) / 덥고습함(1.5~2.0L)
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <div class="summary-card">
+            <h3>총 탄수화물 필요량</h3>
+            <span class="value-display"><b id="res-total-carb">0</b> g</span>
+        </div>
+        <div class="summary-card gel">
+            <h3>추천 파워젤 개수 (60%)</h3>
+            <span class="value-display" style="color:var(--gel-color)"><b id="res-gel-count">0</b> 개</span>
+            <span id="gel-warning" class="warning-text" style="display:none;">⚠️ 위장 장애 주의!</span>
+        </div>
+        <div class="summary-card water">
+            <h3>총 수분 필요량</h3>
+            <span class="value-display" style="color:var(--water-color)"><b id="res-total-water">0</b> L</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>예상 완주 시간 <div><span id="disp-time" class="value-display">10:00</span></div></label>
+            <input type="range" id="in-time" min="120" max="1020" step="15" value="600">
+        </div>
+        <div class="control-group">
+            <label>시간당 탄수화물 <div><span id="disp-carb" class="value-display">60</span> g/h</div></label>
+            <input type="range" id="in-carb" min="40" max="110" step="10" value="60">
+        </div>
+        <div class="control-group">
+            <label>젤 1개당 탄수화물 <div><span id="disp-per-gel" class="value-display" style="color:var(--gel-color)">25</span> g</div></label>
+            <input type="range" id="in-per-gel" min="10" max="35" step="1" value="25">
+        </div>
+        <div class="control-group">
+            <label>시간당 땀 손실량 <div><span id="disp-sweat" class="value-display" style="color:var(--water-color)">0.8</span> L/h</div></label>
+            <input type="range" id="in-sweat" min="0.4" max="2.0" step="0.2" value="0.8">
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-size: 1rem; margin: 0;">📋 완주시간 대비 추천 젤 소요량 (에너지 60% 비중)</h3>
+            <button onclick="downloadCSV('tbl-gel', 'gel_simulation.csv')" title="CSV 다운로드" style="background: none; border: none; cursor: pointer; padding: 0;">
+                <img src="xlsdown.png" alt="Download CSV" style="width: 24px; height: 24px; display: block;">
+            </button>
+        </div>
+        <table id="tbl-gel">
+            <thead><tr id="head-gel"><th>시간 \ g/h</th></tr></thead>
+            <tbody id="body-gel"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const inT = document.getElementById('in-time'), inC = document.getElementById('in-carb');
+    const inG = document.getElementById('in-per-gel'), inS = document.getElementById('in-sweat');
+    
+    const carbCols = [40, 50, 60, 70, 80, 90, 100, 110];
+    const timeRows = [120, 240, 360, 480, 600, 720, 840, 960, 1020];
+    const GEL_RATIO = 0.6; // 전체 탄수화물의 60%만 파워젤로 보급한다고 가정
+
+    function fmtTime(m) { 
+        const h = Math.floor(m/60);
+        const min = m%60;
+        return min > 0 ? `${h}시간 ${min}분` : `${h}시간`; 
+    }
+
+    function initTable() {
+        const hGel = document.getElementById('head-gel');
+        hGel.innerHTML = '<th>시간 \\ g/h</th>'; 
+        carbCols.forEach(c => {
+            const th = document.createElement('th');
+            th.innerText = c + 'g';
+            th.setAttribute('data-col-val', c);
+            hGel.appendChild(th);
+        });
+        update(); 
+    }
+
+    function update() {
+        const t = +inT.value, c = +inC.value, g = +inG.value, s = +inS.value;
+        const hours = t / 60;
+
+        document.getElementById('disp-time').textContent = fmtTime(t);
+        document.getElementById('disp-carb').textContent = c;
+        document.getElementById('disp-per-gel').textContent = g;
+        document.getElementById('disp-sweat').textContent = s;
+
+        // 계산 로직 (60% 전략 반영)
+        const totalCarb = Math.round(hours * c);
+        const gelCount = ((totalCarb * GEL_RATIO) / g).toFixed(1);
+        
+        document.getElementById('res-total-carb').textContent = totalCarb;
+        document.getElementById('res-gel-count').textContent = gelCount;
+        document.getElementById('res-total-water').textContent = (hours * s).toFixed(1);
+
+        // 30개 초과 시 경고 표시
+        const warning = document.getElementById('gel-warning');
+        if (gelCount >= 25) {
+            warning.style.display = 'block';
+            warning.innerText = gelCount >= 30 ? "⚠️ 위장 한계 도달! 고형식 필수" : "⚠️ 파워젤 과다 (주의)";
+        } else {
+            warning.style.display = 'none';
+        }
+
+        const bGel = document.getElementById('body-gel');
+        bGel.innerHTML = "";
+        timeRows.forEach(tr => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-time-val', tr);
+            let rowHtml = `<td><b>${Math.floor(tr/60)}h</b></td>`;
+            carbCols.forEach(cc => {
+                const count = ((tr/60) * cc * GEL_RATIO / g).toFixed(1);
+                rowHtml += `<td data-carb-val="${cc}">${count}</td>`;
+            });
+            row.innerHTML = rowHtml;
+            bGel.appendChild(row);
+        });
+
+        document.querySelectorAll('.hl-cell, .hl-header').forEach(el => el.classList.remove('hl-cell', 'hl-header'));
+        const targetTh = document.querySelector(`#head-gel th[data-col-val="${c}"]`);
+        if(targetTh) targetTh.classList.add('hl-header');
+
+        const rows = document.querySelectorAll('#body-gel tr');
+        let closestRow = rows[0];
+        let minDiff = Math.abs(t - timeRows[0]);
+        rows.forEach(r => {
+            const diff = Math.abs(t - r.getAttribute('data-time-val'));
+            if(diff < minDiff) { minDiff = diff; closestRow = r; }
+        });
+
+        if(closestRow) {
+            const targetTd = closestRow.querySelector(`td[data-carb-val="${c}"]`);
+            if(targetTd) targetTd.classList.add('hl-cell');
+        }
+    }
+
+    [inT, inC, inG, inS].forEach(el => el.addEventListener('input', update));
+    initTable();
+
+    function downloadCSV(tableId, filename) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        let csv = [];
+        const rows = table.querySelectorAll("tr");
+        for (let i = 0; i < rows.length; i++) {
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length; j++) {
+                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                row.push('"' + data + '"');
+            }
+            csv.push(row.join(","));
+        }
+        const csvFile = new Blob(["\uFEFF" + csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+        const link = document.createElement("a"); link.download = filename; link.href = window.URL.createObjectURL(csvFile);
+        link.style.display = "none"; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>

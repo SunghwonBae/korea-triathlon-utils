@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기어비 케이던스 속도 시뮬레이터</title>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+ 
+        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #dfe6e9; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; font-size: 0.85em; color: #636e72; }
+        select { padding: 10px; border: 1px solid #b2bec3; border-radius: 6px; font-size: 0.95em; }
+        .btn-main { grid-column: 1 / -1; padding: 15px; background: #0984e3; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-main:hover { background: #74b9ff; }
+
+        #slider-container { display: none; background: #fff; border: 2px solid #0984e3; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(9, 132, 227, 0.1); }
+        .slider-group { margin-bottom: 35px; position: relative; }
+        .slider-label { font-weight: bold; margin-bottom: 45px; display: block; color: #0984e3; font-size: 1.1em; }
+        
+        .range-wrap { position: relative; width: 100%; padding: 0 10px; box-sizing: border-box; }
+        input[type="range"] { width: 100%; margin: 0; cursor: pointer; pointer-events: none; }
+        input[type="range"]::-webkit-slider-thumb { pointer-events: auto; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { pointer-events: auto; cursor: pointer; }
+        
+        .ticks { display: flex; justify-content: space-between; padding: 0 2px; margin-top: 15px; position: relative; }
+        .ticks span { position: relative; display: flex; flex-direction: column; align-items: center; font-size: 9px; color: #b2bec3; min-width: 15px; }
+        .ticks span::before { content: ""; width: 1px; height: 6px; background: #b2bec3; margin-bottom: 4px; }
+        .ticks span.active { color: #0984e3; font-weight: bold; font-size: 11px; }
+        .ticks span.active::before { background: #0984e3; height: 12px; width: 2px; }
+
+        .result-section { margin-top: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #dfe6e9; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 0.9em; }
+        th { background: #2d3436; color: #fff; padding: 10px 2px; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        td { border: 1px solid #dfe6e9; padding: 8px 2px; text-align: center; transition: 0.1s; }
+        
+        .hl-row { background-color: #fffde7 !important; }
+        .hl-col { background-color: #e3f2fd !important; }
+        .hl-cross { background-color: #ff4757 !important; color: white !important; font-weight: bold; transform: scale(1.05); box-shadow: 0 0 8px rgba(0,0,0,0.3); z-index: 5; position: relative; }
+        .precise-zone { background-color: #f1f8e9; }
+
+        /* 모바일 최적화 미디어 쿼리 */
+        @media (max-width: 768px) {
+
+            .setup-grid { grid-template-columns: 1fr; gap: 12px; padding: 15px; }
+            label { font-size: 0.8rem; }
+            select, .btn-main { font-size: 0.8rem; padding: 10px; }
+            
+            #slider-container { padding: 10px; }
+            .slider-group { margin-bottom: 25px; position: relative; }
+            .slider-label { font-size: 0.8rem; margin-bottom: 20px; }
+            
+            /* 테이블 가독성 확보 */
+            table { font-size: 0.85rem; min-width: max-content; } /* 내용에 맞춰 늘어나게 함 */
+            th, td { padding: 10px 4px; }
+            th { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>🚴‍♂️ 기어비 케이던스 속도 시뮬레이터</h1>
+    </div>
+    <p style="text-align:center; color:#636e72; font-size:0.9em; margin-bottom:20px;">해당하는 구성을 선택하고 분석표 생성버튼을 누르세요.</p>
+
+    <div class="setup-grid">
+        <div class="group"><label>구동계 브랜드</label><select id="brand" onchange="updateSubOptions()">
+            <option value="sram">스램 (SRAM RED/Force/Rival)</option>
+            <option value="shimano">시마노 (SHIMANO Dura-Ace/Ultegra/105)</option>
+        </select></div>
+        <div class="group"><label>앞 크랭크셋</label><select id="crank"></select></div>
+        <div class="group"><label>뒤 카세트 (단수/구성)</label><select id="cassette"></select></div>
+        <div class="group"><label>휠 & 타이어</label><select id="wheel">
+            <option value="2105">700c x 25mm</option>
+            <option value="2136">700c x 28mm</option>
+            <option value="2155">700c x 30mm</option>
+            <option value="2168">700c x 32mm</option>
+        </select></div>
+        <button class="btn-main" onclick="generateAndShow()">분석표 생성</button>
+    </div>
+
+    <div id="slider-container">
+        <div class="slider-group">
+            <span class="slider-label">📍 크랭크 티수 (Chainring T)</span>
+            <div class="range-wrap"><input type="range" id="sl-crank" oninput="syncHighlight()"><div id="ticks-crank" class="ticks"></div></div>
+        </div>
+        <div class="slider-group">
+            <span class="slider-label">📍 카세트 코그 (Cassette T)</span>
+            <div class="range-wrap"><input type="range" id="sl-cassette" oninput="syncHighlight()"><div id="ticks-cassette" class="ticks"></div></div>
+        </div>
+        <div class="slider-group">
+            <span class="slider-label">📍 케이던스 (Cadence RPM) - 85~105구간 2.5단위</span>
+            <div class="range-wrap"><input type="range" id="sl-cadence" oninput="syncHighlight()"><div id="ticks-cadence" class="ticks"></div></div>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 5px;">
+        <h3 style="margin:0; font-size: 1.1em; color: #2d3436;">📊 분석 결과표</h3>
+        <button onclick="downloadCSV('speedTable', 'bike_gear_simulation.csv')" title="CSV 다운로드" style="background: none; border: none; cursor: pointer; padding: 0;">
+            <img src="xlsdown.png" alt="Download CSV" style="width: 30px; height: 30px; display: block;">
+        </button>
+    </div>
+    <div id="result" class="result-section"></div>
+</div>
+
+<script>
+const gearData = {
+    sram: {
+        cranks: {
+            "RED AXS 12단 (50/37T)": [50, 37],
+            "RED AXS 12단 (48/35T)": [48, 35],
+            "RED AXS 12단 (46/33T)": [46, 33],
+            "RED AXS 프로 (52/39T)": [52, 39],
+            "RED AXS 프로 (54/41T)": [54, 41],
+            "구형 RED/11단 (53/39T)": [53, 39],
+            "구형 RED/11단 (52/36T)": [52, 36],
+            "구형 RED/11단 (50/34T)": [50, 34]
+        },
+        cassettes: {
+            "12단 AXS RED (10-26T)": [10,11,12,13,14,15,16,17,19,21,23,26],
+            "12단 AXS RED (10-28T)": [10,11,12,13,14,15,16,17,19,21,24,28],
+            "12단 AXS RED (10-30T)": [10,11,12,13,14,15,17,19,21,24,27,30],
+            "12단 AXS RED (10-33T)": [10,11,12,13,15,17,19,21,24,28,33],
+            "12단 AXS XPLR (10-36T)": [10,11,12,13,15,17,19,21,24,28,32,36],
+            "12단 AXS XPLR (10-44T)": [10,11,13,15,17,19,21,24,28,32,38,44],
+            "11단 RED/Force (11-25T)": [11,12,13,14,15,16,17,19,21,23,25],
+            "11단 RED/Force (11-26T)": [11,12,13,14,15,16,17,19,21,23,26],
+            "11단 RED/Force (11-28T)": [11,12,13,14,15,16,17,19,22,25,28],
+            "11단 RED/Force (11-30T)": [11,12,13,14,15,17,19,21,24,27,30],
+            "11단 WiFLi (11-32T)": [11,12,13,14,15,17,19,22,25,28,32]
+        }
+    },
+    shimano: {
+        cranks: {
+            "Dura-Ace 12단 (54/40T)": [54, 40],
+            "Dura-Ace 12단 (52/36T)": [52, 36],
+            "Dura-Ace 12단 (50/34T)": [50, 34],
+            "11단 스탠다드 (53/39T)": [53, 39],
+            "11단 미드컴팩 (52/36T)": [52, 36],
+            "11단 컴팩트 (50/34T)": [50, 34],
+            "GRX 그래블 (48/31T)": [48, 31],
+            "GRX 그래블 (46/30T)": [46, 30]
+        },
+        cassettes: {
+            "12단 11-30T": [11,12,13,14,15,16,17,19,21,24,27,30],
+            "12단 11-34T": [11,12,13,14,15,17,19,21,24,27,30,34],
+            "11단 11-25T": [11,12,13,14,15,16,17,19,21,23,25],
+            "11단 11-28T": [11,12,13,14,15,17,19,21,23,25,28],
+            "11단 11-30T": [11,12,13,14,15,17,19,21,24,27,30],
+            "11단 11-32T": [11,12,13,14,16,18,20,22,25,28,32],
+            "11단 11-34T": [11,13,15,17,19,21,23,25,27,30,34],
+            "10단 11-25T": [11,12,13,14,15,17,19,21,23,25],
+            "10단 11-28T": [11,12,13,14,15,17,19,21,24,28],
+            "10단 12-30T": [12,13,14,15,17,19,21,24,27,30]
+        }
+    }
+};
+
+const cadences = [];
+for (let i = 70; i <= 120; i += 5) {
+    cadences.push(i);
+    if (i >= 85 && i < 105) cadences.push(i + 2.5);
+}
+const uniqueCadences = [...new Set(cadences)].sort((a, b) => a - b);
+
+let currentFronts = [];
+let currentRears = [];
+
+function updateSubOptions() {
+    const brand = document.getElementById('brand').value;
+    ['crank', 'cassette'].forEach(type => {
+        const sel = document.getElementById(type);
+        sel.innerHTML = "";
+        for (let name in gearData[brand][type + 's']) {
+            let opt = document.createElement('option'); opt.value = name; opt.innerHTML = name; sel.appendChild(opt);
+        }
+    });
+}
+
+function createTicks(elementId, values) {
+    const container = document.getElementById(elementId);
+    container.innerHTML = "";
+    values.forEach(v => {
+        const span = document.createElement('span');
+        span.innerText = v;
+        span.id = `tick-${elementId}-${v}`;
+        container.appendChild(span);
+    });
+}
+
+function generateAndShow() {
+    const brand = document.getElementById('brand').value;
+    currentFronts = gearData[brand].cranks[document.getElementById('crank').value];
+    currentRears = gearData[brand].cassettes[document.getElementById('cassette').value];
+    const circumference = parseInt(document.getElementById('wheel').value);
+
+    document.getElementById('slider-container').style.display = 'block';
+    setupSlider('sl-crank', currentFronts, 'ticks-crank');
+    setupSlider('sl-cassette', currentRears, 'ticks-cassette');
+    setupSlider('sl-cadence', uniqueCadences, 'ticks-cadence');
+
+    let html = `<table id="speedTable"><thead><tr><th>기어 (F-R)</th><th>비율</th>`;
+    uniqueCadences.forEach(c => {
+        const isPrecise = (c >= 85 && c <= 105 && c % 5 !== 0) ? 'style="color:#2ecc71"' : '';
+        html += `<th ${isPrecise}>${c}</th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    currentFronts.forEach(f => {
+        currentRears.forEach(r => {
+            html += `<tr data-f="${f}" data-r="${r}"><td style="font-weight:bold">${f}-${r}</td><td style="background:#f8f9fa">${(f/r).toFixed(2)}</td>`;
+            uniqueCadences.forEach(c => {
+                const speed = ((f/r)*circumference*c*60/1000000).toFixed(1);
+                const isPreciseClass = (c >= 85 && c <= 105) ? 'class="precise-zone"' : '';
+                html += `<td data-c="${c}" ${isPreciseClass}>${speed}</td>`;
+            });
+            html += `</tr>`;
+        });
+    });
+    document.getElementById('result').innerHTML = html + `</tbody></table>`;
+    syncHighlight();
+}
+
+function setupSlider(id, values, tickId) {
+    const el = document.getElementById(id);
+    el.min = 0; el.max = values.length - 1; el.value = 0;
+    createTicks(tickId, values);
+}
+
+function syncHighlight() {
+    const fIdx = document.getElementById('sl-crank').value;
+    const rIdx = document.getElementById('sl-cassette').value;
+    const cIdx = document.getElementById('sl-cadence').value;
+
+    const selF = currentFronts[fIdx];
+    const selR = currentRears[rIdx];
+    const selC = uniqueCadences[cIdx];
+
+    document.querySelectorAll('#speedTable td').forEach(td => td.classList.remove("hl-col", "hl-cross"));
+    document.querySelectorAll('#speedTable tr').forEach(tr => tr.classList.remove("hl-row"));
+    document.querySelectorAll('.ticks span').forEach(s => s.classList.remove('active'));
+
+    const tickF = document.getElementById(`tick-ticks-crank-${selF}`);
+    const tickR = document.getElementById(`tick-ticks-cassette-${selR}`);
+    const tickC = document.getElementById(`tick-ticks-cadence-${selC}`);
+    
+    if(tickF) tickF.classList.add('active');
+    if(tickR) tickR.classList.add('active');
+    if(tickC) tickC.classList.add('active');
+
+    const targetRow = document.querySelector(`tr[data-f="${selF}"][data-r="${selR}"]`);
+    if(targetRow) {
+        targetRow.classList.add('hl-row');
+        document.querySelectorAll(`td[data-c="${selC}"]`).forEach(td => td.classList.add('hl-col'));
+        const cross = targetRow.querySelector(`td[data-c="${selC}"]`);
+        if(cross) cross.classList.add("hl-cross");
+    }
+}
+
+updateSubOptions();
+
+function downloadCSV(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) { alert("먼저 분석표를 생성해주세요."); return; }
+    let csv = [];
+    const rows = table.querySelectorAll("tr");
+    for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll("td, th");
+        for (let j = 0; j < cols.length; j++) {
+            let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+            row.push('"' + data + '"');
+        }
+        csv.push(row.join(","));
+    }
+    const csvFile = new Blob(["\uFEFF" + csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+    const link = document.createElement("a"); link.download = filename; link.href = window.URL.createObjectURL(csvFile);
+    link.style.display = "none"; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+</script>
+</body>
+</html>

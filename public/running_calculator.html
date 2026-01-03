@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>러닝 페이스 보폭 케이던스 시뮬레이터</title>
+<link rel="stylesheet" href="bucheonTriStyle.css">
+<script src="menu_full_handler.js" defer></script>
+<style>
+    :root {
+        --primary-color: #007bff;
+        --bg-color: #f4f7f9;
+        --border-color: #dee2e6;
+        --highlight-bg: #fff9c4;
+        --accent-color: #d32f2f;
+    }
+
+    .controls {
+        background: #fff; padding: 12px; border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 1px solid var(--border-color);
+    }
+    .control-group label { font-weight: 700; font-size: 1em; display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .value-display { font-size: 1.1em; font-weight: 800; color: var(--primary-color); }
+    input[type=range] { width: 100%; margin: 4px 0; accent-color: var(--primary-color); pointer-events: none; }
+    input[type=range]::-webkit-slider-thumb { pointer-events: auto; cursor: pointer; }
+    input[type=range]::-moz-range-thumb { pointer-events: auto; cursor: pointer; }
+    .sub-label { grid-column: 1 / -1; font-size: 1em; color: #555; background: #eef2f5; padding: 8px; border-radius: 6px; font-weight: bold; border-left: 3px solid var(--primary-color); }
+
+    .tables-container { display: flex; flex-direction: column; gap: 20px; }
+    .table-wrapper { background: #fff; padding: 8px; border-radius: 10px; border: 1px solid var(--border-color); overflow: hidden; }
+    
+    /* 가로 스크롤 방지를 위해 width: 100%와 최소 여백 설정 */
+    .scroll-area { width: 100%; overflow: visible; }
+    
+    table { border-collapse: collapse; text-align: center; font-size: 12px; width: 100%; table-layout: auto; }
+    th, td { border: 1px solid var(--border-color); padding: 8px 2px; }
+    th { background-color: #f8f9fa; font-weight: 700; }
+    
+    /* 사선 헤더 */
+    .diagonal-header {
+        position: relative;
+        background: linear-gradient(to top right, transparent calc(50% - 1px), var(--border-color) 50%, transparent calc(50% + 1px)) !important;
+        padding: 0 !important;
+        min-width: 65px;
+        height: 40px;
+    }
+    .diagonal-header .top-label { position: absolute; top: 2px; right: 4px; color: #666; font-size: 1.2em; }
+    .diagonal-header .bottom-label { position: absolute; bottom: 2px; left: 4px; color: #666; font-size: 1.2em; }
+
+    /* 하이라이트 */
+    .highlight-cell { background-color: #ffeb3b !important; color: var(--accent-color); font-weight: 900; outline: 1.5px solid var(--accent-color); position: relative; z-index: 1; }
+    .highlight-row { background-color: var(--highlight-bg) !important; }
+    .highlight-header { background-color: #ffe082 !important; }
+
+    .tbl-title { font-size: 0.95em; font-weight: 800; margin-bottom: 8px; color: #2c3e50; border-left: 4px solid var(--primary-color); padding-left: 8px; }
+
+    /* 모바일 최적화 미디어 쿼리 */
+    @media (max-width: 600px) {
+        .controls { grid-template-columns: 1fr; gap: 8px; }
+        table { font-size: 9px; } /* 폰트 크기를 대폭 줄여 가로폭 확보 */
+        th, td { padding: 6px 1px; letter-spacing: -0.5px; }
+        .diagonal-header { min-width: 45px; height: 35px; }
+        .diagonal-header .top-label, .diagonal-header .bottom-label { font-size: 1.3em; }
+    }
+</style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+            <h1>🏃 러닝 페이스 보폭 케인던스 시뮬레이터</h1>
+        </div>
+
+    <div class="controls">
+        <div class="sub-label">🎯 Step 1. 신체 정보 및 목표</div>
+        <div class="control-group">
+            <label>내 키 <div><span id="disp-height" class="value-display">170</span> cm</div></label>
+            <input type="range" id="input-height" min="145" max="195" value="170" step="1">
+        </div>
+        <div class="control-group">
+            <label>목표 페이스 <div><span id="disp-pace" class="value-display">5:00</span> /km</div></label>
+            <input type="range" id="input-pace" min="224" max="469" value="300" step="1">
+        </div>
+        <div class="sub-label">⚙️ Step 2. 상세 주법 조정</div>
+        <div class="control-group">
+            <label>보폭 (Stride) <div><span id="disp-stride" class="value-display">1.16</span> m</div></label>
+            <input type="range" id="input-stride" min="0.70" max="1.85" value="1.16" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>회전수 (Cadence) <div><span id="disp-cadence" class="value-display">172</span> spm</div></label>
+            <input type="range" id="input-cadence" min="140" max="210" value="172" step="1">
+        </div>
+    </div>
+
+    <div class="tables-container">
+        <div class="table-wrapper">
+            <div class="tbl-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>보폭(Y) vs 회전수(X)</span>
+                <button onclick="downloadCSV('table-main', 'stride_cadence_sim.csv')" title="CSV 다운로드" style="background: none; border: none; cursor: pointer; padding: 0;">
+                    <img src="xlsdown.png" alt="Download CSV" style="width: 24px; height: 24px; display: block;">
+                </button>
+            </div>
+            <div class="scroll-area">
+                <table id="table-main">
+                    <thead>
+                        <tr>
+                            <th class="diagonal-header">
+                                <span class="top-label">SPM</span>
+                                <span class="bottom-label">보폭</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-main"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <div class="tbl-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>페이스(Y) vs 키(X) 보폭(cm)</span>
+                <button onclick="downloadCSV('table-ref', 'pace_height_stride.csv')" title="CSV 다운로드" style="background: none; border: none; cursor: pointer; padding: 0;">
+                    <img src="xlsdown.png" alt="Download CSV" style="width: 24px; height: 24px; display: block;">
+                </button>
+            </div>
+            <div class="scroll-area">
+                <table id="table-ref">
+                    <thead>
+                        <tr>
+                            <th class="diagonal-header">
+                                <span class="top-label">키</span>
+                                <span class="bottom-label">페이스</span>
+                            </th>
+                            <th data-h="150">150</th><th data-h="155">155</th><th data-h="160">160</th>
+                            <th data-h="165">165</th><th data-h="170">170</th><th data-h="175">175</th>
+                            <th data-h="180">180</th><th data-h="185">185</th><th data-h="190">190</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-ref"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 데이터 로직 동일
+    const rawRefData = [
+        {p:"3:44", s:224, h150:132, h155:136, h160:140, h165:144, h170:148, h175:153, h180:157, h185:161, h190:166},
+        {p:"4:00", s:240, h150:122, h155:126, h160:130, h165:135, h170:139, h175:143, h180:147, h185:151, h190:155},
+        {p:"4:21", s:261, h150:114, h155:118, h160:122, h165:126, h170:130, h175:134, h180:138, h185:142, h190:145},
+        {p:"4:40", s:280, h150:108, h155:112, h160:115, h165:119, h170:123, h175:127, h180:130, h185:134, h190:137},
+        {p:"5:00", s:300, h150:102, h155:106, h160:109, h165:113, h170:116, h175:120, h180:123, h185:127, h190:130},
+        {p:"5:17", s:317, h150:97,  h155:101, h160:104, h165:107, h170:110, h175:114, h180:117, h185:120, h190:123},
+        {p:"5:36", s:336, h150:93,  h155:96,  h160:99,  h165:102, h170:105, h175:109, h180:112, h185:115, h190:118},
+        {p:"5:54", s:354, h150:89,  h155:92,  h160:95,  h165:98,  h170:101, h175:104, h180:107, h185:110, h190:113},
+        {p:"6:13", s:373, h150:85,  h155:88,  h160:91,  h165:94,  h170:97,  h175:100, h180:103, h185:106, h190:108},
+        {p:"6:30", s:390, h150:82,  h155:85,  h160:88,  h165:91,  h170:93,  h175:96,  h180:99,  h185:102, h190:104}
+    ];
+
+    const heights = [150, 155, 160, 165, 170, 175, 180, 185, 190];
+    const strides = [0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50, 1.55, 1.60, 1.65, 1.70, 1.75, 1.80, 1.85];
+    const cadences = []; for(let i=150; i<=210; i+=5) cadences.push(i);
+
+    function calculatePace(cad, str) {
+        let minKm = 1000 / (cad * str);
+        let m = Math.floor(minKm), s = Math.round((minKm - m) * 60);
+        return s === 60 ? `${m+1}:00` : `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    const tbodyRef = document.getElementById('tbody-ref');
+    rawRefData.forEach(row => {
+        let tr = document.createElement('tr'); tr.dataset.ps = row.s;
+        let html = `<td><b>${row.p}</b></td>`;
+        heights.forEach(h => html += `<td data-h="${h}">${row['h' + h]}</td>`);
+        tr.innerHTML = html; tbodyRef.appendChild(tr);
+    });
+
+    const theadMainRow = document.querySelector('#table-main thead tr');
+    const tbodyMain = document.getElementById('tbody-main');
+    cadences.forEach(c => {
+        let th = document.createElement('th'); th.dataset.c = c; th.textContent = c; theadMainRow.appendChild(th);
+    });
+    strides.forEach(s => {
+        let tr = document.createElement('tr'); tr.dataset.s = s.toFixed(2);
+        tr.innerHTML = `<td><b>${s.toFixed(2)}</b></td>`;
+        cadences.forEach(c => tr.innerHTML += `<td>${calculatePace(c, s)}</td>`);
+        tbodyMain.appendChild(tr);
+    });
+
+    const inH = document.getElementById('input-height'), inP = document.getElementById('input-pace'), inS = document.getElementById('input-stride'), inC = document.getElementById('input-cadence');
+
+    function update() {
+        const h = +inH.value, p = +inP.value, s = +inS.value, c = +inC.value;
+        document.getElementById('disp-height').textContent = h;
+        document.getElementById('disp-pace').textContent = `${Math.floor(p/60)}:${(p%60).toString().padStart(2,'0')}`;
+        document.getElementById('disp-stride').textContent = s.toFixed(2);
+        document.getElementById('disp-cadence').textContent = c;
+
+        document.querySelectorAll('.highlight-cell, .highlight-row, .highlight-header').forEach(el => el.classList.remove('highlight-cell','highlight-row','highlight-header'));
+
+        let rows2 = [...tbodyRef.rows], tr2 = rows2.find(r => r.dataset.ps == rawRefData.reduce((prev, curr) => Math.abs(curr.s - p) < Math.abs(prev.s - p) ? curr : prev).s);
+        let bestH = heights.reduce((prev, curr) => Math.abs(curr - h) < Math.abs(prev - h) ? curr : prev);
+        if (tr2) {
+            tr2.classList.add('highlight-row');
+            let hIdx = heights.indexOf(bestH) + 1; 
+            tr2.children[hIdx].classList.add('highlight-cell');
+            document.getElementById('table-ref').querySelectorAll('th')[hIdx].classList.add('highlight-header');
+        }
+
+        let rows1 = [...tbodyMain.rows], bestR1 = rows1.reduce((prev, curr) => Math.abs(curr.dataset.s - s) < Math.abs(prev.dataset.s - s) ? curr : prev);
+        let bestCIdx = cadences.reduce((prev, curr, idx) => Math.abs(curr - c) < Math.abs(cadences[prev] - c) ? idx : prev, 0);
+        bestR1.classList.add('highlight-row');
+        document.querySelector('#table-main thead tr').querySelectorAll('th[data-c]')[bestCIdx].classList.add('highlight-header');
+        bestR1.children[bestCIdx + 1].classList.add('highlight-cell');
+    }
+
+    inH.oninput = inP.oninput = () => {
+        let h = +inH.value, p = +inP.value;
+        let bestRow = rawRefData.reduce((prev, curr) => Math.abs(curr.s - p) < Math.abs(prev.s - p) ? curr : prev);
+        let bestH = heights.reduce((prev, curr) => Math.abs(curr - h) < Math.abs(prev - h) ? curr : prev);
+        let bSt = bestRow['h' + bestH];
+        inS.value = bSt / 100; inC.value = Math.min(210, Math.round((1000 / (p/60)) / (bSt/100)));
+        update();
+    };
+    inS.oninput = () => { inC.value = Math.min(210, Math.round((1000 / (+inP.value/60)) / +inS.value)); update(); };
+    inC.oninput = () => { inS.value = ((1000 / (+inP.value/60)) / +inC.value).toFixed(2); update(); };
+
+    update();
+
+    function downloadCSV(tableId, filename) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        let csv = [];
+        const rows = table.querySelectorAll("tr");
+        for (let i = 0; i < rows.length; i++) {
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length; j++) {
+                let data = "";
+                if (cols[j].querySelector('.top-label')) {
+                     data = cols[j].querySelector('.top-label').innerText + " / " + cols[j].querySelector('.bottom-label').innerText;
+                } else {
+                     data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                }
+                row.push('"' + data + '"');
+            }
+            csv.push(row.join(","));
+        }
+        const csvFile = new Blob(["\uFEFF" + csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+        const link = document.createElement("a"); link.download = filename; link.href = window.URL.createObjectURL(csvFile);
+        link.style.display = "none"; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+</script>
+    </div>
+</body>
+</html>

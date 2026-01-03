@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>철인 킹코스 완주시간 시뮬레이터</title>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+        :root { --primary: #2563eb; --track-bg: #e5e7eb; --highlight: #fef08a; --disabled: #94a3b8; }
+ 
+        .summary { background: #1e293b; color: white; padding: 20px; border-radius: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center; }
+        .summary div span { display: block; font-size: 0.8em; opacity: 0.7; }
+        .summary div b { font-size: 1.4em; color: #60a5fa; }
+        .toggle-row { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        
+        /* 버튼 스타일 */
+        #btn-toggle { padding: 10px 20px; border-radius: 8px; border: 2px solid #cbd5e1; cursor: pointer; font-weight: bold; background: #fff; transition: all 0.3s; }
+        #btn-toggle.unlocked { background: #fef2f2; border-color: #ef4444; color: #ef4444; }
+
+        .box { border: 1px solid #e5e7eb; padding: 15px; border-radius: 10px; margin-bottom: 15px; position: relative; background: #fff; transition: opacity 0.3s; }
+        /* 비활성화 시 박스 연하게 */
+        .box.disabled-ui { opacity: 0.6; background: #f8fafc; }
+
+        .label-row { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+        
+        /* 슬라이더 기본 공통 스타일 */
+        input[type="range"] { width: 100%; cursor: pointer; height: 10px; -webkit-appearance: none; background: var(--track-bg); border-radius: 5px; outline: none; margin: 15px 0; pointer-events: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: var(--primary); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: relative; z-index: 3; pointer-events: auto; }
+
+        /* ★ 비활성화(Disabled) 슬라이더 스타일 ★ */
+        input[type="range"]:disabled { cursor: not-allowed; background: #cbd5e1 !important; }
+        input[type="range"]:disabled::-webkit-slider-thumb { background: var(--disabled); border-color: #e2e8f0; box-shadow: none; pointer-events: none; }
+
+        .range-track-wrapper { position: relative; margin: 20px 0; height: 10px; background: var(--track-bg); border-radius: 5px; }
+        .highlight-zone { display: block; height: 10px; background: rgba(37, 99, 235, 0.15); border-left: 2px solid var(--primary); border-right: 2px solid var(--primary); position: absolute; z-index: 1; pointer-events: none; border-radius: 5px; top: 0; }
+        .special-slider { position: absolute; top: -11px; left: 0; width: 100%; z-index: 2; background: transparent !important; margin: 0 !important; }
+        .ruler { display: flex; justify-content: space-between; font-size: 10px; color: #9ca3af; margin-top: 5px; padding: 0 2px; }
+        table { width: 100%; background: #fff; border-collapse: collapse; margin-top: 25px; font-size: 12px; }
+        th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: center; }
+        tr.active { background: var(--highlight) !important; outline: 2px solid var(--primary); font-weight: bold; }
+
+        /* 모바일 최적화 */
+        @media (max-width: 600px) {
+            .summary { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 15px; }
+            .summary div b { font-size: 1.2em; }
+            .label-row { font-size: 0.9rem; }
+            table { font-size: 11px; }
+            th, td { padding: 6px 2px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>🏊🚴🏃 철인 킹코스 완주시간 시뮬레이터</h1>
+    </div>
+    <div class="summary">
+        <div><span>완주시간</span><b id="d-total">12:00</b></div>
+        <div><span>수영</span><b id="d-sw">01:21</b></div>
+        <div><span>싸이클</span><b id="d-cy">06:08</b></div>
+        <div><span>런</span><b id="d-rn">04:14</b></div>
+    </div>
+    <div class="toggle-row"><button id="btn-toggle">종목간 기록 연동 중</button></div>
+    
+    <div class="box" id="box-total">
+        <div class="label-row">기준 완주 시간 설정<span id="v-total">12:00</span></div>
+        <input type="range" id="i-total" min="480" max="1020" step="20" value="720">
+        <div class="ruler" id="r-total"></div>
+    </div>
+
+    <div class="box">
+        <div class="label-row">🏊 수영 <span id="v-sw">01:21</span></div>
+        <div class="range-track-wrapper">
+            <div id="z-sw" class="highlight-zone"></div>
+            <input type="range" id="i-sw" min="40" max="140" value="81" class="special-slider">
+        </div>
+        <div class="ruler" id="r-sw"></div>
+    </div>
+    <div class="box">
+        <div class="label-row">🚴 싸이클 <span id="v-cy">06:08</span></div>
+        <div class="range-track-wrapper">
+            <div id="z-cy" class="highlight-zone"></div>
+            <input type="range" id="i-cy" min="240" max="540" value="368" class="special-slider">
+        </div>
+        <div class="ruler" id="r-cy"></div>
+    </div>
+    <div class="box">
+        <div class="label-row">🏃 마라톤 <span id="v-rn">04:14</span></div>
+        <div class="range-track-wrapper">
+            <div id="z-rn" class="highlight-zone"></div>
+            <input type="range" id="i-rn" min="150" max="450" value="254" class="special-slider">
+        </div>
+        <div class="ruler" id="r-rn"></div>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <div class="box" style="flex:1"><div class="label-row">T1 <span id="v-t1">10m</span></div><input type="range" id="i-t1" min="0" max="40" value="10"><div class="ruler" id="r-t1"></div></div>
+        <div class="box" style="flex:1"><div class="label-row">T2 <span id="v-t2">7m</span></div><input type="range" id="i-t2" min="0" max="40" value="7"><div class="ruler" id="r-t2"></div></div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 20px; margin-bottom: 5px;">
+        <button onclick="downloadCSV('target-table', 'ironman_simulation.csv')" title="CSV 다운로드" style="background: none; border: none; cursor: pointer; padding: 0;">
+            <img src="xlsdown.png" alt="Download CSV" style="width: 30px; height: 30px; display: block;">
+        </button>
+    </div>
+    <table id="target-table">
+        <thead><tr><th>완주시간</th><th>수영</th><th>T1+T2</th><th>싸이클</th><th>마라톤</th></tr></thead>
+        <tbody id="tbody"></tbody>
+    </table>
+</div>
+
+<script>
+const stats = [
+    {t:480, sw:52, t12:6, cy:255, rn:167}, {t:500, sw:54, t12:7, cy:262, rn:177},
+    {t:520, sw:57, t12:7, cy:269, rn:187}, {t:540, sw:59, t12:8, cy:278, rn:195},
+    {t:560, sw:62, t12:9, cy:288, rn:201}, {t:580, sw:64, t12:10, cy:298, rn:208},
+    {t:600, sw:67, t12:11, cy:308, rn:214}, {t:620, sw:70, t12:12, cy:318, rn:220},
+    {t:640, sw:72, t12:13, cy:328, rn:227}, {t:660, sw:74, t12:14, cy:338, rn:234},
+    {t:680, sw:77, t12:15, cy:348, rn:240}, {t:700, sw:79, t12:16, cy:358, rn:247},
+    {t:720, sw:81, t12:17, cy:368, rn:254}, {t:740, sw:83, t12:18, cy:377, rn:262},
+    {t:760, sw:85, t12:20, cy:386, rn:269}, {t:780, sw:88, t12:21, cy:396, rn:275},
+    {t:800, sw:90, t12:22, cy:405, rn:283}, {t:820, sw:92, t12:24, cy:415, rn:289},
+    {t:840, sw:95, t12:27, cy:425, rn:293}, {t:860, sw:97, t12:29, cy:434, rn:300},
+    {t:880, sw:100, t12:32, cy:443, rn:305}, {t:900, sw:102, t12:34, cy:452, rn:312},
+    {t:920, sw:105, t12:36, cy:461, rn:318}, {t:940, sw:107, t12:38, cy:470, rn:325},
+    {t:960, sw:110, t12:40, cy:480, rn:330}, {t:980, sw:113, t12:43, cy:488, rn:336},
+    {t:1000, sw:116, t12:46, cy:496, rn:342}, {t:1020, sw:118, t12:48, cy:505, rn:349}
+];
+
+let isLocked = true;
+const dom = {
+    total: document.getElementById('i-total'),
+    sw: document.getElementById('i-sw'), cy: document.getElementById('i-cy'), rn: document.getElementById('i-rn'),
+    t1: document.getElementById('i-t1'), t2: document.getElementById('i-t2'),
+    boxTotal: document.getElementById('box-total'),
+    btnToggle: document.getElementById('btn-toggle')
+};
+
+function fmt(m) { return `${Math.floor(m/60)}:${(m%60).toString().padStart(2,'0')}`; }
+
+function init() {
+    ['r-total','r-sw','r-cy','r-rn', 'r-t1', 'r-t2'].forEach(id => {
+        const r = document.getElementById(id);
+        if(id==='r-total') for(let i=480;i<=1020;i+=60) r.innerHTML+=`<span>${fmt(i)}</span>`;
+        if(id==='r-sw') for(let i=40;i<=140;i+=20) r.innerHTML+=`<span>${fmt(i)}</span>`;
+        if(id==='r-cy') for(let i=240;i<=540;i+=60) r.innerHTML+=`<span>${fmt(i)}</span>`;
+        if(id==='r-rn') for(let i=150;i<=450;i+=60) r.innerHTML+=`<span>${fmt(i)}</span>`;
+        if(id==='r-t1' || id==='r-t2') for(let i=0;i<=40;i+=10) r.innerHTML+=`<span>${i}m</span>`;
+    });
+    const tb = document.getElementById('tbody');
+    stats.forEach(s => tb.innerHTML += `<tr id="tr-${s.t}"><td>${fmt(s.t)}</td><td>${fmt(s.sw)}</td><td>${s.t12}m</td><td>${fmt(s.cy)}</td><td>${fmt(s.rn)}</td></tr>`);
+    syncUI();
+}
+
+function syncUI() {
+    const sw = parseInt(dom.sw.value), cy = parseInt(dom.cy.value), rn = parseInt(dom.rn.value), t1 = parseInt(dom.t1.value), t2 = parseInt(dom.t2.value);
+    const totalCalc = sw + cy + rn + t1 + t2;
+    document.getElementById('d-total').innerText = fmt(totalCalc);
+    document.getElementById('v-total').innerText = fmt(totalCalc);
+    dom.total.value = Math.round(totalCalc / 20) * 20;
+
+    ['sw','cy','rn'].forEach(id => document.getElementById('v-'+id).innerText = fmt(parseInt(dom[id].value)));
+    document.getElementById('v-t1').innerText = t1 + 'm';
+    document.getElementById('v-t2').innerText = t2 + 'm';
+
+    const rounded = dom.total.value;
+    document.querySelectorAll('tr').forEach(r => r.classList.remove('active'));
+    const row = document.getElementById('tr-' + rounded);
+    if(row) row.classList.add('active');
+
+    if (isLocked) {
+        const base = stats.find(s => s.t == rounded) || stats[12];
+        updateZone('sw', base.sw-15, base.sw+15, 40, 140);
+        updateZone('cy', base.cy-30, base.cy+30, 240, 540);
+        updateZone('rn', base.rn-30, base.rn+30, 150, 450);
+    } else {
+        ['sw','cy','rn'].forEach(id => document.getElementById('z-'+id).style.display = 'none');
+    }
+}
+
+function updateZone(id, min, max, start, end) {
+    const z = document.getElementById('z-' + id);
+    z.style.display = 'block';
+    z.style.left = Math.max(0, (min - start) / (end - start) * 100) + '%';
+    z.style.width = Math.min(100, (max - min) / (end - start) * 100) + '%';
+}
+
+dom.btnToggle.onclick = function() {
+    isLocked = !isLocked;
+    this.innerText = isLocked ? "종목간 기록 연동 중" : "종목간 기록 연동 해제 중";
+    
+    // 버튼 스타일 토글
+    this.classList.toggle('unlocked', !isLocked);
+    
+    // 메인 슬라이더 비활성화 및 스타일 처리
+    dom.total.disabled = !isLocked;
+    dom.boxTotal.classList.toggle('disabled-ui', !isLocked);
+    
+    syncUI();
+};
+
+let currentBase = stats[12], currentT1 = 10, currentT2 = 7;
+function setStartBase() {
+    const total = parseInt(dom.sw.value) + parseInt(dom.cy.value) + parseInt(dom.rn.value) + parseInt(dom.t1.value) + parseInt(dom.t2.value);
+    currentBase = stats.find(s => s.t == Math.round(total/20)*20) || stats[12];
+    currentT1 = parseInt(dom.t1.value);
+    currentT2 = parseInt(dom.t2.value);
+}
+
+[dom.sw, dom.cy, dom.rn, dom.t1, dom.t2].forEach(el => { el.onmousedown = el.ontouchstart = setStartBase; });
+
+dom.total.oninput = () => {
+    const s = stats.find(v => v.t == dom.total.value);
+    if(s) { dom.sw.value=s.sw; dom.cy.value=s.cy; dom.rn.value=s.rn; dom.t1.value=Math.floor(s.t12/2); dom.t2.value=Math.ceil(s.t12/2); }
+    syncUI();
+};
+
+dom.sw.oninput = () => {
+    if (isLocked) {
+        const diff = dom.sw.value - currentBase.sw;
+        if (Math.abs(diff) <= 15) {
+            dom.cy.value = Math.max(240, Math.min(540, currentBase.cy - Math.floor(diff/2)));
+            dom.rn.value = Math.max(150, Math.min(450, currentBase.rn - Math.ceil(diff/2)));
+        }
+    }
+    syncUI();
+};
+
+dom.cy.oninput = () => {
+    if (isLocked) {
+        const diff = dom.cy.value - currentBase.cy;
+        if (Math.abs(diff) <= 30) {
+            let swAdj = Math.floor(-diff * 0.1);
+            dom.sw.value = Math.max(40, Math.min(140, currentBase.sw + swAdj));
+            dom.rn.value = Math.max(150, Math.min(450, currentBase.rn - diff - swAdj));
+        }
+    }
+    syncUI();
+};
+
+dom.rn.oninput = () => {
+    if (isLocked) {
+        const diff = dom.rn.value - currentBase.rn;
+        if (Math.abs(diff) <= 30) {
+            let swAdj = Math.floor(-diff * 0.1);
+            dom.sw.value = Math.max(40, Math.min(140, currentBase.sw + swAdj));
+            dom.cy.value = Math.max(240, Math.min(540, currentBase.cy - diff - swAdj));
+        }
+    }
+    syncUI();
+};
+
+dom.t1.oninput = () => {
+    if (isLocked) {
+        const diff = dom.t1.value - currentT1;
+        if (Math.abs(diff) <= 5) dom.t2.value = Math.max(0, Math.min(40, currentT2 - diff));
+    }
+    syncUI();
+};
+
+dom.t2.oninput = () => {
+    if (isLocked) {
+        const diff = dom.t2.value - currentT2;
+        if (Math.abs(diff) <= 5) dom.t1.value = Math.max(0, Math.min(40, currentT1 - diff));
+    }
+    syncUI();
+};
+
+init();
+
+function downloadCSV(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    let csv = [];
+    const rows = table.querySelectorAll("tr");
+    for (let i = 0; i < rows.length; i++) {
+        let row = [], cols = rows[i].querySelectorAll("td, th");
+        for (let j = 0; j < cols.length; j++) {
+            let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+            row.push('"' + data + '"');
+        }
+        csv.push(row.join(","));
+    }
+    const csvFile = new Blob(["\uFEFF" + csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+    const link = document.createElement("a"); link.download = filename; link.href = window.URL.createObjectURL(csvFile);
+    link.style.display = "none"; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+</script>
+</body>
+</html>

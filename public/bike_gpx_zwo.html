@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Ride Workout Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+        :root { 
+            --zwift-orange: #fc6719; --strava-red: #fc4c02; --mywhoosh-yellow: #f6c303;
+            --panel-bg: #ffffff; --text-main: #333; --text-sub: #666; --border-color: #e0e0e0;
+        }
+
+        /* Body styling handled by bucheonTriStyle.css */
+        
+        .content-wrapper {
+            max-width: 1300px; margin: 0 auto; width: 100%;
+        }
+
+        /* Header and h1 handled by bucheonTriStyle.css */
+
+        .step-container { 
+            background: var(--panel-bg); border-radius: 16px; padding: 20px; margin-bottom: 25px; 
+            border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        }
+        .step-1 { border-top: 5px solid var(--strava-red); }
+        .step-2 { border-top: 5px solid var(--zwift-orange); }
+        .step-3 { border-top: 5px solid #4CAF50; }
+        .step-4 { border-top: 5px solid var(--mywhoosh-yellow); }
+
+        .step-title { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .step-number { background: #eee; color: #555; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; }
+
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        a.button, .content-wrapper button, .modal button { 
+            display: inline-flex; align-items: center; justify-content: center; padding: 12px 16px; 
+            background-color: #f0f0f0; color: #333; text-decoration: none; border-radius: 10px; 
+            border: 1px solid #ddd; cursor: pointer; font-weight: 600; flex: 1; min-width: 140px; transition: 0.2s;
+        }
+        a.button:hover, .content-wrapper button:hover, .modal button:hover { background-color: #e5e5e5; transform: translateY(-1px); }
+        .btn-primary { background-color: #333 !important; color: white !important; border: none !important; }
+
+        /* GPX 고저도 차트 */
+        #elevationWrapper { display: none; margin-top: 20px; padding: 15px; background: #fafafa; border-radius: 12px; border: 1px solid #eee; }
+        .chart-container { background: #fff; border-radius: 10px; padding: 10px; border: 1px solid #eee; margin-top: 10px; }
+
+        /* 분석 결과 영역 */
+        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .stat-group { background: #fdfdfd; border-radius: 12px; padding: 15px; border: 1px solid #eee; }
+        .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #ddd; font-size: 0.9rem; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: var(--text-sub); }
+        .stat-value { font-weight: 700; color: #111; }
+
+        input[type="number"], input[type="file"] { 
+            border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 0.95rem; 
+        }
+
+        /* 모달 스타일 */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .modal-content { background: white; margin: 10% auto; padding: 25px; border-radius: 20px; width: 85%; max-width: 550px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+        /* 📱 모바일 최적화 */
+        @media (max-width: 600px) {
+            .stats-container { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; }
+            .button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>🚴 Ride Workout Hub</h1>
+    </div>
+
+    <div class="content-wrapper">
+        <p style="color: var(--text-sub); font-size: 0.9rem; text-align: center; margin-bottom: 20px;">야외 GPX 기록을 스마트하게 변환하세요.</p>
+
+    <div class="step-container step-1">
+        <div class="step-title"><div class="step-number">1</div>Strava GPX 추출 및 확인</div>
+        <p style="font-size: 0.9rem; margin-bottom: 10px;">스트라바에서 경로 파일을 준비하고 미리보기를 확인하세요.</p>
+        <div class="button-group">
+            <a href="https://www.strava.com/athlete/training" target="_blank" class="button btn-primary" style="background:var(--strava-red) !important;">Strava 열기</a>
+        </div>
+        <div style="margin-top: 15px;">
+            <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.85rem; font-weight: bold;">GPX 파일 선택 (고저도 확인):</span>
+                <a href="부천트라이_아라뱃길_라이딩훈련_51km.gpx" download="부천트라이_아라뱃길_라이딩훈련_51km.gpx" style="font-size: 0.8rem; font-weight: normal;">샘플파일다운</a>
+            </label>
+            <input type="file" id="gpxInput" accept=".gpx" style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <div id="elevationWrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; font-size: 0.9rem;">⛰️ 코스 고저도 미리보기</span>
+                <span id="gpxInfo" style="font-size: 0.8rem; color: var(--strava-red); font-weight: bold;"></span>
+            </div>
+            <div class="chart-container" style="height: 180px;">
+                <canvas id="elevationChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="step-container step-2">
+        <div class="step-title"><div class="step-number">2</div>ZWO 변환</div>
+        <p style="font-size: 0.9rem; margin-bottom: 10px;">파일을 업로드하여 .zwo 워크아웃 파일로 변환합니다.</p>
+        <div class="button-group">
+            <a href="https://whatsonzwift.com/gpx-to-zwift-workout" target="_blank" class="button btn-primary" style="background:var(--zwift-orange) !important;">ZWO 컨버터 열기</a>
+            <button onclick="openModal()">💡 설정 가이드 보기</button>
+        </div>
+    </div>
+
+    <div class="step-container step-3">
+        <div class="step-title"><div class="step-number">3</div>분석 및 최적화</div>
+        <div style="background: #f1f3f5; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+            <div>내 FTP <input type="number" id="ftpInput" value="200" style="width:65px;"> W</div>
+            <div>내 체중 <input type="number" id="weightInput" value="70" style="width:65px;"> kg</div>
+        </div>
+        
+        <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: bold;">변환된 ZWO 파일 업로드:</span>
+            <a href="부천트라이_아라뱃길_라이딩훈련_51km.zwo" download="부천트라이_아라뱃길_라이딩훈련_51km.zwo" style="font-size: 0.8rem; font-weight: normal;">샘플파일다운</a>
+        </label>
+        <input type="file" id="zwoInput" accept=".zwo" style="width: 100%; box-sizing: border-box; margin-bottom: 10px;">
+        
+        <div id="resultArea" style="display:none;">
+            <div class="stats-container">
+                <div class="stat-group">
+                    <div class="stat-row"><span class="stat-label">Time (총 시간)</span><span class="stat-value" id="resTime">-</span></div>
+                    <div class="stat-row"><span class="stat-label">NP® (정규화 파워)</span><span class="stat-value" id="resNP">-</span></div>
+                    <div class="stat-row"><span class="stat-label">IF® (강도 지수)</span><span class="stat-value" id="resIF">-</span></div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-row"><span class="stat-label">Avg. Power (평균)</span><span class="stat-value" id="resAvgP">-</span></div>
+                    <div class="stat-row"><span class="stat-label">TSS® (훈련 부하)</span><span class="stat-value" id="resTSS">-</span></div>
+                    <div class="stat-row"><span class="stat-label">W/kg (체중비)</span><span class="stat-value" id="resWkg">-</span></div>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 280px; margin-top: 15px;">
+                <canvas id="workoutChart"></canvas>
+            </div>
+            <button id="downloadBtn" class="btn-primary" style="width:100%; margin-top:20px; height: 55px; background: #4CAF50 !important; font-size: 1.1rem;">마이우쉬 호환 ZWO 다운로드</button>
+        </div>
+    </div>
+
+    <div class="step-container step-4">
+        <div class="step-title"><div class="step-number">4</div>게임 폴더 배포</div>
+        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:10px;">각 게임의 워크아웃 폴더 경로입니다. 클릭하여 복사 후 탐색기에 붙여넣으세요.</p>
+        
+        <div class="button-group" style="margin-bottom: 15px;">
+            <button onclick="openDeployGuideModal()">📖 배포 가이드 보기</button>
+        </div>
+
+        <div class="path-card">
+            <div class="path-title" style="color:var(--mywhoosh-yellow);">🟡 MyWhoosh 경로</div>
+            <span class="path-text" id="p_mywhoosh">%USERPROFILE%\Documents\MyWhoosh\Workouts</span>
+            <button onclick="copyT('p_mywhoosh')" style="margin-top:8px; width:100%; padding:8px;">마이우쉬 경로 복사</button>
+        </div>
+
+        <div class="path-card" style="margin-top:15px;">
+            <div class="path-title" style="color:var(--zwift-orange);">🟠 Zwift 경로</div>
+            <span class="path-text" id="p_zwift">%USERPROFILE%\Documents\Zwift\Workouts</span>
+            <button onclick="copyT('p_zwift')" style="margin-top:8px; width:100%; padding:8px;">즈위프트 경로 복사</button>
+        </div>
+    </div>
+</div>
+
+    <div id="gModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📋 ZWO 컨버터 설정 가이드</h3>
+                <span onclick="closeModal()" style="font-size: 24px; cursor: pointer; color: #999;">&times;</span>
+            </div>
+            <div style="font-size: 0.95rem; line-height: 1.7;">
+                <h4 style="color: var(--zwift-orange); margin-bottom: 5px;">1. 기본 설정 (Rider data)</h4>
+                <p>• <b>FTP:</b> 정확한 파워를 입력해야 훈련 강도가 맞습니다.</p>
+                <p>• <b>Target intensity factor (IF):</b> <b>0.8</b> 정도가 가장 적당합니다.</p>
+                <p>• <b>Mass:</b> 라이더와 자전거 무게를 각각 입력하세요.</p>
+                <h4 style="color: var(--zwift-orange); margin-top: 15px; margin-bottom: 5px;">2. 고급 설정 (Advanced)</h4>
+                <p>• <b>CdA (공기저항):</b> 보통 0.3을 사용합니다.</p>
+                <p>• <b>Drivetrain loss:</b> 기어 손실 파워(약 3%)입니다.</p>
+                <p>• <b>Warm-up:</b> 시작 전 10분간의 몸풀기 구간 추가 여부입니다.</p>
+            </div>
+            <button class="btn-primary" onclick="closeModal()" style="width:100%; margin-top:20px; height: 45px;">확인했습니다</button>
+        </div>
+    </div>
+
+    <div id="deployGuideModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📖 ZWO 파일 배포 가이드</h3>
+                <span onclick="closeDeployGuideModal()" style="font-size: 24px; cursor: pointer; color: #999;">&times;</span>
+            </div>
+            <div style="font-size: 0.95rem; line-height: 1.7;">
+                <h4 style="color: var(--mywhoosh-yellow); margin-bottom: 5px;">🟡 MyWhoosh 파일 배포 </h4>
+                <p>즈위프트 파일(.zwo)을 구하셨다면, 마이우쉬가 설치된 PC의 아래 경로에 복사해서 넣으시면 됩니다.</p>
+                <p><b>경로:</b> <code style="background:#eee; padding: 2px 5px; border-radius:4px;">C:\Users\[사용자명]\Documents\MyWhoosh\Workouts</code></p>
+                <p>또는 <code>내 문서 &gt; MyWhoosh &gt; Workouts</code> 폴더를 찾으시면 됩니다.</p>
+                <p><b>주의사항:</b> 폴더가 없다면 직접 <code>Workouts</code>라는 이름으로 폴더를 만드셔도 됩니다.</p>
+                
+                <h4 style="color: var(--mywhoosh-yellow); margin-top: 20px; margin-bottom: 5px;">동기화 확인 방법</h4>
+                <ol style="padding-left: 20px; margin-top: 10px;">
+                    <li>위 경로에 .zwo 파일을 넣습니다.</li>
+                    <li>마이우쉬 게임을 실행합니다.</li>
+                    <li>워크아웃(Workouts) 메뉴로 들어갑니다.</li>
+                    <li>좌측 카테고리 리스트에서 "Custom" 또는 "Imported" 탭을 클릭합니다.</li>
+                    <li>방금 넣은 파일의 제목이 리스트에 뜨는지 확인합니다.</li>
+                </ol>
+
+                <h4 style="color: var(--mywhoosh-yellow); margin-top: 20px; margin-bottom: 5px;">모바일/태블릿(iOS, Android) 유저라면?</h4>
+                <p>모바일 기기는 PC처럼 폴더에 직접 접근하기가 까다롭습니다. 그래서 마이우쉬는 다음과 같은 우회 방법을 권장합니다.</p>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><b>PC에서 먼저 넣기:</b> PC 마이우쉬에서 한 번이라도 로컬 파일을 넣어 실행하면, 계정 클라우드에 저장되어 동일 계정으로 로그인한 태블릿이나 스마트폰에서도 해당 워크아웃이 나타납니다.</li>
+                    <li><b>공식 웹 에디터 이용:</b> MyWhoosh Workout Editor에 파일을 업로드(Import)하는 것이 모바일 유저에게는 가장 빠른 "동기화" 방법입니다.</li>
+                </ul>
+
+                <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+                <h4 style="color: var(--zwift-orange); margin-top: 20px; margin-bottom: 5px;">🟠 즈위프트 파일 배포 (로컬 동기화)</h4>
+                <p>마이우쉬는 클라우드 기반이지만, 즈위프트는 PC의 특정 폴더에 파일이 생기면 그걸 서버로 올리는 방식입니다.</p>
+                <ul style="padding-left: 20px; margin-top: 10px;">
+                    <li><b>동기화 원리:</b> PC나 Mac에서 <code>\Documents\Zwift\Workouts</code> 폴더에 .zwo 파일을 넣고 게임을 실행하면, 즈위프트 서버가 이를 감지하여 본인 계정의 클라우드에 저장합니다.</li>
+                    <li><b>결과:</b> 한 번 PC에서 인식시키면, 나중에 아이패드나 애플TV로 접속해도 'Custom Workouts' 카테고리에 해당 워크아웃이 나타납니다.</li>
+                </ul>
+            </div>
+            <button class="btn-primary" onclick="closeDeployGuideModal()" style="width:100%; margin-top:20px; height: 45px;">확인했습니다</button>
+        </div>
+    </div>
+
+    <script>
+        let elevChart = null; let workChart = null; let parsedSegs = []; let fName = ""; let map = null; let polyline = null;
+
+        // --- GPX 고저도 미리보기 로직 ---
+        document.getElementById('gpxInput').onchange = function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const xml = new DOMParser().parseFromString(ev.target.result, "text/xml");
+                const pts = xml.getElementsByTagName("trkpt");
+                let data = [], totalD = 0, pLat, pLon; let pathCoords = [];
+                for (let i = 0; i < pts.length; i++) {
+                    const ele = parseFloat(pts[i].getElementsByTagName("ele")[0]?.textContent || 0);
+                    const lat = parseFloat(pts[i].getAttribute("lat")), lon = parseFloat(pts[i].getAttribute("lon"));
+                    if (i > 0) totalD += haversine(pLat, pLon, lat, lon);
+                    data.push({ x: totalD.toFixed(2), y: ele });
+                    pathCoords.push({ lat: lat, lng: lon });
+                    pLat = lat; pLon = lon;
+                }
+                drawElev(data);
+
+                document.getElementById('elevationWrapper').style.display = 'block';
+                document.getElementById('gpxInfo').innerText = totalD.toFixed(1) + " km";
+            };
+            reader.readAsText(file);
+        };
+
+        function haversine(la1, lo1, la2, lo2) {
+            const R = 6371; const dLat = (la2 - la1) * Math.PI / 180; const dLon = (lo2 - lo1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function drawElev(data) {
+            const ctx = document.getElementById('elevationChart').getContext('2d');
+            if (elevChart) elevChart.destroy();
+            elevChart = new Chart(ctx, {
+                type: 'line', data: { datasets: [{ data, fill: true, borderColor: '#888', backgroundColor: 'rgba(200,200,200,0.3)', pointRadius: 0, borderWidth: 1 }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    interaction: { mode: 'index', intersect: false },
+                    scales: { x: { type: 'linear' }, y: { beginAtZero: false } }, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { title: c => `거리: ${c[0].parsed.x} km`, label: c => `고도: ${c.parsed.y} m` }
+                        }
+                    } 
+                }
+            });
+        }
+
+        // --- ZWO 분석 및 최적화 로직 ---
+        document.getElementById('zwoInput').onchange = function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            fName = file.name;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                parsedSegs = parseZWO(ev.target.result);
+                updateDisplay();
+                document.getElementById('resultArea').style.display = 'block';
+            };
+            reader.readAsText(file);
+        };
+
+        function parseZWO(xmlText) {
+            const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+            const workout = xml.getElementsByTagName("workout")[0];
+            const segs = []; if (!workout) return [];
+            for (let n of workout.children) {
+                if (["SteadyState", "Warmup", "CoolDown", "Ramp", "IntervalsT"].includes(n.tagName)) {
+                    if(n.tagName === "IntervalsT") {
+                        let r = parseInt(n.getAttribute("Repeat"));
+                        for(let i=0; i<r; i++) {
+                            segs.push({ d: parseFloat(n.getAttribute("OnDuration")), pL: parseFloat(n.getAttribute("OnPower")), pH: parseFloat(n.getAttribute("OnPower")) });
+                            segs.push({ d: parseFloat(n.getAttribute("OffDuration")), pL: parseFloat(n.getAttribute("OffPower")), pH: parseFloat(n.getAttribute("OffPower")) });
+                        }
+                    } else {
+                        segs.push({ d: parseFloat(n.getAttribute("Duration")), pL: parseFloat(n.getAttribute("PowerLow") || n.getAttribute("Power")), pH: parseFloat(n.getAttribute("PowerHigh") || n.getAttribute("Power")) });
+                    }
+                }
+            }
+            return segs;
+        }
+
+        function updateDisplay() {
+            const ftp = parseFloat(document.getElementById('ftpInput').value) || 200;
+            const weight = parseFloat(document.getElementById('weightInput').value) || 70;
+            let tSec = 0, aPSum = 0, nSum = 0;
+            parsedSegs.forEach(s => {
+                tSec += s.d; let avg = (s.pL + s.pH) / 2;
+                aPSum += (avg * s.d); nSum += (Math.pow(avg, 4) * s.d);
+            });
+            const avgP = aPSum / tSec, np = Math.pow(nSum / tSec, 0.25);
+            const h = Math.floor(tSec / 3600), m = Math.round((tSec % 3600) / 60);
+            
+            document.getElementById('resTime').innerText = `${h > 0 ? h + '시간 ' : ''}${m}분`;
+            document.getElementById('resNP').innerText = (np * ftp).toFixed(1) + " W";
+            document.getElementById('resAvgP').innerText = (avgP * ftp).toFixed(1) + " W";
+            document.getElementById('resIF').innerText = np.toFixed(2);
+            document.getElementById('resTSS').innerText = Math.round((tSec * ftp * np * np) / (ftp * 36));
+            document.getElementById('resWkg').innerText = ((avgP * ftp) / weight).toFixed(2);
+            drawWork(ftp);
+        }
+
+        function drawWork(ftp) {
+            const ctx = document.getElementById('workoutChart').getContext('2d');
+            let pts = [], cur = 0;
+            parsedSegs.forEach(s => {
+                pts.push({ x: cur / 60, y: s.pL * ftp }); cur += s.d;
+                pts.push({ x: cur / 60, y: s.pH * ftp });
+            });
+            if (workChart) workChart.destroy();
+            workChart = new Chart(ctx, {
+                type: 'line', data: { datasets: [{ data: pts, fill: true, pointRadius: 0, segment: { borderColor: c => getZC(c, ftp), backgroundColor: c => getZC(c, ftp, 0.3) }, borderWidth: 2 }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    interaction: { mode: 'index', intersect: false },
+                    scales: { 
+                        x: { 
+                            type: 'linear', 
+                            ticks: { callback: v => { const h=Math.floor(v/60), m=Math.floor(v%60); return (h>0?h+':':'')+(m<10?'0':'')+m; } } 
+                        }, 
+                        y: { beginAtZero: true, ticks: { callback: v => v+' W' } } 
+                    }, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { title: c => { const v=c[0].parsed.x, h=Math.floor(v/60), m=Math.floor(v%60); return `시간: ${(h>0?h+':':'')+(m<10?'0':'')+m}`; }, label: c => `파워: ${Math.round(c.parsed.y)} W` }
+                        }
+                    } 
+                }
+            });
+        }
+
+        function getZC(c, ftp, a = 1) {
+            if(!c.p0) return `rgba(200,200,200,${a})`;
+            const p = c.p0.parsed.y / ftp;
+            if (p < 0.60) return `rgba(150,150,150,${a})`;
+            if (p < 0.76) return `rgba(52,152,219,${a})`;
+            if (p < 0.90) return `rgba(46,204,113,${a})`;
+            if (p < 1.05) return `rgba(241,196,15,${a})`;
+            if (p < 1.19) return `rgba(230,126,34,${a})`;
+            return `rgba(231,76,60,${a})`;
+        }
+
+        function copyT(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
+            alert("경로가 복사되었습니다! 탐색기 주소창에 붙여넣으세요.");
+        }
+
+        function openModal() { document.getElementById('gModal').style.display = 'block'; }
+        function closeModal() { document.getElementById('gModal').style.display = 'none'; }
+
+        function openDeployGuideModal() { document.getElementById('deployGuideModal').style.display = 'block'; }
+        function closeDeployGuideModal() { document.getElementById('deployGuideModal').style.display = 'none'; }
+
+        document.getElementById('downloadBtn').onclick = function() {
+            let xml = `<?xml version="1.0" encoding="UTF-8"?><workout_file><name>Opt_${fName.replace('.zwo','')}</name><workout>`;
+            parsedSegs.forEach(s => { xml += `<SteadyState Duration="${s.d}" Power="${s.pH}"/>`; });
+            xml += `</workout></workout_file>`;
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([xml], {type: "text/xml"}));
+            a.download = "Optimized_" + fName; a.click();
+        };
+
+        document.getElementById('ftpInput').oninput = updateDisplay;
+        document.getElementById('weightInput').oninput = updateDisplay;
+    </script>
+</body>
+</html>

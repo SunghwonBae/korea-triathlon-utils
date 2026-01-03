@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마라톤 구간 페이스 시뮬레이터</title>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/fit-file-writer@1.0.0/dist/index.min.js"></script>
+    
+    <style>
+        :root {
+            --negative-color: #3498db;
+            --even-color: #2ecc71;
+            --positive-color: #e74c3c;
+            --track-bg: #dfe6e9;
+        }
+
+        .slider-container { margin-bottom: 40px; position: relative; padding: 0 10px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; color: #34495e; }
+        .slider-val { color: #d35400; font-size: 1.2em; font-family: monospace; }
+
+        input[type=range] {
+            width: 100%; cursor: pointer; height: 10px; border-radius: 5px; 
+            background: var(--track-bg); -webkit-appearance: none; appearance: none;
+        }
+
+        /* 전략 슬라이더 그라데이션 복구 */
+        #in-strategy {
+            background: linear-gradient(to right, var(--negative-color), var(--even-color), var(--positive-color)) !important;
+            height: 12px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 24px; height: 24px;
+            background: #fff; border: 3px solid #34495e; border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* 커스텀 눈금자 복구 */
+        .custom-ruler { position: relative; width: 100%; height: 20px; margin-top: 8px; pointer-events: none; }
+        .tick { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+        .tick::before { content: ''; width: 1px; height: 8px; background: #bdc3c7; margin-bottom: 3px; }
+        .tick span { font-size: 10px; color: #7f8c8d; white-space: nowrap; }
+        .tick.major::before { height: 12px; background: #7f8c8d; width: 2px; }
+        .tick.major span { font-weight: bold; color: #2c3e50; }
+
+        .summary-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
+        .sum-item span { display: block; font-size: 0.85em; color: #7f8c8d; }
+        .sum-item strong { display: block; font-size: 1.2em; color: #2c3e50; margin-top: 4px; }
+
+        .table-container { background: #fff; padding: 15px; border-radius: 12px; overflow-x: auto; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; text-align: center; }
+        th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .highlight-row { background-color: #fffde7; font-weight: bold; }
+        .finish-row { background-color: #e8f5e9; font-weight: bold; color: #2e7d32; }
+        .garmin-section { background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid #e9ecef; text-align: center; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .btn-garmin { background: #000; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-csv { background: #27ae60; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1>🏃‍♂️ 마라톤 구간 페이스 시뮬레이터</h1>
+    </div>
+
+    <div class="controls" style="background:#fff; padding:25px 15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:20px;">
+        
+        <div class="slider-container">
+            <div class="slider-label"><span>달릴 거리</span><span class="slider-val"><span id="disp-dist">42.2</span> km</span></div>
+            <input type="range" id="in-dist" min="5" max="42.195" step="0.1" value="42.195">
+            <div class="custom-ruler">
+                <div class="tick major" style="left: 0%"><span>5k</span></div>
+                <div class="tick" style="left: 13.4%"><span>10k</span></div>
+                <div class="tick major" style="left: 43.2%"><span>Half</span></div>
+                <div class="tick" style="left: 67.2%"><span>30k</span></div>
+                <div class="tick major" style="left: 100%"><span>Full</span></div>
+            </div>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>목표 완주 시간</span><span class="slider-val" id="disp-time">4:00:00</span></div>
+            <input type="range" id="in-time" min="10" max="420" step="1" value="240">
+            <div class="custom-ruler">
+                <div class="tick major" style="left: 0%"><span>0h</span></div>
+                <div class="tick" style="left: 28.5%"><span>2h</span></div>
+                <div class="tick major" style="left: 57.1%"><span>4h</span></div>
+                <div class="tick" style="left: 85.7%"><span>6h</span></div>
+                <div class="tick major" style="left: 100%"><span>7h</span></div>
+            </div>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>평균 페이스</span><span class="slider-val" id="disp-pace">5'41"/km</span></div>
+            <input type="range" id="in-pace" min="150" max="720" step="1" value="341" style="direction: rtl;">
+            <div style="display:flex; justify-content:space-between; font-size:0.75em; color:#95a5a6; margin-top:8px;">
+                <span>🐢 Slow (12:00)</span>
+                <span>🚀 Fast (2:30)</span>
+            </div>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>스플릿 전략</span><span class="slider-val" id="disp-strategy">Even</span></div>
+            <input type="range" id="in-strategy" min="-120" max="120" step="5" value="0">
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <div class="sum-item"><span>시작 페이스</span><strong id="sum-start">0'00"</strong></div>
+        <div class="sum-item"><span>평균 페이스</span><strong id="strong-avg-pace">0'00"</strong></div>
+        <div class="sum-item"><span>마지막 페이스</span><strong id="sum-end">0'00"</strong></div>
+    </div>
+
+    <div class="garmin-section">
+        <h3>기기로 전략 내보내기</h3>
+        <div class="btn-group">
+            <button class="btn-garmin" onclick="exportToFit()">FIT 다운로드</button>
+            <button class="btn-csv" onclick="exportToCSV()">가민 업로드용 CSV</button>
+        </div>
+        <p style="font-size: 0.8em; margin-top: 10px; color: #666;">FIT은 기기에 직접 넣고, CSV는 가민 커넥트 웹에서 활용하세요.</p>
+    </div>
+
+    <div class="table-container">
+        <table id="split-table">
+            <thead><tr><th>거리(km)</th><th>구간 페이스</th><th>누적 시간</th></tr></thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    const elDist = document.getElementById('in-dist'), elTime = document.getElementById('in-time');
+    const elPace = document.getElementById('in-pace'), elStrat = document.getElementById('in-strategy');
+    const dDist = document.getElementById('disp-dist'), dTime = document.getElementById('disp-time');
+    const dPace = document.getElementById('disp-pace'), dStrat = document.getElementById('disp-strategy');
+    const sStart = document.getElementById('sum-start'), sAvg = document.getElementById('strong-avg-pace'), sEnd = document.getElementById('sum-end');
+
+    let currentSplits = [];
+
+    function fmtPace(sec) {
+        let m = Math.floor(sec / 60), s = Math.round(sec % 60);
+        return `${m}'${s.toString().padStart(2, '0')}"`;
+    }
+    function fmtTotalTime(min) {
+        let h = Math.floor(min / 60), m = Math.floor(min % 60), s = Math.round((min * 60) % 60);
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function update() {
+        const d = parseFloat(elDist.value), p = parseFloat(elPace.value), st = parseFloat(elStrat.value);
+        const totalMin = (d * p) / 60;
+        currentSplits = [];
+
+        dDist.textContent = d.toFixed(2);
+        dTime.textContent = fmtTotalTime(totalMin);
+        dPace.textContent = fmtPace(p) + "/km";
+
+        dStrat.textContent = st === 0 ? "Even" : (st < 0 ? `Negative (${Math.abs(st)}s)` : `Positive (${st}s)`);
+        dStrat.style.color = st === 0 ? "var(--even-color)" : (st < 0 ? "var(--negative-color)" : "var(--positive-color)");
+
+        let startP = p - (st / 2), endP = p + (st / 2);
+        sStart.textContent = fmtPace(startP);
+        sAvg.textContent = fmtPace(p);
+        sEnd.textContent = fmtPace(endP);
+
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = "";
+        let cumS = 0, slope = (d > 1) ? st / (d - 1) : 0;
+        
+        for (let i = 1; i <= Math.floor(d); i++) {
+            let curP = startP + ((i - 1) * slope);
+            cumS += curP;
+            currentSplits.push({km: i, pace: curP, cumulative: cumS});
+
+            let tr = document.createElement('tr');
+            if(i % 5 === 0) tr.className = 'highlight-row';
+            tr.innerHTML = `<td>${i} km</td><td>${fmtPace(curP)}</td><td>${fmtTotalTime(cumS/60)}</td>`;
+            tbody.appendChild(tr);
+        }
+        if (d % 1 > 0) {
+            let lastP = startP + (Math.floor(d) * slope);
+            cumS += lastP * (d % 1);
+            let tr = document.createElement('tr');
+            tr.className = 'finish-row';
+            tr.innerHTML = `<td>Finish (${d}km)</td><td>${fmtPace(lastP)}</td><td>${fmtTotalTime(cumS/60)}</td>`;
+            tbody.appendChild(tr);
+        }
+    }
+    // CSV 내보내기 (안전한 대체 방법)
+    function exportToCSV() {
+        let csvContent = "Distance,Target Pace,Cumulative Time\n";
+        currentSplits.forEach(s => {
+            csvContent += `${s.km},${fmtPace(s.pace)},${new Date(s.cumulative * 1000).toISOString().substr(11, 8)}\n`;
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "marathon_strategy.csv";
+        link.click();
+    }
+
+    // FIT 내보내기 수정
+    function exportToFit() {
+        // 라이브러리 존재 여부 다시 확인
+        const FitWriter = window.FitFileWriter || (window.default && window.default.FitFileWriter);
+        
+        if (!FitWriter) {
+            alert("라이브러리 로드 실패. CSV 기능을 이용해주세요.");
+            return;
+        }
+
+        try {
+            const writer = new FitWriter();
+            // 가민이 인식할 수 있는 최소한의 세션 정보 추가
+            currentSplits.forEach(s => {
+                writer.addRecord({
+                    timestamp: new Date(),
+                    distance: s.km * 1000,
+                    enhanced_speed: 1000 / s.pace // m/s
+                });
+            });
+
+            const blob = new Blob([writer.write()], { type: 'application/octet-stream' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "PacePro_Strategy.fit";
+            link.click();
+        } catch (e) {
+            console.error(e);
+            alert("FIT 파일 생성 중 오류 발생: " + e.message);
+        }
+    }
+
+
+    elDist.oninput = () => { elTime.value = (elDist.value * elPace.value) / 60; update(); };
+    elTime.oninput = () => { elPace.value = (elTime.value * 60) / elDist.value; update(); };
+    elPace.oninput = () => { elTime.value = (elDist.value * elPace.value) / 60; update(); };
+    elStrat.oninput = update;
+    update();
+</script>
+</body>
+</html>

@@ -1,0 +1,1319 @@
+/* ==========================================================================
+   1. 초기화 및 전역 설정
+   ========================================================================== */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+:root {
+    --primary-blue: #0A317E; 
+    --accent-red: #8E1F29;   
+    --header-bg: #dce1f0;   
+    --bg-light: #f4f4f9;    
+    --border-light: #eee;
+    --text-dark: #333;
+    --white: #ffffff;
+}
+
+body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    font-size: 0.85em;
+    padding: 10px; 
+    line-height: 1.4;
+    overflow-y: auto;
+    /* 🚨 수정: 고정 헤더(높이 60px)가 콘텐츠를 가리지 않도록 상단 패딩 추가 */
+    padding-top: 70px;
+}
+
+.container {
+    max-width: 1300px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px; 
+    height: auto;
+}
+
+
+/* ==========================================================================
+   2. 헤더 섹션 (로고 및 타이틀 겹치기)
+   ========================================================================== */
+.header-section {
+    /* 🚨 수정: position:fixed로 상단 고정 */
+    position: fixed;
+    top: 0;          
+    left: 0;         
+    width: 100%;     
+    
+    padding: 10px 0; /* 좌우는 컨테이너에서 처리되므로 0으로 변경 */
+    
+    margin-bottom: 0; /* 고정되었으므로 margin-bottom 제거 */
+    border-bottom: 2px solid var(--primary-blue);
+    
+    /* 🚨 추가: 메뉴와 타이틀의 배경색 */
+    background-color: var(--header-bg); 
+    z-index: 9500; /* 로딩창(9000)보다 높게 */
+    
+    /* 🚨 추가: 내부 콘텐츠 높이를 최소화하여 메뉴와 h1만 덮도록 설정 */
+    height: 60px; /* 메뉴 버튼 높이(40px) + 상하 패딩(10px*2) */
+
+    flex-shrink: 0;
+}
+
+
+/* ========================================================= */
+/* 타이틀 스타일 (앱 헤더 스타일로 변경) */
+/* ========================================================= */
+h1 {
+    color: var(--primary-blue);
+    position: absolute;
+    
+    /* 위치 변경: 하단 오른쪽 -> 상단 왼쪽 (메뉴 버튼 옆) */
+    top: 13px;       /* 메뉴 버튼의 top과 동일하게 맞춤 */
+    left: 60px;      /* 버튼위치(10px) + 버튼폭(40px) + 간격(10px) */
+    bottom: auto;    /* 기존 하단 위치 초기화 */
+    right: auto;     /* 기존 우측 위치 초기화 */
+    
+    /* 텍스트 정렬 및 배치 */
+    margin: 0;
+    text-align: left;
+    
+    /* 폰트 스타일 */
+    font-size: 1.8em;  /* 모바일에서 한 줄에 나오도록 크기 약간 축소 */
+    font-weight: 800;  /* 두껍게 */
+    
+    /* 가독성 확보 (배경 이미지 위에 글씨가 올라가므로 흰색 테두리 효과 추가) */
+    text-shadow: 
+        -1px -1px 0 #fff,  
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff;
+        
+    z-index: 99; /* 메뉴 버튼보다는 낮고, 이미지보다는 높게 */
+    
+    /* 긴 제목 말줄임 처리 (화면이 너무 좁을 경우 대비) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 70px); /* 화면 폭에서 버튼 영역 제외 */
+}
+
+/* ==========================================================================
+   3. 컨트롤러 (버튼 및 안내문)
+   ========================================================================== */
+.sort-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.sort-buttons button {
+    background-color: var(--white);
+    color: var(--primary-blue);
+    border: 1px solid var(--primary-blue);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    font-size: 0.9em;
+}
+
+.sort-buttons button:hover { background-color: #e6e6f2; }
+
+.sort-buttons button.active {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    box-shadow: 0 2px 4px rgba(10, 49, 126, 0.4);
+}
+
+.explanation-text {
+    color: var(--primary-blue);
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding: 5px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    flex-shrink: 0;
+}
+
+/* 더미 가로 스크롤바 */
+.dummy-scroll-wrapper {
+    overflow-x: scroll;
+    overflow-y: hidden; 
+    height: 17px; 
+    margin-bottom: 5px; 
+    flex-shrink: 0;
+}
+.dummy-scroll {
+    min-width: 1200px;
+    height: 1px;
+}
+
+/* ==========================================================================
+   4. 색상 범례
+   ========================================================================== */
+.pace-legend-container {
+    background: var(--white);
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    flex-shrink: 0;
+}
+
+.pace-legend-title {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.pace-legend-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.legend-group {
+    display: flex;
+    align-items: center;
+    background: #f1f3f5;
+    padding: 4px 8px;
+    border-radius: 6px;
+    gap: 3px;
+}
+
+.group-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    display: inline-block;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* ==========================================================================
+   5. 메인 데이터 테이블
+   ========================================================================== */
+.vertical-scroll-container {
+    max-height: 80vh; 
+    flex-grow: 1;
+    min-height: 0; 
+    background-color: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.scroll-container {
+    overflow-x: scroll;
+    max-width: 100%;
+}
+
+.athlete-vdot-table {
+    width: 100%;
+    min-width: 1200px;
+    border-collapse: collapse;
+}
+
+.athlete-vdot-table th, .athlete-vdot-table td {
+    border: 1px solid var(--border-light);
+    padding: 6px 8px; 
+    vertical-align: middle;
+    text-align: center;
+    height: auto;
+    white-space: nowrap;
+}
+
+.athlete-vdot-table thead {
+    position: sticky;
+    top: 0; 
+    z-index: 30;
+}
+
+.athlete-vdot-table th {
+    background-color: var(--header-bg);
+    font-weight: bold;
+    color: var(--primary-blue);
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+.athlete-vdot-table tbody tr:hover { background-color: #f7f7fa; }
+
+/* run_month_detail.html 전용 VDOT 테이블 (PC min-width 제거) */
+.month-vdot-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.month-vdot-table th, .month-vdot-table td {
+    border: 1px solid var(--border-light);
+    padding: 6px 8px; 
+    vertical-align: middle;
+    text-align: center;
+    height: auto;
+    white-space: nowrap;
+}
+
+.month-vdot-table thead {
+    position: sticky;
+    top: 0; 
+    z-index: 30;
+}
+
+.month-vdot-table th {
+    background-color: var(--header-bg);
+    font-weight: bold;
+    color: var(--primary-blue);
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+.month-vdot-table tbody tr:hover { background-color: #f7f7fa; }
+
+.vdot-score { font-size: 1.0em; font-weight: bold; color: var(--accent-red); }
+.pace-value { font-weight: 600; color: var(--primary-blue); }
+
+/* 고정 컬럼 스타일 */
+.fixed-column-bg { background-color: var(--white) !important; }
+.athlete-vdot-table thead .fixed-column-bg { background-color: var(--header-bg) !important; z-index: 30; }
+
+/* 고정 컬럼 (TD) */
+.fixed-name { 
+    position: sticky; 
+    left: 0; 
+    z-index: 10; 
+    min-width: 80px; 
+    border-right: 2px solid #ccc; 
+}
+/* 🚨 최종 수정: fixed-name 내부의 strong 태그를 flex column으로 만들어 수직 정렬 */
+.fixed-name strong {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+}
+.fixed-vdot { position: sticky; left: 80px; z-index: 9; min-width: 80px; }
+.fixed-distance { position: sticky; left: 160px; z-index: 8; min-width: 80px; }
+.fixed-totaltime { position: sticky; left: 240px; z-index: 7; min-width: 100px; }
+.fixed-count { position: sticky; left: 340px; z-index: 6; min-width: 80px; }
+.fixed-pace { position: sticky; left: 420px; z-index: 5; min-width: 100px; border-right: 2px solid #ccc; }
+
+/* ==========================================================================
+   6. 활동 목록 스타일
+   ========================================================================== */
+.runs-scroll-wrapper {
+    display: flex; 
+    padding: 5px 0;
+    gap: 6px; 
+    white-space: nowrap; 
+    height: 100%; 
+    align-items: center; 
+}
+
+.recent-run-item {
+    flex: 0 0 140px;
+    min-width: 140px;
+    background: #f7f7fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px; 
+    font-size: 0.8em; 
+    text-align: left;
+    display: inline-block; 
+}
+
+.run-name { 
+    font-weight: 600; 
+    display: block; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    color: var(--primary-blue);
+} 
+.run-stats { margin: 1px 0 0 0; font-size: 0.9em; }
+
+/* ==========================================================================
+   7. VDOT 정보 섹션
+   ========================================================================== */
+.vdot-info-section {
+    max-width: 1300px;
+    margin: 30px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    line-height: 1.6;
+    color: #333;
+}
+
+.vdot-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+}
+
+.vdot-header h3 { font-size: 1.5em; margin: 0 0 10px 0; color: var(--primary-blue); }
+.vdot-header p { width: 100%; font-size: 0.95rem; color: #555; margin: 15px 0 0 0; }
+.vdot-control { display: flex; align-items: center; gap: 10px; }
+
+/* VDOT 테이블 */
+.vdot-table-wrapper {      
+    width: 100%; 
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #dee2e6; 
+    margin-top: 15px;
+}
+#vdotTable {
+    width: 100% !important;
+    min-width: 600px;
+    border-collapse: collapse !important;
+    table-layout: fixed;
+    background-color: var(--white);
+}
+
+#vdotTable th, #vdotTable td {
+    border: 1px solid #dee2e6 !important;
+    text-align: center !important;
+    padding: 12px 5px !important;
+    vertical-align: middle;
+}
+
+#vdotTable th {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap !important;
+}
+
+#vdotTable td:first-child { font-weight: bold; color: #2563eb; background-color: #f8faff; }
+
+/* 설명 박스 */
+.pace-features, .vdot-notes {
+    margin-top: 30px;
+    padding: 25px;
+    border-radius: 12px;
+}
+.pace-features { background-color: #fefce8; border: 1px solid #fef08a; }
+.vdot-notes { background-color: #fff1f2; border: 1px solid #fecdd3; font-size: 1.0em; }
+
+.pace-features h3, .vdot-notes h3 { margin-top: 0; font-size: 1.1rem; color: var(--primary-blue); margin-bottom: 15px; }
+.pace-features ul, .vdot-notes ul { list-style: none; padding-left: 0; margin: 0; }
+.pace-features li, .vdot-notes li { margin-bottom: 8px; padding-left: 15px; position: relative; line-height: 1.5; }
+.pace-features ul li::before, .vdot-notes ul li::before {
+    content: "•"; color: var(--primary-blue); font-weight: bold; display: inline-block; width: 1em; margin-left: -1em;
+}
+.vdot-notes strong { color: var(--accent-red); }
+
+/* ==========================================================================
+   8. 페이스 그라데이션 클래스 (Pace Colors - 원본 값 복구 완료)
+   ========================================================================== */
+.pace-gradient-1 { background-color: #e53e3e !important; color: white !important; } 
+.pace-gradient-2 { background-color: #fc8181 !important; color: #333333 !important; } 
+.pace-gradient-3 { background-color: #feb2b2 !important; color: #333333 !important; } 
+
+.pace-gradient-4 { background-color: #ff6600 !important; color: white !important; } 
+.pace-gradient-5 { background-color: #ff9933 !important; color: #333333 !important; } 
+.pace-gradient-6 { background-color: #ffc266 !important; color: #333333 !important; } 
+
+.pace-gradient-7 { background-color: #d69e2e !important; color: #333333 !important; } 
+.pace-gradient-8 { background-color: #f6e05e !important; color: #333333 !important; } 
+.pace-gradient-9 { background-color: #fdf3a5 !important; color: #333333 !important; } 
+
+.pace-gradient-10 { background-color: #38a169 !important; color: white !important; } 
+.pace-gradient-11 { background-color: #68d391 !important; color: #333333 !important; } 
+.pace-gradient-12 { background-color: #90f0c0 !important; color: #333333 !important; } 
+
+.pace-gradient-13 { background-color: #3182ce !important; color: white !important; } 
+.pace-gradient-14 { background-color: #63b3ed !important; color: #333333 !important; } 
+.pace-gradient-15 { background-color: #90cdf4 !important; color: #333333 !important; } 
+
+.pace-gradient-16 { background-color: #5a67d8 !important; color: white !important; } 
+.pace-gradient-17 { background-color: #8099e7 !important; color: white !important; } 
+.pace-gradient-18 { background-color: #a7b6f7 !important; color: #333333 !important; } 
+
+.pace-gradient-19 { background-color: #805ad5 !important; color: white !important; } 
+.pace-gradient-20 { background-color: #b794f4 !important; color: #333333 !important; } 
+.pace-gradient-21 { background-color: #d6bcfa !important; color: #333333 !important; } 
+.pace-gradient-22 { background-color: #eae3fb !important; color: #333333 !important; } 
+
+/* ==========================================================================
+   9. 모달 및 차트 스타일 (최종 확정)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--white);
+    padding: 15px; 
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+    
+    width: 95%;
+    max-width: 1000px;
+    max-height: 95vh; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+}
+/* 모달 내부 차트들을 담는 래퍼 추가 */
+.modal-body-wrapper {
+    flex-grow: 1; /* 남은 공간을 채움 */
+    overflow-y: auto; /* 내용이 많아지면 스크롤 가능 */
+    padding: 5px 0;
+    display: flex; /* 두 차트 박스를 나란히 배열하기 위해 flex 사용 */
+    flex-wrap: wrap;
+    gap: 15px; /* 차트 박스 사이의 간격 */
+    justify-content: space-between;
+}
+/* ------------------------------------------------ */
+/* 🌟 index.html 모달 전용 개별 차트 박스 스타일 */
+/* ------------------------------------------------ */
+.modal-chart-box {
+    /* run_analysis.html의 차트 박스 스타일과 통일 */
+    background-color: var(--white); /* 흰색 배경 */
+    border: 1px solid var(--border-light); /* 부드러운 구분선 */
+    border-radius: 8px; /* 둥근 모서리 */
+    padding: 15px; /* 내부 여백 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* 은은한 그림자 */
+    transition: all 0.3s ease;
+    
+    flex: 1 1 calc(50% - 7.5px); /* 데스크톱: 50% 너비, gap 15px 반영 */
+    min-width: 300px; /* 최소 너비 설정 */
+}
+
+.modal-chart-box h4 {
+    text-align: center;
+    color: var(--primary-blue);
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+
+/* ------------------------------------------------ */
+/* run_analysis.html 및 analysis.html의 차트 박스 스타일 재정의 */
+/* ------------------------------------------------ */
+.chart-box {
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px; /* run_analysis, analysis.html 차트 간격 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+/* --- 닫기 버튼 기본 (로그인 모달 등 기존 스타일 유지) --- */
+.modal-content .close-btn {
+    position: absolute;
+    top: 15px;     /* 기존 위치 고정 */
+    right: 15px;   /* 기존 위치 고정 */
+    font-size: 24px;
+    color: #999;
+    background: none;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 100;
+    transform: none !important; /* 중앙 정렬 방지 */
+}
+
+/* --- 차트 모달 전용 헤더 설정 (구조 분리) --- */
+.modal-header {
+    display: flex;
+    align-items: flex-start; /* 제목이 길어져도 위쪽 기준 */
+    position: relative;
+    padding: 10px 40px 10px 0; /* 오른쪽 버튼 공간 확보 */
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 10px;
+}
+
+#chartTitle {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-blue);
+    word-break: keep-all; /* 단어 단위 줄바꿈 */
+    line-height: 1.4;
+}
+
+/* 닫기 버튼: login-modal-content와 chartModal 양쪽 모두에 안전하게 적용 */
+
+
+/* 로그인 모달용 개별 설정 (높이 망가짐 방지) */
+.login-modal-content {
+    background: white;
+    padding: 30px 20px;
+    border-radius: 15px;
+    width: 320px !important; 
+    height: auto !important; /* 🚨 내용만큼만 높이 차지 */
+    position: relative;
+    display: block;
+}
+/* 로그인 모달 안의 버튼은 헤더가 없으므로 top 위치 조정 */
+.login-modal-content .close-btn {
+    top: 20px !important;
+    transform: none;
+}
+
+/* 타이틀 크기 최종 수정 (1.5em) */
+.modal-header h3 {
+    margin: 0 !important; 
+    font-size: 1.5em; 
+}
+
+#chartTitle {
+    color: var(--primary-blue);
+}
+
+.close-btn {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+.close-btn:hover { color: var(--accent-red); }
+
+/* ------------------------------------------------ */
+/* 🌟 통합된 차트 박스 스타일: analysis.html, run_analysis.html, index.html 모달에 사용 */
+/* ------------------------------------------------ */
+.chart-box {
+    background-color: var(--white); /* 배경색을 흰색으로 명확하게 설정 */
+    border: 1px solid var(--border-light); /* #eee로 부드러운 구분 */
+    border-radius: 8px; /* 둥근 모서리 */
+    padding: 15px; /* 내부 여백 */
+    margin: 10px 0; /* 상하 여백 조정 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* 은은한 그림자 */
+    transition: all 0.3s ease;
+    width: 100%; /* flex 컨테이너 내부에서 100% 폭 사용 */
+}
+
+.chart-box h3 {
+    text-align: center;
+    color: var(--text-dark);
+    margin-bottom: 15px; /* 제목 아래 여백 조정 */
+    font-size: 1.2em; /* 크기 조정 */
+}
+
+/* ------------------------------------------------ */
+/* run_analysis.html 의 차트 행 스타일: .chart-box 스타일을 상속받음 */
+/* ------------------------------------------------ */
+.chart-row {
+    margin-bottom: 20px;
+    /* run_analysis.html에 있는 chart-row는 이제 chart-box의 스타일을 상속받습니다. */
+    /* run_analysis.html 파일의 chart-row 클래스에 .chart-box 클래스를 추가해야 합니다. */
+}
+
+/* run_analysis.html 및 analysis.html의 차트 제목 및 설명 스타일 */
+.chart-header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    color: var(--primary-blue);
+}
+.chart-desc {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+/* analysis.html Footer 스타일 */
+.analysis-footer {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.8em;
+    color: #999;
+    border-top: 1px solid var(--border-light);
+    margin-top: 20px;
+}
+
+
+/* ------------------------------------------------ */
+/* index.html 모달의 차트 컨테이너 스타일 재정의: .chart-box 스타일을 상속받음 */
+/* ------------------------------------------------ */
+#chartContainer {
+    /* 기존 스타일 삭제 및 .chart-box 스타일 상속 */
+    background-color: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 8px; 
+    padding: 15px; 
+    margin: 10px 0; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+    transition: all 0.3s ease;
+}
+
+#chartContainer h3 {
+    text-align: center;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.chart-section {
+    height: calc(45vh - 40px); 
+    margin-bottom: 10px;
+}
+.chart-section h4 { margin: 5px 0; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   9-1. 트라이애슬론 스타일 배지 (Triathlon Style Badge)
+   ========================================================================== */
+
+/* 공통 배지 스타일 */
+.tss-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #fff; /* 기본 흰색 글자 */
+    min-width: 35px;
+}
+
+/* 구간별 색상 정의 */
+.tss-mid {
+    background-color: #48bb78; /* 초록: 적정 (20-50) */
+}
+
+.tss-high {
+    background-color: #ed8936; /* 주황: 강함 (50-100) */
+}
+
+.tss-extreme {
+    background-color: #f56565; /* 빨강: 매우 강함 (100+) */
+    box-shadow: 0 0 5px rgba(245, 101, 101, 0.5); /* 강조 효과 */
+}
+
+.tss-low-value {
+    background-color: #e6c758;
+}
+/* ==========================================================================
+   10. 미디어 쿼리 (모바일 최적화)
+   ========================================================================== */
+
+/* 📱 1000px 이하 */
+@media (max-width: 1000px) {
+    body { font-size: 0.75em; padding: 5px 10px; }
+    .header-logo { height: 150px;}
+    h1 { font-size: 1.8em; bottom: 5px; right: 5px; }
+
+    .athlete-vdot-table th, .athlete-vdot-table td { padding: 4px 6px; font-size: 0.9em; height: 35px; }
+    .recent-run-item { min-width: 130px; flex: 0 0 130px; padding: 3px; font-size: 0.9em; }
+    .run-stats { margin: 0; }
+    
+    .sort-buttons button { padding: 4px 8px; font-size: 0.8em; }
+    .vdot-info-section { padding: 15px 10px; }
+    .vdot-pace-table th, .vdot-pace-table td { padding: 6px; font-size: 0.75em; }
+    .vdot-notes { font-size: 0.9em; padding: 10px; }
+
+    /* 틀 고정 위치 조정 */
+    .fixed-name { width: 50px; min-width: 50px; left: 0; }
+    .fixed-vdot { width: 50px; min-width: 50px; left: 50px; }
+    .fixed-distance { width: 50px; min-width: 50px; left: 100px; }
+    .fixed-totaltime { width: 70px; min-width: 70px; left: 150px; }
+    .fixed-count { width: 50px; min-width: 50px; left: 220px; }
+    .fixed-pace { width: 70px; min-width: 70px; left: 270px; }
+
+    .athlete-vdot-table thead tr th:last-child { min-width: 300px !important; }
+    .athlete-vdot-table { min-width: 800px; }
+    .pace-legend-title { font-size: 0.7rem; }
+}
+
+/* 📱 768px 이하 (차트/모달 반응형) */
+@media (max-width: 768px) {
+    .modal-content { padding: 8px; height: 90vh; }
+    .chart-section { height: calc(45vh - 40px); margin-bottom: 10px; }
+    .modal-header h3 { font-size: 1rem; }
+    .chart-section h4 { font-size: 0.85rem; margin-top: 2px; }
+}
+
+/* 📱 600px 이하 */
+@media (max-width: 600px) {
+    .pace-legend-grid { gap: 5px; }
+    .legend-group { padding: 3px 6px; }
+    .group-label { font-size: 0.7rem; }
+
+    .vdot-header { flex-direction: column; align-items: flex-start; }
+    .vdot-control { width: 100%; margin-top: 15px; justify-content: space-between; }
+    #vdotSlider { flex-grow: 1; }
+    .vdot-header p { order: 3; margin-top: 15px; }
+}
+
+/* 📱 500px 이하 (모바일 세로모드 - 원본 로직 100% 복구) */
+@media (max-width: 650px) {
+    body { font-size: 0.65em; padding: 5px; padding-top: 70px;}
+    .header-logo { height: 100px; }
+    h1 { 
+        top: 16px; /* 폰트가 작아지면 수직 위치 미세 조정 */
+    }
+    .sort-buttons button { padding: 2px 4px; font-size: 0.7em; }
+
+    /* 틀 고정 극한 축소 */
+    .fixed-name { width: 41px; min-width: 41px; left: 0; }
+    .fixed-vdot { width: 41px; min-width: 41px; left: 41px; }
+    .fixed-distance { width: 44px; min-width: 44px; left: 82px; }
+    .fixed-totaltime { width: 56px; min-width: 56px; left: 126px; }
+    .fixed-count { width: 34px; min-width: 34px; left: 182px; }
+    .fixed-pace { width: 56px; min-width: 56px; left: 216px; }
+
+    .athlete-vdot-table thead tr th:last-child { min-width: 180px !important; }
+    .athlete-vdot-table { min-width: 550px; }
+    .athlete-vdot-table th, .athlete-vdot-table td { padding: 1px 3px; height: 28px; }
+    .recent-run-item { min-width: 110px; flex: 0 0 110px; }
+
+    /* 하단 VDOT 섹션 가로 스크롤 차단 및 강제 맞춤 (핵심) */
+    .vdot-info-section { padding: 0 5px !important; margin: 10px 0 !important; width: 100% !important; overflow-x: hidden !important; }
+    .vdot-table-wrapper { overflow-x: hidden !important; width: 100% !important; }
+    #vdotTable { width: 100% !important; min-width: 0 !important; table-layout: fixed; font-size: 0.75rem; }
+    #vdotTable th, #vdotTable td { padding: 6px 1px !important; font-size: 0.6rem !important; letter-spacing: -0.5px; word-break: break-all; }
+    
+    .vdot-header { padding: 8px !important; }
+    .vdot-header h3 { font-size: 0.9rem !important; }
+    .vdot-header p { font-size: 0.7rem !important; }
+    .vdot-control { padding: 4px 8px !important; font-size: 0.75rem !important; }
+    #vdotSlider { width: 50% !important; }
+
+    .pace-features, .vdot-notes { padding: 10px !important; margin-top: 10px !important; }
+    .pace-features h3, .vdot-notes h3 { font-size: 0.85rem !important; }
+    .pace-features ul li, .vdot-notes ul li { font-size: 0.7rem !important; line-height: 1.3 !important; margin-bottom: 4px !important; }
+
+    /* 모달 모바일 최적화 복구 */
+    .modal-content { padding: 10px !important; }
+    .modal-header {
+        padding: 10px 40px 10px 5px !important;
+        min-height: 50px; /* 제목이 두 줄이 되어도 대응 가능하도록 */
+    }  
+    /* 차트 모달 제목 크기 키우기 */
+    #chartTitle {
+        font-size: 1.25rem !important; /* 폰에서 잘 보이게 확대 */
+        white-space: normal !important; /* 줄바꿈 허용 */
+        display: block;
+    }
+
+    /* 차트 모달 내의 닫기 버튼만 위치 조정 */
+    .modal-header .close-btn {
+        top: 50% !important;
+        transform: translateY(-50%) !important; /* 헤더 영역 세로 중앙 */
+        right: 0px !important;
+        font-size: 30px !important; /* 터치하기 쉽게 */
+    }
+
+    /* 로그인 모달은 높이 자동 조절 및 기존 스타일 유지 */
+    .login-modal-content {
+        height: auto !important; 
+        min-height: unset !important;
+        padding: 30px 20px !important;
+    }
+    
+    .chart-section h4 { font-size: 0.65rem; margin-top: 0px; }
+
+    /* 🌟 차트 높이 조정: 45vh에서 40vh로 줄여서 스크롤 방지 */
+    .chart-section { 
+        height: calc(40vh - 40px) !important; /* 기존 45vh를 40vh로 줄였습니다. */
+        margin-bottom: 5px !important;
+    }
+}
+
+/* ========================================================= */
+/* 모바일 슬라이드 메뉴 스타일 (Mobile Slide-out Menu) */
+/* ========================================================= */
+
+/* 1. 햄버거 버튼 스타일 */
+.menu-btn {
+    position: absolute; /* 로고 위에 겹치기 위해 절대 위치 사용 */
+    left: 10px;         /* 좌측 여백 */
+    z-index: 100;       /* 로고 이미지보다 확실히 위에 오도록 설정 */
+    
+    /* 박스 디자인 (흰색 배경 + 테두리) */
+    background-color: #ffffff;     /* 흰색 배경 */
+    border: 1px solid #cccccc;     /* 회색 테두리 */
+    border-radius: 6px;            /* 모서리 둥글게 */
+    width: 40px;                   /* 버튼 너비 고정 */
+    height: 40px;                  /* 버튼 높이 고정 */
+    
+    /* 아이콘 정렬 및 폰트 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;             /* 아이콘 크기 */
+    color: var(--primary-blue);    /* 아이콘 색상 */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 살짝 그림자를 주어 잘 보이게 함 */
+    padding: 0;                    /* 기존 패딩 초기화 */
+    line-height: 1;
+}
+
+/* 버튼 눌렸을 때 효과 */
+.menu-btn:active {
+    background-color: #f0f0f0;
+    transform: translateY(1px);
+}
+
+/* 2. 배경 오버레이 (메뉴 열렸을 때 뒤에 깔리는 어두운 막) */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 */
+    z-index: 10000; /* 메뉴보다 한 단계 낮게 */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 오버레이 활성화 상태 */
+.menu-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 3. 슬라이드 메뉴 패널 */
+.slide-menu {
+    position: fixed;
+    top: 0;
+    left: -280px; /* 처음에 화면 왼쪽 밖으로 숨김 */
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    z-index: 10001; /* 가장 위에 표시 */
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 부드러운 애니메이션 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 메뉴 활성화 상태 (JS로 클래스 추가 시) */
+.slide-menu.is-active {
+    transform: translateX(280px); /* 오른쪽으로 이동하여 화면에 표시 */
+}
+
+/* 메뉴 내부 헤더 */
+.menu-header {
+    background-color: var(--primary-blue); /* 기존 테마 색상 */
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* 닫기(X) 버튼 */
+.menu-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* 메뉴 리스트 */
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto; /* 메뉴가 길어지면 스크롤 */
+}
+
+.menu-list li {
+    border-bottom: 1px solid #eee;
+}
+
+.menu-link {
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.menu-link:hover, .menu-link:active {
+    background-color: #f5f5f5;
+    color: var(--primary-blue);
+}
+
+/* 현재 페이지 하이라이트 효과 (옵션) */
+.menu-link.active {
+    background-color: #eef2ff;
+    color: var(--primary-blue);
+    font-weight: 700;
+    border-left: 5px solid var(--primary-blue);
+}
+
+/* ========================================================= */
+/* 4. 슬라이드 메뉴 내부 푸터 (스트라바 이미지) */
+/* ========================================================= */
+.menu-footer {
+    /* 메뉴 본문(ul.menu-list)이 차지하고 남은 공간을 차지하도록 설정 */
+    margin-top: auto; 
+    padding: 10px 0; /* 상하 10px 패딩 */
+    text-align: center; /* 이미지 중앙 정렬 */
+    background-color: var(--white); /* 흰색 배경 */
+    border-top: 1px solid #eee; /* 상단 구분선 */
+    flex-shrink: 0; /* 크기가 줄어들지 않도록 고정 */
+}
+
+.menu-footer img {
+    max-width:150px; /* 메뉴 너비(280px)에 맞춰 최대 폭 설정 */
+    height: auto;
+    /* 작은 모바일 환경에서도 너무 커지지 않도록 최대 너비를 제한 */
+    max-height: 75px; 
+    object-fit: contain;
+}
+
+/* 1. 모달 배경 (전체 화면 덮기) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: none; /* JS에서 flex로 변경 */
+    justify-content: center;
+    align-items: center;
+    z-index: 11000; /* 메뉴(10001)보다 확실히 높게 설정 */
+}
+
+/* [수정] 9. 모달 및 차트 스타일 - 공통 및 차트용 */
+.modal-content {
+    background-color: var(--white);
+    padding: 15px; 
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+    
+    /* PC에서는 넓게, 모바일에서는 유연하게 */
+    width: 95%;
+    max-width: 1000px; 
+    max-height: 95vh; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* [추가] 로그인 모달 전용 스타일 (클래스 분리) */
+.login-modal-content {
+    background: white;
+    padding: 30px 20px;
+    border-radius: 15px;
+    
+    /* 로그인창에만 적용될 고정 크기 */
+    width: 320px !important; 
+    height: auto !important;
+    max-width: 90%;
+    
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    display: block; /* 차트 모달의 flex와 차별화 */
+}
+
+/* 기존 CSS 하단에 있던 .modal-content 중복 정의 부분은 삭제하거나 
+   위의 .login-modal-content 클래스로 대체하세요. */
+
+/* 소셜 버튼 간격 및 크기 고정 */
+.social-login-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;          /* 버튼 사이 간격 고정 */
+    margin-top: 15px;
+}
+
+.social-btn {
+    height: 50px;       /* 버튼 높이 고정 (스트라바 이미지 사이즈에 맞춰 조정) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+.social-btn:active { opacity: 0.8; }
+
+.google { background-color: #4285F4; }
+.kakao { background-color: #FEE500; color: #3C1E1E !important; }
+
+.gsi-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-appearance: none;
+  background-color: WHITE;
+  background-image: none;
+  border: 1px solid #747775;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #1f1f1f;
+  cursor: pointer;
+  font-family: 'Roboto', arial, sans-serif;
+  font-size: 14px;
+  height: 40px;
+  letter-spacing: 0.25px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 12px;
+  position: relative;
+  text-align: center;
+  -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+  transition: background-color .218s, border-color .218s, box-shadow .218s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: auto;
+  max-width: 400px;
+  min-width: min-content;
+}
+
+.gsi-material-button .gsi-material-button-icon {
+  height: 20px;
+  margin-right: 10px;
+  min-width: 20px;
+  width: 20px;
+}
+
+.gsi-material-button .gsi-material-button-content-wrapper {
+  -webkit-align-items: center;
+  align-items: center;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.gsi-material-button .gsi-material-button-contents {
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
+  font-family: 'Roboto', arial, sans-serif;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.gsi-material-button .gsi-material-button-state {
+  -webkit-transition: opacity .218s;
+  transition: opacity .218s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.gsi-material-button:disabled {
+  cursor: default;
+  background-color: #ffffff61;
+  border-color: #1f1f1f1f;
+}
+
+.gsi-material-button:disabled .gsi-material-button-contents {
+  opacity: 38%;
+}
+
+.gsi-material-button:disabled .gsi-material-button-icon {
+  opacity: 38%;
+}
+
+.gsi-material-button:not(:disabled):active .gsi-material-button-state, 
+.gsi-material-button:not(:disabled):focus .gsi-material-button-state {
+  background-color: #303030;
+  opacity: 12%;
+}
+
+.gsi-material-button:not(:disabled):hover {
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+}
+
+.gsi-material-button:not(:disabled):hover .gsi-material-button-state {
+  background-color: #303030;
+  opacity: 8%;
+}
+코드 복사됨
+
+
+/* 스트라바 버튼 전용 스타일 */
+.social-btn.strava {
+    background-color: transparent;
+    padding: 0;
+    border: none;
+}
+.social-btn.strava img {
+    height: 100%;
+    width: auto;
+    display: block;
+}
+
+/* 모달 등장 애니메이션 */
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* 4. 닫기 버튼 */
+.modal-content .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    color: #999;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* 로딩 오버레이 스타일 */
+.loading-overlay {
+    position: fixed;
+    top: 70px; /* 🚨 중요: 헤더(70px) 아래부터 시작하게 해서 메뉴 버튼 클릭 방해 안 함 */
+    left: 0;
+    width: 100%;
+    height: calc(100% - 70px);
+    background: rgba(255, 255, 255, 0.2); /* 배경을 약간 더 투명하게 해서 답답함 해소 */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9000; /* 헤더보다 낮게 */
+}
+/* 세련된 스피너 */
+.spinner {
+    width: 50px; height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%; border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* =============================================================
+   최종 모달 정리 (기존 스타일 무시하고 이 설정이 적용됨)
+   ============================================================= */
+
+/* 1. 차트 모달 (이름을 분리하여 간섭 차단) */
+.chart-modal-content {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 1000px;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+}
+
+/* 2. 로그인 모달 (좁게 고정) */
+.login-modal-content {
+    background: #ffffff;
+    padding: 40px 20px 30px 20px;
+    border-radius: 15px;
+    width: 360px !important; 
+    max-width: 90%;
+    height: auto !important; 
+    position: relative;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    animation: modalFadeIn 0.3s ease;
+}
+
+/* 3. 닫기 버튼 위치 조정 (차트 모달과 로그인 모달 구분) */
+.chart-close-btn {
+    position: absolute !important;
+    top: 0px !important;
+    right: 5px !important; /* 상단 우측 고정 */
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    z-index: 999 !important;
+    font-size: 30px; color: #999;
+}
+.login-close-btn {
+    position: absolute !important;
+    top: 10px !important;
+    right: 15px !important; /* 상단 우측 고정 */
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    z-index: 999 !important;
+    font-size: 24px; color: #ccc;
+}
+.menu-close-btn {
+    position: absolute !important; 
+    right: 15px !important;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10;
+}
+
+@media (max-width: 650px) {
+    /* 폰 세로모드에서 차트 모달 여백 조정 */
+    .chart-modal-content {
+        padding: 15px;
+        width: 98%;
+    }
+    /* 로그인 모달은 이미 320px 고정이므로 건드릴 필요 없음 */
+}
