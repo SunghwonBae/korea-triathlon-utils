@@ -137,7 +137,7 @@ export default function CyclingAnalyzer() {
           <div className="card-header">
             <div className="icon-circle">🚴</div>
             <h2>사이클 구간 평속 분석</h2>
-            <p className="desc">파일(.xlsx, .csv)을 업로드하면<br/>구간별 평속을 바탕으로 분석해 드립니다.</p>
+            <p className="desc">파일(.xlsx, .csv)을 업로드하면<br/>분석한 html을 다운해드립니다.</p>
             <a href="/2025_구례IRONMAN_홍길동클럽_싸이클_구간기록.xlsx" download className="sample-link">
               📥 샘플 파일 다운로드
             </a>
@@ -339,7 +339,6 @@ export default function CyclingAnalyzer() {
 
         /* 모바일 스타일 */
         @media (max-width: 640px) {
-          .header-section h1 { font-size: 1.4rem !important; }
           .card-header h2 { font-size: 1.3rem; }
           .desc { font-size: 0.9rem; }
           .guide-section h3 { font-size: 1.2rem; }

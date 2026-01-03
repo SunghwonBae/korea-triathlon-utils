@@ -66,6 +66,7 @@ export default function MainIndex() {
           border-bottom-left-radius: 30px;
           border-bottom-right-radius: 30px;
           box-shadow: 0 10px 30px rgba(10, 49, 126, 0.2);
+          z-index: 1;
         }
         .header-content h1 {
           font-size: 2.2rem;
@@ -88,7 +89,7 @@ export default function MainIndex() {
           margin: -80px auto 40px;
           padding: 0 20px;
           position: relative;
-          z-index: 10;
+          z-index: 50;
         }
         .menu-grid {
           display: grid;
@@ -108,11 +109,18 @@ export default function MainIndex() {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
           border: 1px solid rgba(255,255,255,0.5);
+          cursor: pointer;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
         }
         .menu-card:hover {
           transform: translateY(-8px);
           box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
           border-color: #e0e7ff;
+        }
+        .menu-card:active {
+          transform: scale(0.98);
+          background-color: #f3f4f6;
         }
         .card-icon {
           font-size: 3rem;
@@ -122,6 +130,7 @@ export default function MainIndex() {
         .card-text {
           display: flex;
           flex-direction: column;
+          flex: 1;
         }
         .card-title {
           font-size: 1.2rem;
@@ -142,10 +151,10 @@ export default function MainIndex() {
         }
         @media (max-width: 640px) {
           .hero-header {
-            padding: 60px 20px 100px;
+            padding: 60px 10px 100px;
             border-radius: 0 0 20px 20px;
           }
-          .header-content h1 { font-size: 1.8rem; }
+          .header-content h1 { font-size: 1.6rem; letter-spacing: -0.05em; }
           .subtitle { font-size: 1rem; }
           .mobile-br { display: block; }
           .menu-grid { grid-template-columns: 1fr; gap: 15px; }
