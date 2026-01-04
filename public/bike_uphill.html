@@ -13,9 +13,24 @@
 
         /* 비주얼 & 상태창 */
         .visual-container { height: 160px; background: #e0f7fa; position: relative; border-radius: 15px; overflow: hidden; margin-bottom: 20px; display: flex; align-items: flex-end; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .road { width: 200%; height: 500px; background: #555; position: absolute; bottom: -450px; transform-origin: center; transition: 0.5s; border-top: 4px dashed #fff; }
-        .bike { font-size: 45px; position: relative; z-index: 5; bottom: 10px; transition: 0.5s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .road { width: 200%; height: 500px; background: #555; position: absolute; bottom: -450px; transform-origin: center; transition: 0.5s; border-top: 4px dotted #fff; }
         
+        .bike { 
+            font-size: 60px; 
+            position: relative; 
+            z-index: 5; 
+            bottom: 30px; 
+            transition: 0.5s; 
+            display: inline-block; 
+        } 
+
+        @keyframes pedal-move {
+            0%, 100% { transform: rotate(0deg) translateY(0px); }
+            25% { transform: rotate(-2deg) translateY(-2px); }
+            75% { transform: rotate(2deg) translateY(-2px); }
+        }
+
+
         .status-board { background: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 25px; border: 1px solid #ffe0b2; box-shadow: 0 4px 15px rgba(230, 126, 34, 0.1); }
         .main-res { font-size: 2.5em; font-weight: 800; color: var(--primary); margin: 10px 0; letter-spacing: -1px; }
         #course-tag { font-size: 1.1em; margin-bottom: 5px; }
@@ -47,8 +62,9 @@
         tr.clickable { transition: background 0.1s; }
         tr.clickable:hover { background: #f8f9fa; cursor: pointer; }
         
-        .rpm-bad { color: var(--danger); font-weight: bold; background: #fff5f5; border-radius: 4px; padding: 2px 6px; }
-        .rpm-good { color: var(--success); font-weight: bold; background: #e8f5e9; border-radius: 4px; padding: 2px 6px; }
+        .rpm-bad { color: var(--danger) !important; font-weight: bold; }
+        .rpm-good { color: var(--success) !important; font-weight: bold; }
+        .rpm-neutral { color: #7f8c8d !important; }
         .highlight-box { border: 2px solid var(--primary) !important; background: #fff9f5; }
         
         .hint { font-size: 0.85em; color: #888; margin-top: 8px; text-align: right; margin-bottom: 5px; }
@@ -63,9 +79,21 @@
             .main-res { font-size: 2em; }
             .status-board { padding: 15px; }
             
-            th, td { padding: 10px 8px; font-size: 0.85em; }
+            th, td { padding: 10px 2px; font-size: 0.8em; }
             .custom-row { flex-direction: row; }
             input[type="number"], select { font-size: 0.9rem; padding: 8px; }
+            table { min-width: auto; }
+        }
+        .group-header td { background: #f1f3f5; font-weight: bold; color: #495057; text-align: left; padding: 8px 15px; font-size: 0.9em; border-top: 2px solid #dee2e6; }
+        
+        /* 파워존 시각화 */
+        .zone-legend { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px; font-size: 0.7em; display: flex; flex-direction: column; gap: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10; }
+        .zone-item { display: flex; align-items: center; gap: 5px; }
+        .zone-color { width: 10px; height: 10px; border-radius: 50%; }
+        .bike-zone-label { 
+            position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%) scaleX(-1); 
+            font-size: 14px; font-weight: bold; background: rgba(255,255,255,0.8); 
+            padding: 2px 6px; border-radius: 4px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -78,11 +106,27 @@
 
     <div class="visual-container">
         <div id="road" class="road"></div>
-        <div id="bike" class="bike">🚴</div>
+        <div id="bike" class="bike">
+            🚴
+            <div id="bikeZoneText" class="bike-zone-label">Z2</div>
+        </div>
+        <div class="zone-legend">
+            <div class="zone-item"><div class="zone-color" style="background:#bdc3c7"></div>Z1 회복</div>
+            <div class="zone-item"><div class="zone-color" style="background:#3498db"></div>Z2 지구력</div>
+            <div class="zone-item"><div class="zone-color" style="background:#2ecc71"></div>Z3 템포</div>
+            <div class="zone-item"><div class="zone-color" style="background:#f1c40f"></div>Z4 역치</div>
+            <div class="zone-item"><div class="zone-color" style="background:#e67e22"></div>Z5 VO2Max</div>
+            <div class="zone-item"><div class="zone-color" style="background:#e74c3c"></div>Z6 무산소</div>
+            <div class="zone-item"><div class="zone-color" style="background:#9b59b6"></div>Z7 신경근</div>
+        </div>
     </div>
 
+
+
     <div class="status-board">
-        <div id="course-tag" style="font-weight:bold; color:var(--primary);">코스 분석 중...</div>
+        <div id="course-tag" style="font-weight:bold; color:var(--primary); line-height:1.4;">
+            코스 분석 중...
+        </div>
         <div class="main-res"><span id="speed-display">0.0</span> km/h</div>
         <div id="current-gear-info" style="font-size: 0.9em; color: #666;">기준 기어: 34-34T (1.00)</div>
     </div>
@@ -94,17 +138,18 @@
         </div>
 
         <div class="group highlight-box">
-            <label>목표 파워 (Watt) <span id="val-power">200</span>W</label>
+            <label>언덕주행 파워 (Watt) <span id="val-power">200</span>W</label>
             <input type="range" id="power" min="50" max="800" step="5" value="200" oninput="run('power')">
         </div>
 
         <div class="group highlight-box">
-            <label>목표 케이던스 (RPM) <span id="val-cadence">80</span>rpm</label>
+            <label>언적주행 케이던스 (RPM) <span id="val-cadence">80</span>rpm</label>
             <input type="range" id="cadence" min="30" max="120" step="1" value="80" oninput="run('cadence')">
         </div>
 
         <div class="group half-mobile"><label>자전거 무게 (kg)</label><input type="number" id="bikeW" value="8.5" oninput="run()"></div>
         <div class="group half-mobile"><label>내 몸무게 (kg)</label><input type="number" id="riderW" value="75" oninput="run()"></div>
+        <div class="group half-mobile"><label>나의 FTP (W)</label><input type="number" id="ftp" value="200" oninput="run()"></div>
         <div class="group half-mobile">
             <label>휠 규격</label>
             <select id="wheel" onchange="run()">
@@ -136,10 +181,10 @@
         <table>
             <thead>
                 <tr>
-                    <th>기어 종류</th>
-                    <th>조합 (F-R)</th>
-                    <th>기어비</th>
-                    <th>필요 케이던스</th>
+                    <th style="width:15%">구분</th>
+                    <th style="width:40%">조합 및 비고</th>
+                    <th style="width:15%">기어비</th>
+                    <th style="width:30%">필요 케이던스</th>
                 </tr>
             </thead>
             <tbody id="res-body"></tbody>
@@ -148,24 +193,30 @@
 </div>
 
 <script>
+
 let GEAR_PRESETS = [
-    { cat: "컴팩트", name: "생존", f: 34, r: 34 },
-    { cat: "컴팩트", name: "표준", f: 34, r: 32 },
-    { cat: "컴팩트", name: "중급", f: 34, r: 30 },
-    { cat: "컴팩트", name: "상급", f: 34, r: 28 },
-    { cat: "미드컴팩", name: "생존", f: 36, r: 34 },
-    { cat: "미드컴팩", name: "표준", f: 36, r: 30 },
-    { cat: "미드컴팩", name: "상급", f: 36, r: 28 },
-    { cat: "스탠다드", name: "기본", f: 39, r: 28 },
-    { cat: "전문가", name: "TT", f: 56, r: 28 },
-    { cat: "전문가", name: "초고속", f: 60, r: 28 }
+    // 1. 컴팩트/미드컴팩 업힐용
+    { section: "1. 컴팩트/미드컴팩 업힐용 (낮은 기어비)", cat: "업힐", name: "컴팩트 생존", f: 34, r: 34, desc: "가장 가벼운 기어비" },
+    { section: "1. 컴팩트/미드컴팩 업힐용 (낮은 기어비)", cat: "업힐", name: "미드컴팩 표준", f: 36, r: 30, desc: "업힐 표준 세팅" },
+    { section: "1. 컴팩트/미드컴팩 업힐용 (낮은 기어비)", cat: "업힐", name: "스탠다드 상급", f: 39, r: 28, desc: "상급자용 기어비" },
+
+    // 2. 낮은 언덕/낙타등 돌파용
+    { section: "2. 낮은 언덕/낙타등 돌파용 (중간 기어비)", cat: "낙타등", name: "이너 고속", f: 36, r: 15, desc: "이너 체인링으로 빠르게 넘을 때" },
+    { section: "2. 낮은 언덕/낙타등 돌파용 (중간 기어비)", cat: "낙타등", name: "아우터 중저속", f: 50, r: 28, desc: "아우터로 버티며 오를 때" },
+    { section: "2. 낮은 언덕/낙타등 돌파용 (중간 기어비)", cat: "낙타등", name: "아우터 표준", f: 52, r: 25, desc: "미드컴팩 아우터 표준" },
+
+    // 3. 평지/고속 구간
+    { section: "3. 평지/고속 구간 (높은 기어비)", cat: "평지", name: "아우터 고속", f: 50, r: 11, desc: "컴팩트 최고 속도" },
+    { section: "3. 평지/고속 구간 (높은 기어비)", cat: "평지", name: "스탠다드 아우터", f: 53, r: 11, desc: "스탠다드 최고 속도" },
+    { section: "3. 평지/고속 구간 (높은 기어비)", cat: "평지", name: "초고속 커스텀", f: 60, r: 28, desc: "미니벨로 등 특수 목적" },
+    { section: "3. 평지/고속 구간 (높은 기어비)", cat: "전문가", name: "프로 독주용", f: 56, r: 11, desc: "TT/철인 경기용" }
 ];
 
 function addGear() {
     const f = parseInt(document.getElementById('cF').value);
     const r = parseInt(document.getElementById('cR').value);
     if(f && r) {
-        GEAR_PRESETS.push({ cat: "직접입력", name: "커스텀", f: f, r: r });
+        GEAR_PRESETS.push({ section: "✨ 직접 입력한 기어", cat: "커스텀", name: "사용자 설정", f: f, r: r, desc: "직접 추가함" });
         document.getElementById('cF').value = ""; document.getElementById('cR').value = "";
         run();
     }
@@ -183,6 +234,7 @@ function run(mode) {
     const slope = parseFloat(document.getElementById('slope').value);
     const bikeW = parseFloat(document.getElementById('bikeW').value);
     const riderW = parseFloat(document.getElementById('riderW').value);
+    const ftp = parseFloat(document.getElementById('ftp').value) || 200;
     const wheel = parseInt(document.getElementById('wheel').value);
     const baseRatio = parseFloat(document.getElementById('baseGearVal').value);
     const totalW = bikeW + riderW;
@@ -212,36 +264,117 @@ function run(mode) {
     
     const deg = rad * (180/Math.PI);
     document.getElementById('road').style.transform = `rotate(-${deg}deg)`;
-    document.getElementById('bike').style.transform = `rotate(-${deg}deg)`;
+    document.getElementById('bike').style.transform = `rotate(-${deg}deg) scaleX(-1)`;
 
+    // 파워존 계산 및 색상 적용
     const currentPower = parseFloat(document.getElementById('power').value);
+    const pRatio = (currentPower / ftp) * 100;
+    let zColor = "#555";
+    let zText = "Z1";
+    
+    if (pRatio < 55) { zColor = "#bdc3c7"; zText = "Z1 회복"; }
+    else if (pRatio < 76) { zColor = "#3498db"; zText = "Z2 지구력"; }
+    else if (pRatio < 91) { zColor = "#2ecc71"; zText = "Z3 템포"; }
+    else if (pRatio < 106) { zColor = "#f1c40f"; zText = "Z4 역치"; }
+    else if (pRatio < 121) { zColor = "#e67e22"; zText = "Z5 VO2Max"; }
+    else if (pRatio < 151) { zColor = "#e74c3c"; zText = "Z6 무산소"; }
+    else { zColor = "#9b59b6"; zText = "Z7 신경근"; }
+
+    document.getElementById('road').style.background = zColor;
+    document.getElementById('bikeZoneText').innerText = zText;
+
     let final_v_ms = currentPower / (totalW * g * (Math.sin(rad) + Crr));
     let final_kmh = Math.max(0, final_v_ms * 3.6);
     document.getElementById('speed-display').innerText = final_kmh.toFixed(1);
 
     // 코스 태그
     const courseTag = document.getElementById('course-tag');
-    let cName = "평지";
-    if (slope >= 11) cName = "화악산급 (고통)";
-    else if (slope >= 7) cName = "북악/대관령급 (중급)";
-    else if (slope >= 4) cName = "남산급 (표준)";
-    courseTag.innerText = "유사 코스: " + cName;
+    let cName = "평지 및 완만한 구간";
+    let cDesc = "";
 
-    // 테이블 렌더링
+    if (slope >= 20) {
+        cName = "벽 (The Wall)";
+        cDesc = "자전거 앞바퀴가 들릴 수 있는 극악의 경사";
+    } else if (slope >= 15) {
+        cName = "삼막사 '할딱고개' 급";
+        cDesc = "댄싱 없이는 돌리기 힘든 무시무시한 구간";
+    } else if (slope >= 12) {
+        cName = "화악산 / 무등산 8부 능선";
+        cDesc = "국내 최고 난이도 업힐의 본모습";
+    } else if (slope >= 10) {
+        cName = "미시령 옛길 / 지안재 급";
+        cDesc = "본격적인 '침 흘리는' 업힐 구간";
+    } else if (slope >= 8) {
+        cName = "북악 스카이웨이 / 대관령";
+        cDesc = "중급 라이더의 실력을 가르는 기준점";
+    } else if (slope >= 6) {
+        cName = "서울 남산 (중반부) 급";
+        cDesc = "동호인들의 국민 업힐 코스 난이도";
+    } else if (slope >= 4) {
+        cName = "분원리 / 하오고개 급";
+        cDesc = "리드미컬한 업힐이 가능한 표준 경사";
+    } else if (slope >= 2) {
+        cName = "완만한 낙타등 구간";
+        cDesc = "에어로 자세를 풀게 되는 약오르막";
+    } else if (slope > 0) {
+        cName = "평지 같은 오르막";
+        cDesc = "미세하게 파워가 더 실리는 구간";
+    }
+
+    courseTag.innerHTML = `<span style="font-size:1.2em;">${cName}</span><br><span style="font-size:0.8em; font-weight:normal; color:#e67e22;">${cDesc}</span>`;
+
+
+    // 테이블 렌더링 (기존 run 함수 하단부 tbody.innerHTML 부분을 아래로 교체)
     const tbody = document.getElementById('res-body');
     tbody.innerHTML = "";
+    
+    let currentSection = "";
     GEAR_PRESETS.forEach(g => {
         const ratio = g.f / g.r;
-        const rpm = (final_kmh * 1000000) / (ratio * wheel * 60);
-        const rpmClass = rpm < 60 ? 'rpm-bad' : (rpm >= 70 && rpm <= 95 ? 'rpm-good' : '');
-        const isActive = ratio.toFixed(2) === baseRatio.toFixed(2) ? "active-row" : "";
+        const speed = parseFloat(document.getElementById('speed-display').innerText);
+        const wheel = parseInt(document.getElementById('wheel').value);
+        const baseRatio = parseFloat(document.getElementById('baseGearVal').value);
         
+        // 현재 속도에서의 케이던스 계산
+        const rpm = (speed * 1000000) / (ratio * wheel * 60);
+        
+        // 상태별 클래스 부여 (70미만 무릎주의, 70~95 최적)
+        let rpmClass = "";
+        let rpmLabel = "";
+        let rpmStyle = "font-size:1.1em;";
+
+        if (rpm < 70) {
+            rpmClass = "rpm-bad";
+            rpmLabel = "<div style='font-size:0.6em; margin-top:2px;'>무릎주의</div>";
+        } else if (rpm >= 70 && rpm <= 95) {
+            rpmClass = "rpm-good";
+            rpmLabel = "<div style='font-size:0.6em; margin-top:2px;'>최적</div>";
+        } else {
+            rpmClass = "rpm-neutral";
+        }
+
+        // 기준 기어비와 일치하는 행 하이라이트
+        const isActive = ratio.toFixed(2) === baseRatio.toFixed(2) ? "active-row" : "";
+
+        // 섹션 헤더 추가
+        if (g.section !== currentSection) {
+            currentSection = g.section;
+            tbody.innerHTML += `<tr class="group-header"><td colspan="4">${currentSection}</td></tr>`;
+        }
+
         tbody.innerHTML += `
             <tr class="clickable ${isActive}" onclick="setAsBase(${ratio}, '${g.f}-${g.r}T')">
-                <td>${g.cat}</td>
-                <td>${g.f}-${g.r}T (${g.name})</td>
-                <td>${ratio.toFixed(2)}</td>
-                <td class="${rpmClass}">${Math.round(rpm)} RPM</td>
+                <td style="font-weight:bold; color:#666;">${g.cat}</td>
+                <td>
+                    <div style="font-weight:bold;">${g.f}-${g.r}T</div>
+                    <div style="font-size:0.8em; color:var(--primary);">${g.name}</div>
+                    <div style="font-size:0.75em; color:#888; margin-top:2px;">${g.desc}</div>
+                </td>
+                <td style="color:#888;">${ratio.toFixed(2)}</td>
+                <td class="${rpmClass}" style="${rpmStyle}">
+                    ${Math.round(rpm)} <span style="font-size:0.7em;">RPM</span>
+                    ${rpmLabel}
+                </td>
             </tr>`;
     });
 }

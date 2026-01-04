@@ -10,6 +10,7 @@ export default function MainIndex() {
     { icon: "⚖️", title: "킹코스 완주시간", desc: "철인3종 예상 기록 계산", url: "/ironman_calculator.html" },
     { icon: "🍌", title: "보급 계산기", desc: "경기 중 필요한 에너지 보급량", url: "/gelwater_calculator.html" },
     { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/bike_calculator.html" },
+    { icon: "🏔️", title: "업힐 분석기", desc: "경사도/파워별 기어비 분석", url: "/bike_uphill.html" },
     { icon: "🚴", title: "GPX to ZWO", desc: "코스 파일을 워크아웃으로 변환", url: "/bike_gpx_zwo.html" },
     { icon: "📊", title: "사이클 평속 분석", desc: "라이딩 구간별속도 분석 리포트생성", url: "/cyclinganalyzer" },
     { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/running_calculator.html" },
@@ -48,7 +49,7 @@ export default function MainIndex() {
       </section>
 
       <footer className="main-footer">
-        <p>2026 Korea Triathlon Utils. 🄯 Copyleft. Powered by 부천트라이 배성훤.</p>
+        <p>2026 Korea Triathlon Utils.<br className="mobile-br"/> 🄯 Copyleft. Powered by 부천트라이 배성훤.</p>
       </footer>
 
       <style jsx>{`
@@ -86,14 +87,14 @@ export default function MainIndex() {
         .mobile-br { display: none; }
         .content-section {
           max-width: 1100px;
-          margin: -80px auto 40px;
+          margin: -80px auto 20px;
           padding: 0 20px;
           position: relative;
           z-index: 50;
         }
         .menu-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 20px;
         }
         .menu-card {
@@ -148,6 +149,11 @@ export default function MainIndex() {
           padding: 40px 20px;
           color: #9ca3af;
           font-size: 0.85rem;
+        }
+        @media (max-width: 1024px) {
+          .menu-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
         @media (max-width: 640px) {
           .hero-header {
