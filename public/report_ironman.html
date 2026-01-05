@@ -29,9 +29,6 @@
         .page-num { cursor: pointer; padding: 0.6rem 1.1rem; border-radius: 0.85rem; font-weight: 800; font-size: 13px; border: 1px solid #e2e8f0; background: white; transition: all 0.2s; }
         .page-num:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
         .page-num.active { background-color: #ef4444; color: white; border-color: #ef4444; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4); }
-        
-        /* 슬라이더 커스텀 */
-        input[type=range]::-webkit-slider-thumb { border: 4px solid #fff; height: 24px; width: 24px; border-radius: 50%; background: #ef4444; cursor: pointer; -webkit-appearance: none; margin-top: -8px; }
     </style>
 </head>
 <body class="leading-tight">
@@ -40,14 +37,17 @@
         <div class="card max-w-xl w-full text-center py-20 border-none shadow-2xl">
             <div class="mb-8">
                 <i class="fas fa-trident text-red-600 text-6xl mb-4"></i>
-                <h1 class="text-6xl font-black italic tracking-tighter uppercase">IM <span class="text-red-600">PRO</span></h1>
-                <p class="text-slate-400 font-bold mt-2 uppercase tracking-widest">Advanced Race Analytics</p>
+                <h1 class="text-6xl font-black italic tracking-tighter uppercase">킹코스기록줄께 <BR><span class="text-red-600">차트다오</span></h1>
+                <p class="text-slate-400 font-bold mt-2 uppercase tracking-widest">구례기록 CSV 파일분석 차트생성기</p>
             </div>
             <label class="block w-full cursor-pointer bg-white border-4 border-dashed border-slate-200 rounded-[3rem] p-16 hover:border-red-500 hover:bg-red-50/30 transition-all group">
                 <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
                 <i class="fas fa-cloud-upload-alt text-6xl text-slate-300 group-hover:text-red-500 mb-6 transition-colors"></i>
-                <span class="block font-black text-slate-700 text-xl mb-2">CSV 파일 업로드</span>
-                <span class="block text-slate-400 text-sm font-medium">기록 데이터를 불러와 Sub-10 분석을 시작하세요</span>
+                <span class="block font-black text-slate-700 text-xl mb-2">킹코스기록 CSV 파일 업로드</span>
+                <span class="block text-slate-400 text-sm font-medium mb-4">기록 데이터를 불러와 분석을 시작하세요.</span>
+                <div class="text-left text-[11px] text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    https://www.coachcox.co.uk/imstats/race/2460/results/에서 제공하는 CSV파일을 다운받아서 보면 한글이 깨지면서 셀이 제자리를 못찾는 행이 생겨보입니다. 분석프로그램에서는 수정없이 그대로 업로드하면 저절로 파싱해서 문제없이 분석합니다. 다만, 분석대상은 Rank가 기록되어 있는 Finisher 만 대상으로 합니다. 특히, 구례대회 등록할때 꼭 에이지 그룹으로 신청하세요. 오픈디비젼(ODIV)으로 신청하면 저 CSV에 기록이 포함되지 않습니다.
+                </div>
             </label>
         </div>
     </div>
@@ -55,7 +55,7 @@
     <div id="mainDashboard" class="hidden min-h-screen pb-24">
         <header class="bg-white/95 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200 px-6 py-4">
             <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center gap-6">
-                <div class="font-black text-3xl italic flex-shrink-0 tracking-tighter">IM <span class="text-red-600">GURYE</span></div>
+                <div class="font-black text-3xl italic flex-shrink-0 tracking-tighter">나는 차트<span class="text-red-600">구례</span></div>
                 <div class="flex-1 flex gap-3 w-full">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -73,10 +73,10 @@
         <main class="max-w-[1600px] mx-auto p-4 md:p-8 space-y-10">
             <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
                 <div class="relative z-10">
-                    <h2 class="text-4xl font-black italic mb-4 tracking-tight uppercase">Sub-10 Benchmark Analysis</h2>
+                    <h2 class="text-4xl font-black italic mb-4 tracking-tight uppercase">Race Benchmark Analysis</h2>
                     <p class="text-slate-300 text-lg leading-relaxed max-w-4xl font-medium">
-                        현재 로드된 대시보드는 <span class="text-red-500 font-bold underline decoration-2">10시간 이내 완주자(Sub-10)들의 평균 기록</span>을 가진 가상의 선수를 기준으로 설정되었습니다.
-                        상위권 경쟁자들과의 구간별 격차를 시각화하여 보여줍니다. 본인의 기록으로 분석하고 싶다면 검색창에 배번을 입력 후 <span class="text-white font-bold bg-white/20 px-2 py-0.5 rounded">분석기준선수로 등록</span> 버튼을 눌러주세요.
+                        현재 로드된 대시보드는 <span class="text-red-500 font-bold underline decoration-2">전체 참가자의 평균 기록</span>에 해당하는 선수를 기준으로 설정되었습니다.
+                        기준 선수보다 20분/40분/60분 빠르거나 느린 선수들이 비교군으로 자동 설정되어 구간별 격차를 시각화합니다. 본인의 기록으로 분석하고 싶다면 검색창에 배번을 입력 후 <span class="text-white font-bold bg-white/20 px-2 py-0.5 rounded">분석기준선수로 등록</span> 버튼을 눌러주세요.
                     </p>
                 </div>
                 <i class="fas fa-bolt absolute -right-10 -bottom-10 text-[20rem] text-white/5 -rotate-12"></i>
@@ -84,38 +84,21 @@
 
             <div id="athleteList" class="flex flex-wrap min-h-[50px] gap-2 px-2"></div>
 
-            <div id="simulatorCard" class="card bg-slate-900 text-white border-none shadow-2xl">
-                <div class="flex flex-col md:flex-row justify-between items-start mb-10 gap-8">
-                    <div>
-                        <h3 id="simTitle" class="font-black italic text-red-500 text-3xl uppercase mb-3 tracking-tighter">PERFORMANCE SIMULATOR</h3>
-                        <div class="space-y-2">
-                            <p class="text-slate-400 text-sm font-medium flex items-center"><i class="fas fa-info-circle mr-2"></i>슬라이더를 좌우로 움직여 전체 시간 대비 종목별 예상 기록 변화를 시뮬레이션 합니다.</p>
-                            <p class="text-slate-400 text-sm font-medium flex items-center"><i class="fas fa-check-circle mr-2 text-red-500"></i>목표 버튼을 누르면 해당 그룹에 도달하기 위한 필요 기록이 자동 계산됩니다.</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-3">
-                        <button onclick="applyQuickTarget('avg')" class="bg-slate-800 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-slate-700 transition-all uppercase tracking-widest">Age Avg Target</button>
-                        <button onclick="applyQuickTarget('top10')" class="bg-slate-800 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-slate-700 transition-all uppercase tracking-widest">Age 10% Target</button>
-                        <button onclick="applyQuickTarget('sub10')" class="bg-red-600 text-white px-8 py-4 rounded-2xl font-black text-xs hover:bg-red-700 shadow-xl shadow-red-900/20 transition-all uppercase tracking-widest">Sub-10 Target</button>
-                    </div>
-                </div>
-                <div class="px-4">
-                    <input type="range" id="simSlider" min="-120" max="60" value="0" class="w-full h-3 bg-slate-700 rounded-full appearance-none cursor-pointer accent-red-500">
-                    <div class="flex justify-between text-[10px] font-black text-slate-500 mt-4 uppercase tracking-widest">
-                        <span>-120 MIN</span>
-                        <span id="sliderLabel" class="text-2xl text-red-500 italic tracking-tighter">TARGET PERFORMANCE: CURRENT</span>
-                        <span>+60 MIN</span>
-                    </div>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div class="card lg:col-span-2">
                     <div class="guide-box border-l-slate-800">
-                        <h5 class="font-black text-slate-800 text-base mb-2 uppercase flex items-center"><i class="fas fa-chart-area mr-2"></i>기록 분포 분석 (Total Time Distribution)</h5>
-                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 참가자의 완주 시간 분포 그래프입니다. 회색 바가 높을수록 해당 시간대에 많은 선수가 몰려 있음을 의미합니다. <span class="text-red-600">빨간 점(Me)</span>이 그래프의 왼쪽으로 갈수록 상위권입니다. 경쟁이 가장 치열한 '팩'을 벗어나기 위한 목표 지점을 설정하세요.</p>
+                        <h5 class="font-black text-slate-800 text-base mb-2 uppercase flex flex-wrap items-center justify-between gap-2">
+                            <span class="flex items-center"><i class="fas fa-chart-area mr-2"></i>기록 분포 분석</span>
+                            <div class="flex items-center gap-3 text-[11px] bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                <label class="flex items-center cursor-pointer hover:text-red-600"><input type="radio" name="distMetric" value="t" checked onchange="updateDashboard()" class="mr-1 accent-red-500">Total</label>
+                                <label class="flex items-center cursor-pointer hover:text-blue-600"><input type="radio" name="distMetric" value="s" onchange="updateDashboard()" class="mr-1 accent-blue-500">Swim</label>
+                                <label class="flex items-center cursor-pointer hover:text-green-600"><input type="radio" name="distMetric" value="bk" onchange="updateDashboard()" class="mr-1 accent-green-500">Bike</label>
+                                <label class="flex items-center cursor-pointer hover:text-orange-600"><input type="radio" name="distMetric" value="rn" onchange="updateDashboard()" class="mr-1 accent-orange-500">Run</label>
+                            </div>
+                        </h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 참가자의 완주 시간 분포 그래프입니다. 회색 바가 높을수록 해당 시간대에 많은 선수가 몰려 있음을 의미합니다. <span class="text-red-600">빨간 점(Me)</span>이 분석기준선수이고, <span class="text-red-600 border-b-2 border-dashed border-red-600">붉은 점선</span>은 선택된 그룹의 평균 기록입니다. <span class="text-blue-600 cursor-pointer font-bold">막대를 클릭하면 해당 시간대 선수들이 아래 테이블에 필터링됩니다.</span></p>
                         <div class="mt-3">
-                            <select id="distFilter" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2" onchange="updateDashboard()">
+                            <select id="distFilter" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2" onchange="filteredData=null; updateDashboard()">
                                 <option value="All">All Divisions</option>
                             </select>
                         </div>
@@ -128,15 +111,18 @@
                         <h5 class="font-black text-red-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-tachometer-alt mr-2"></i>종목별 밸런스 점수 (Ability Balance)</h5>
                         <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 평균을 50점으로 환산했을 때 나의 종목별 상대 점수입니다. 100점에 가까울수록 해당 종목에서 압도적인 기량을 가졌음을 뜻합니다. 레이더 차트의 면적이 정삼각형에 가깝게 넓어지는 것이 이상적인 훈련 목표입니다.</p>
                     </div>
-                    <div class="chart-container"><canvas id="radarChart"></canvas></div>
+                    <div class="chart-container" style="height: 640px"><canvas id="radarChart"></canvas></div>
                 </div>
 
                 <div class="card">
                     <div class="guide-box border-l-blue-600">
                         <h5 class="font-black text-blue-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-project-diagram mr-2"></i>구간별 순위 변동 추이 (Rank Flow)</h5>
-                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">수영, 사이클, 런 각 구간을 마쳤을 때의 실시간 순위 변화를 추적합니다. 그래프가 우상향한다면 뒷심이 강한 것이고, 우하향한다면 해당 종목 이후 체력이 급격히 저하됨을 의미합니다. Sub-10 달성자들과의 구간별 격차를 확인하세요.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">수영, 사이클, 런 각 구간을 마쳤을 때의 실시간 순위 변화를 추적합니다. <span class="text-slate-400 font-bold">회색선</span>은 <span id="flowDesc" class="text-slate-800 font-bold decoration-2 underline decoration-slate-300 underline-offset-2">분석기준선수(Me)보다 기록이 빠른 10명과 느린 10명의 흐름</span>입니다. 그래프가 우상향한다면 뒷심이 강한 것이고, 우하향한다면 해당 종목 이후 체력이 급격히 저하됨을 의미합니다. <span class="text-blue-600 cursor-pointer">선을 클릭하면 상세 정보가 표시됩니다.</span></p>
                     </div>
-                    <div class="chart-container"><canvas id="flowChart"></canvas></div>
+                    <div class="chart-container relative" style="height: 640px">
+                        <canvas id="flowChart"></canvas>
+                        <div id="flowTooltip" class="hidden absolute top-2 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur border border-slate-200 shadow-xl rounded-xl p-3 text-xs z-10 transition-all min-w-[200px]"></div>
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +132,18 @@
                         <h3 class="font-black italic text-2xl uppercase tracking-tighter">Full Race Database</h3>
                         <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Click headers to sort / Page size: 50</p>
                     </div>
-                    <div id="tableStats" class="bg-red-50 text-red-600 px-5 py-2 rounded-xl text-xs font-black tracking-widest border border-red-100"></div>
+                    <div class="flex items-center gap-2">
+                        <button id="resetFilterBtn" class="hidden bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition-colors" onclick="resetTableFilter()">
+                            <i class="fas fa-undo mr-1"></i>필터 해제 전체보기
+                        </button>
+                        <div id="tableStats" class="bg-red-50 text-red-600 px-5 py-2 rounded-xl text-xs font-black tracking-widest border border-red-100"></div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 mb-4 px-6">
+                    <button onclick="applyBenchmarkFilter('s')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-swimmer mr-1"></i>수영 빠른 20명</button>
+                    <button onclick="applyBenchmarkFilter('bk')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-biking mr-1"></i>사이클 빠른 20명</button>
+                    <button onclick="applyBenchmarkFilter('rn')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-running mr-1"></i>런 빠른 20명</button>
+                    <span class="text-xs text-slate-400 font-medium ml-2">누르면 목록 필터링과 동시에 구간별 순위 변동 추이에 회색선으로 반영됩니다.</span>
                 </div>
                 <div class="px-6 mb-3 text-xs font-bold flex flex-col sm:flex-row gap-2">
                     <span class="text-red-600 flex items-center"><i class="fas fa-mouse-pointer mr-2"></i> [이름을 누르면 분석기준선수로 등록됩니다]</span>
@@ -157,16 +154,16 @@
                     <table class="w-full text-left text-sm border-collapse">
                         <thead>
                             <tr class="bg-slate-50/80">
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px] active-sort sort-asc" data-col="ro">Overall Rank</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="b">Bib No.</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="n">Athlete Name</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="d">Division</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="s">Swim</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="t1">T1</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="bk">Bike</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="t2">T2</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="rn">Run</th>
-                                <th class="sortable py-4 px-6 font-black uppercase text-[11px]" data-col="t">Total Time</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px] active-sort sort-asc" data-col="ro">Rank</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="b">Bib No.</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="n">Athlete Name</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="d">Division</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="s">Swim</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t1">T1</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="bk">Bike</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t2">T2</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="rn">Run</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t">Total Time</th>
                             </tr>
                         </thead>
                         <tbody id="recordBody" class="font-bold text-slate-700"></tbody>
@@ -182,7 +179,7 @@
     </div>
 
     <script>
-        let raceData = null; let me = null; let competitors = []; let targets = { offset: 0 }; let charts = {};
+        let raceData = null; let filteredData = null; let filterReason = ""; let me = null; let competitors = []; let charts = {};
         let currentSort = { col: 'ro', dir: 'asc' };
         let currentPage = 1; const pageSize = 50;
         const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
@@ -200,6 +197,7 @@
         window.onload = () => {
             if (window.embeddedData) {
                 raceData = window.embeddedData; me = window.embeddedMe;
+                if (window.embeddedCompetitors) competitors = window.embeddedCompetitors;
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
                 initDistFilterOptions();
@@ -241,45 +239,98 @@
 
         // 초기 Sub-10 분석 로직
         function initSub10Analysis() {
-            const sub10s = raceData.filter(x => x.t < 36000).sort((a,b) => a.t - b.t);
-            if (sub10s.length > 0) {
-                const avgT = sub10s.reduce((a, b) => a + b.t, 0) / sub10s.length;
-                me = sub10s.reduce((prev, curr) => Math.abs(curr.t - avgT) < Math.abs(prev.t - avgT) ? curr : prev);
-                competitors = sub10s.filter(x => x.b !== me.b).slice(0, 4);
-                updateAthleteList(); updateDashboard();
-            }
+            if (!raceData || raceData.length === 0) return;
+
+            // 1. 전체 평균 계산 및 Me 설정
+            const avgT = raceData.reduce((a, b) => a + b.t, 0) / raceData.length;
+            me = raceData.reduce((prev, curr) => Math.abs(curr.t - avgT) < Math.abs(prev.t - avgT) ? curr : prev);
+
+            // 2. 비교군 설정 (-60m, -40m, -20m, +20m, +40m, +60m)
+            competitors = [];
+            const timeDiffs = [-3600, -2400, -1200, 1200, 2400, 3600]; // 초 단위
+            
+            timeDiffs.forEach(diff => {
+                const targetTime = me.t + diff;
+                let bestMatch = null;
+                let minDiff = Infinity;
+                for (const p of raceData) {
+                    if (p.b === me.b || competitors.some(c => c.b === p.b)) continue;
+                    const d = Math.abs(p.t - targetTime);
+                    if (d < minDiff) { minDiff = d; bestMatch = p; }
+                }
+                if (bestMatch) competitors.push(bestMatch);
+            });
+            
+            updateAthleteList(); updateDashboard();
         }
 
         // 테이블 렌더링 및 페이지네이션
         function renderTable() {
-            const sortedData = [...raceData].sort((a, b) => {
+            const sourceData = filteredData || raceData;
+            const sortedData = [...sourceData].sort((a, b) => {
                 let valA = a[currentSort.col], valB = b[currentSort.col];
                 if (typeof valA === 'string') return currentSort.dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 return currentSort.dir === 'asc' ? valA - valB : valB - valA;
             });
 
-            const totalPages = Math.ceil(raceData.length / pageSize);
+            const totalPages = Math.ceil(sourceData.length / pageSize);
             const start = (currentPage - 1) * pageSize;
             const paginated = sortedData.slice(start, start + pageSize);
             
             document.getElementById('recordBody').innerHTML = paginated.map(row => `
                 <tr class="border-b border-slate-50 hover:bg-slate-50 transition-all ${me && row.b === me.b ? 'bg-red-50/60' : ''}">
-                    <td class="py-3 px-6 font-black ${currentSort.col === 'ro' ? 'text-red-600' : ''}">${row.ro}</td>
-                    <td class="py-3 px-6 text-slate-400 font-mono text-xs cursor-pointer hover:text-blue-600 hover:font-bold transition-colors" onclick="addCompetitorByBib('${row.b}')" title="비교군에 추가">${row.b}</td>
-                    <td class="py-3 px-6 font-black text-slate-900 text-base cursor-pointer hover:text-red-600 transition-colors" onclick="setAsMeByBib('${row.b}')" title="분석기준선수로 등록">${row.n}</td>
-                    <td class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-tighter">${row.d}</td>
-                    <td class="py-3 px-6 text-slate-500 font-medium">${sToHms(row.s)}</td>
-                    <td class="py-3 px-6 text-slate-400 font-medium text-xs">${sToHms(row.t1)}</td>
-                    <td class="py-3 px-6 text-slate-500 font-medium">${sToHms(row.bk)}</td>
-                    <td class="py-3 px-6 text-slate-400 font-medium text-xs">${sToHms(row.t2)}</td>
-                    <td class="py-3 px-6 text-slate-500 font-medium">${sToHms(row.rn)}</td>
-                    <td class="py-3 px-6 font-black text-slate-900">${sToHms(row.t)}</td>
+                    <td class="py-2 px-3 font-black ${currentSort.col === 'ro' ? 'text-red-600' : ''}">${row.ro}</td>
+                    <td class="py-2 px-3 text-slate-400 font-mono text-xs cursor-pointer hover:text-blue-600 hover:font-bold transition-colors" onclick="addCompetitorByBib('${row.b}')" title="비교군에 추가">${row.b}</td>
+                    <td class="py-2 px-3 font-black text-slate-900 text-base cursor-pointer hover:text-red-600 transition-colors" onclick="setAsMeByBib('${row.b}')" title="분석기준선수로 등록">${row.n}</td>
+                    <td class="py-2 px-3 text-xs font-bold text-slate-500 uppercase tracking-tighter">${row.d}</td>
+                    <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.s)}</td>
+                    <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToHms(row.t1)}</td>
+                    <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.bk)}</td>
+                    <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToHms(row.t2)}</td>
+                    <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.rn)}</td>
+                    <td class="py-2 px-3 font-black text-slate-900">${sToHms(row.t)}</td>
                 </tr>`).join('');
 
-            document.getElementById('tableStats').innerText = `SHOWING ${start+1} - ${Math.min(start+pageSize, raceData.length)} OF ${raceData.length.toLocaleString()} ATHLETES`;
+            const resetBtn = document.getElementById('resetFilterBtn');
+            if (filteredData) resetBtn.classList.remove('hidden');
+            else resetBtn.classList.add('hidden');
+
+            const reasonText = filterReason ? ` (${filterReason})` : (filteredData ? ' (FILTERED)' : '');
+            document.getElementById('tableStats').innerText = `SHOWING ${start+1} - ${Math.min(start+pageSize, sourceData.length)} OF ${sourceData.length.toLocaleString()} ATHLETES${reasonText}`;
+
             renderPagination(totalPages);
         }
 
+        function resetTableFilter() {
+            filteredData = null;
+            filterReason = "";
+            currentPage = 1;
+            renderTable();
+            updateDashboard(); // 차트도 초기화
+        }
+
+                function applyBenchmarkFilter(type) {
+            if (!me) return alert("먼저 분석기준선수를 등록해주세요.");
+            
+            // 해당 종목 기록순 정렬
+            const sorted = [...raceData].sort((a, b) => a[type] - b[type]);
+            const meIdx = sorted.findIndex(x => x.b === me.b);
+            
+            if (meIdx === -1) return;
+            
+            // 나보다 빠른 20명 추출 (나 포함)
+            const start = Math.max(0, meIdx - 20);
+            const subset = sorted.slice(start, meIdx + 1);
+            
+            filteredData = subset;
+            const typeName = type === 's' ? '수영' : (type === 'bk' ? '사이클' : '런');
+            filterReason = `${me.n}보다 ${typeName} 빠른 20명`;
+            
+            currentPage = 1;
+            updateDashboard(); // 차트 및 테이블 업데이트
+            document.getElementById('flowChart').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
         function renderPagination(total) {
             const container = document.getElementById('paginationNumbers');
             container.innerHTML = '';
@@ -323,7 +374,7 @@
                 
                 currentPage = 1; // 정렬 시 무조건 1페이지로
                 
-                document.querySelectorAll('th.sortable').forEach(h => h.className = 'sortable py-4 px-6 font-black uppercase text-[11px]');
+                document.querySelectorAll('th.sortable').forEach(h => h.className = 'sortable py-2 px-3 font-black uppercase text-[11px]');
                 th.classList.add('active-sort', currentSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
                 renderTable();
             });
@@ -332,7 +383,7 @@
         // 다운로드 기능
         document.getElementById('downloadHtmlBtn').onclick = () => {
             if (!raceData) return;
-            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};<\/script>`;
+            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};window.embeddedCompetitors=${JSON.stringify(competitors)};<\/script>`;
             const finalHtml = document.documentElement.outerHTML.replace('<\/body>', dataScript + '<\/body>');
             const blob = new Blob([finalHtml], { type: 'text/html' });
             const link = document.createElement('a');
@@ -344,8 +395,7 @@
         // 대시보드 업데이트 (차트 렌더링)
         function updateDashboard() {
             const activeAthletes = [];
-            const ratio = me ? (me.t + (targets.offset * 60)) / me.t : 1;
-            if (me) activeAthletes.push({ data: { ...me, s: me.s*ratio, bk: me.bk*ratio, rn: me.rn*ratio, t: me.t+(targets.offset*60) }, color: '#ef4444', label: `${me.n} (Me)` });
+            if (me) activeAthletes.push({ data: me, color: '#ef4444', label: `${me.n} (Me)` });
             competitors.forEach((c, i) => activeAthletes.push({ data: c, color: colors[(i + 1) % colors.length], label: c.n }));
             
             renderRadar(activeAthletes); renderFlow(activeAthletes); renderDist(activeAthletes);
@@ -364,31 +414,129 @@
             if(charts.radar) charts.radar.destroy();
             charts.radar = new Chart(document.getElementById('radarChart'), { 
                 type:'radar', data:{ labels:['수영 점수','사이클 점수','런 점수'], datasets }, 
-                options:{ maintainAspectRatio:false, scales:{r:{min:0, max:100, ticks:{display:false}, grid:{color:'#e2e8f0'}, angleLines:{color:'#e2e8f0'}}}, plugins:{legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}}} } 
+                options:{ maintainAspectRatio:false, scales:{r:{min:0, max:100, ticks:{display:true, stepSize:20, backdropColor:'transparent'}, grid:{color:'#e2e8f0'}, angleLines:{color:'#e2e8f0'}}}, plugins:{legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}}} } 
             });
         }
 
         function renderFlow(athletes) {
-            const datasets = athletes.map(a => ({
-                label: a.label, data: [a.data.ro+30, a.data.ro+15, a.data.ro],
-                borderColor: a.color, tension: 0.4, pointRadius: 6, pointHoverRadius: 10, borderWidth: 4
-            }));
+            if (!me || !raceData) return;
+
+            // Lazy init ranks if not present
+            if (raceData.length > 0 && typeof raceData[0].sRank === 'undefined') {
+                const addRank = (key, valFunc) => {
+                    [...raceData].sort((a,b) => valFunc(a) - valFunc(b)).forEach((x, i) => x[key] = i + 1);
+                };
+                addRank('sRank', x => x.s);
+                addRank('bRank', x => x.s + x.t1 + x.bk);
+            }
+
+            const sorted = [...raceData].sort((a,b) => a.ro - b.ro);
+            const meIdx = sorted.findIndex(x => x.b === me.b);
+            if (meIdx < 0) return;
+
+            let subset;
+            if (filteredData && filteredData.length > 0) {
+                subset = filteredData;
+            } else {
+                const start = Math.max(0, meIdx - 10);
+                const end = Math.min(sorted.length, meIdx + 11);
+                subset = sorted.slice(start, end);
+            }
+
+            const descEl = document.getElementById('flowDesc');
+            if (descEl) {
+                descEl.innerText = (filteredData && filterReason) ? filterReason + "의 흐름" : "분석기준선수(Me)보다 기록이 빠른 10명과 느린 10명의 흐름";
+            }
+
+            // Merge context subset and highlighted athletes
+            const combinedMap = new Map();
+            
+            // 1. Add context athletes (Gray)
+            subset.forEach(a => {
+                combinedMap.set(a.b, { 
+                    data: a, color: '#cbd5e1', width: 2, hoverColor: '#64748b', order: 1 
+                });
+            });
+
+            // 2. Add highlighted athletes (Colored)
+            athletes.forEach(item => {
+                combinedMap.set(item.data.b, { 
+                    data: item.data, color: item.color, width: 4, hoverColor: item.color, order: 0 
+                });
+            });
+
+            const finalAthletes = Array.from(combinedMap.values());
+
+            let minR = Infinity, maxR = -Infinity;
+            const datasets = finalAthletes.map(item => {
+                const a = item.data;
+                const r1 = a.sRank, r2 = a.bRank, r3 = a.ro;
+                minR = Math.min(minR, r1, r2, r3);
+                maxR = Math.max(maxR, r1, r2, r3);
+                return {
+                    label: a.n, data: [r1, r2, r3],
+                    borderColor: item.color, borderWidth: item.width,
+                    hoverBorderColor: item.hoverColor, hoverBorderWidth: 4,
+                    tension: 0.4, pointRadius: item.order === 0 ? 3 : 0, pointHoverRadius: 5, pointHitRadius: 25, order: item.order,
+                    rawAthlete: a
+                };
+            });
+
             if(charts.flow) charts.flow.destroy();
             charts.flow = new Chart(document.getElementById('flowChart'), { 
                 type:'line', data:{ labels:['수영 피니시','사이클 피니시','런 피니시'], datasets }, 
-                options:{ maintainAspectRatio:false, scales:{y:{reverse:true, grid:{color:'#f1f5f9'}}}, plugins:{legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}}} }
+                options:{ 
+                    maintainAspectRatio:false, 
+                    interaction: { mode: 'nearest', axis: 'xy', intersect: false },
+                    scales:{ y:{ reverse:true, min: minR, max: maxR, grid:{color:'#f1f5f9'}, ticks:{stepSize:1}, title: { display: true, text: 'Rank' } } }, 
+                    plugins:{ legend:{display:false}, tooltip:{enabled: false} },
+                    onHover: (e, elements, chart) => {
+                        const tooltipEl = document.getElementById('flowTooltip');
+                        if (!elements || elements.length === 0) {
+                            tooltipEl.classList.add('hidden');
+                            return;
+                        }
+                        const datasetIndex = elements[0].datasetIndex;
+                        const dataset = chart.data.datasets[datasetIndex];
+                        const a = dataset.rawAthlete;
+                        
+                        tooltipEl.innerHTML = `
+                            <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-1">
+                                <span class="font-black text-sm" style="color:${dataset.borderColor}">${a.n}</span>
+                                <span class="text-[10px] font-mono text-slate-400">#${a.b}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600 font-medium">
+                                <span>Total: <b class="text-slate-800">${sToHms(a.t)}</b></span>
+                                <span>Rank: <b class="text-slate-800">${a.ro}</b></span>
+                                <span>Swim: ${sToHms(a.s)}</span>
+                                <span>Bike: ${sToHms(a.bk)}</span>
+                                <span>Run: ${sToHms(a.rn)}</span>
+                            </div>
+                        `;
+                        tooltipEl.classList.remove('hidden');
+                    }
+                }
             });
         }
 
         function renderDist(athletes) {
             const filterVal = document.getElementById('distFilter') ? document.getElementById('distFilter').value : 'All';
+            const metricEl = document.querySelector('input[name="distMetric"]:checked');
+            const metric = metricEl ? metricEl.value : 't';
             
             // Global bounds calculation (always based on full raceData)
             const bins = 40; 
-            const globalTimes = raceData.map(x=>x.t).sort((a,b)=>a-b);
-            if(globalTimes.length === 0) return;
-            const min = globalTimes[0], max = globalTimes[globalTimes.length-1];
+            const globalValues = raceData.map(x=>x[metric]).filter(v => v > 0).sort((a,b)=>a-b);
+            if(globalValues.length === 0) return;
+            const min = globalValues[0], max = globalValues[globalValues.length-1];
             const step = (max === min) ? 60 : (max-min)/bins;
+
+            // Calculate Global Counts for background
+            const globalCounts = Array(bins).fill(0);
+            raceData.forEach(x => {
+                const val = x[metric];
+                if(val > 0 && val >= min && val <= max) globalCounts[Math.min(Math.floor((val-min)/step), bins-1)]++;
+            });
 
             let data = raceData;
             if (filterVal && filterVal !== 'All') {
@@ -396,31 +544,82 @@
             }
             
             const counts = Array(bins).fill(0); 
-            data.forEach(x => counts[Math.min(Math.floor((x.t-min)/step), bins-1)]++);
+            data.forEach(x => {
+                const val = x[metric];
+                if(val > 0 && val >= min && val <= max) counts[Math.min(Math.floor((val-min)/step), bins-1)]++;
+            });
+
+            const validData = data.filter(x => x[metric] > 0);
+            const avgTime = validData.length > 0 ? validData.reduce((a,b) => a + b[metric], 0) / validData.length : 0;
+            const avgIndex = (avgTime - min) / step;
             
             const labels = Array(bins).fill(0).map((_, i) => sToHms(min + i * step).substring(0, 5));
 
+            const datasets = [];
+            // 1. Athletes Markers (Top layer)
+            datasets.push(...athletes.map(a => {
+                const val = a.data[metric];
+                if (val < min || val > max || val <= 0) return null;
+                const athleteIdx = Math.min(Math.floor((val-min)/step), bins-1);
+                return {
+                    label: a.label, type: 'line', data: counts.map((c, i) => i === athleteIdx ? c : null),
+                    borderColor: a.color, backgroundColor: a.color, pointRadius: 6, pointHoverRadius: 12, showLine: false,
+                    datalabels: { display: false }, order: 1
+                };
+            }).filter(x => x));
+
+            // 2. Selected Group Distribution (Middle layer)
+            datasets.push({ 
+                label: filterVal === 'All' ? 'Overall' : filterVal, type: 'bar', data: counts, 
+                backgroundColor: filterVal === 'All' ? '#e2e8f0' : '#94a3b8', 
+                barPercentage: 0.9, categoryPercentage: 0.9, grouped: false, order: 2,
+                datalabels: { anchor: 'end', align: 'end', color: '#64748b', font: {size:10, weight:'bold'}, formatter: (v)=>v>0?v:'' }
+            });
+
+            // 3. Overall Context Background (Bottom layer)
+            if (filterVal !== 'All') {
+                datasets.push({
+                    label: 'Overall Context', type: 'bar', data: globalCounts,
+                    backgroundColor: '#f1f5f9', barPercentage: 0.9, categoryPercentage: 0.9, grouped: false, order: 3,
+                    datalabels: { display: false }
+                });
+            }
+
+            const avgLinePlugin = {
+                id: 'avgLine',
+                afterDatasetsDraw(chart) {
+                    const { ctx, scales: { x, y } } = chart;
+                    if (!avgTime || avgIndex < 0 || avgIndex >= bins) return;
+                    
+                    const x0 = x.getPixelForValue(0);
+                    const x1 = x.getPixelForValue(1);
+                    const width = x1 - x0;
+                    const xPos = x0 + (avgIndex - 0.5) * width;
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(xPos, y.top);
+                    ctx.lineTo(xPos, y.bottom);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ef4444';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`AVG ${sToHms(avgTime).substring(0,5)}`, xPos, y.top - 8);
+                    ctx.restore();
+                }
+            };
+
             if(charts.dist) charts.dist.destroy();
             charts.dist = new Chart(document.getElementById('distChart'), {
-                plugins: [ChartDataLabels],
+                plugins: [ChartDataLabels, avgLinePlugin],
                 type:'bar',
                 data: {
                     labels: labels,
-                    datasets: [
-                        ...athletes.map(a => {
-                            if (a.data.t < min || a.data.t > max) return null;
-                            const athleteIdx = Math.min(Math.floor((a.data.t-min)/step), bins-1);
-                            return {
-                                label: a.label, type: 'line', data: counts.map((c, i) => i === athleteIdx ? c : null),
-                                borderColor: a.color, backgroundColor: a.color, pointRadius: 12, pointHoverRadius: 15, showLine: false,
-                                datalabels: { display: false }
-                            };
-                        }).filter(x => x),
-                        { 
-                            label: 'Count', type: 'bar', data: counts, backgroundColor: '#e2e8f0', barPercentage: 0.9, categoryPercentage: 0.9,
-                            datalabels: { anchor: 'end', align: 'end', color: '#64748b', font: {size:10, weight:'bold'}, formatter: (v)=>v>0?v:'' }
-                        }
-                    ]
+                    datasets: datasets
                 },
                 options: { 
                     maintainAspectRatio: false, 
@@ -429,10 +628,34 @@
                         y: { display: false, grace: '5%' } 
                     }, 
                     plugins:{
-                        legend:{position:'top'},
+                        legend:{
+                            position:'bottom',
+                            labels: { padding: 20 },
+                        },
                         tooltip: { callbacks: { title: (ctx) => `Time: ${ctx[0].label} ~` } }
                     },
-                    layout: { padding: { top: 20 } }
+                    layout: { padding: { top: 0 } },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const rangeStart = min + index * step;
+                            const rangeEnd = min + (index + 1) * step;
+                            
+                            filteredData = data.filter(x => x[metric] >= rangeStart && x[metric] < rangeEnd);
+                            const metricName = metric === 't' ? 'Total' : (metric === 's' ? 'Swim' : (metric === 'bk' ? 'Bike' : 'Run'));
+                            filterReason = `${metricName}: ${sToHms(rangeStart).substring(0,5)}~`;
+                            currentPage = 1;
+                            renderTable();
+                            document.getElementById('recordTableSection').scrollIntoView({ behavior: 'smooth' });
+                        } else {
+                            if (filteredData) {
+                                filteredData = null;
+                                filterReason = "";
+                                currentPage = 1;
+                                renderTable();
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -442,7 +665,6 @@
             const list = document.getElementById('athleteList');
             list.innerHTML = '';
             if (me) {
-                document.getElementById('simTitle').innerText = `${me.n} ANALYSIS`;
                 list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" onclick="removeAthlete('${me.b}')"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
             }
             competitors.forEach((c, i) => {
@@ -455,9 +677,6 @@
         function setAsMe(user) {
             if (!user) return;
             me = user;
-            targets.offset = 0;
-            document.getElementById('simSlider').value = 0;
-            document.getElementById('sliderLabel').innerText = `TARGET PERFORMANCE: CURRENT`;
             updateAthleteList();
             updateDashboard();
         }
@@ -496,26 +715,6 @@
             else competitors = competitors.filter(c => c.b !== bib);
             updateAthleteList(); updateDashboard();
         }
-
-        function applyQuickTarget(mode) {
-            if(!me) return;
-            let targetS = 0;
-            if (mode === 'sub10') { targetS = 35940; } 
-            else {
-                const ageGroup = raceData.filter(x => x.d === me.d);
-                targetS = (mode==='avg') ? ageGroup.reduce((a,b)=>a+b.t,0)/ageGroup.length : [...ageGroup].sort((a,b)=>a.t-b.t)[Math.floor(ageGroup.length*0.1)].t;
-            }
-            targets.offset = Math.round((targetS - me.t)/60);
-            document.getElementById('simSlider').value = targets.offset;
-            document.getElementById('sliderLabel').innerText = `TARGET PERFORMANCE: ${targets.offset} MIN`;
-            updateDashboard();
-        }
-
-        document.getElementById('simSlider').oninput = (e) => {
-            targets.offset = parseInt(e.target.value);
-            document.getElementById('sliderLabel').innerText = targets.offset === 0 ? "TARGET PERFORMANCE: CURRENT" : `TARGET PERFORMANCE: ${targets.offset} MIN`;
-            updateDashboard();
-        };
     </script>
 </body>
 </html>
