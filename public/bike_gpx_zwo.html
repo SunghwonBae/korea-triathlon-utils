@@ -78,6 +78,26 @@
             .modal button { height: 40px !important; font-size: 0.9rem !important; margin-top: 15px !important; padding: 0 !important; }
         }
 
+        /* 모바일 가로모드 (Landscape) 최적화 */
+        @media (max-height: 600px) and (orientation: landscape) {
+            body { padding-top: 40px !important; }
+            .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; }
+            .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; }
+            .menu-btn { font-size: 1.2rem; padding: 0; }
+            .container { padding-top: 10px !important; margin-top: 0 !important; }
+            
+            .step-container { padding: 10px; margin-bottom: 15px; }
+            .step-title { font-size: 1rem; margin-bottom: 8px; }
+            .chart-container { height: 150px !important; }
+            
+            .stats-container { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+            .stat-group { padding: 8px; }
+            .stat-row { padding: 3px 0; font-size: 0.8rem; }
+            
+            .button-group { gap: 5px; margin-top: 5px; }
+            a.button, .content-wrapper button { padding: 8px 12px; min-width: auto; font-size: 0.9rem; }
+        }
+
         /* 가이드 모달 디자인 개선 */
         .guide-box { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ddd; }
         .guide-box h4 { margin: 0 0 8px 0; font-size: 1rem; }

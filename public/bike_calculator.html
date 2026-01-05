@@ -58,6 +58,24 @@
             th, td { padding: 10px 4px; }
             th { font-size: 0.8rem; }
         }
+
+        /* 모바일 가로모드 (Landscape) 최적화 */
+        @media (max-height: 600px) and (orientation: landscape) {
+            body { padding-top: 40px !important; }
+            .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; }
+            .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; }
+            .menu-btn { font-size: 1.2rem; padding: 0; }
+            .container { padding-top: 10px !important; margin-top: 0 !important; }
+
+            .setup-grid { grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 10px; margin-bottom: 10px; }
+            .group { margin-bottom: 0; }
+            label { margin-bottom: 2px; font-size: 0.8em; }
+            select, .btn-main { padding: 5px; font-size: 0.85em; }
+            
+            #slider-container { padding: 10px; }
+            .slider-group { margin-bottom: 15px; }
+            .slider-label { margin-bottom: 15px; font-size: 0.9em; }
+        }
     </style>
 </head>
 <body>

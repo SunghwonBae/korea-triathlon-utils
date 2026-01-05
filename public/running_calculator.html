@@ -65,6 +65,26 @@
         .diagonal-header { min-width: 45px; height: 35px; }
         .diagonal-header .top-label, .diagonal-header .bottom-label { font-size: 1.3em; }
     }
+
+    /* 모바일 가로모드 (Landscape) 최적화 */
+    @media (max-height: 600px) and (orientation: landscape) {
+        body { padding-top: 40px !important; }
+        .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; }
+        .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; }
+        .menu-btn { font-size: 1.2rem; padding: 0; }
+        .container { padding-top: 10px !important; margin-top: 0 !important; }
+
+        .controls { grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; margin-bottom: 10px; }
+        .sub-label { padding: 4px; font-size: 0.85em; }
+        .control-group label { font-size: 0.8em; margin-bottom: 0; }
+        input[type=range] { margin: 2px 0; }
+        
+        .tables-container { gap: 10px; }
+        .table-wrapper { padding: 5px; }
+        .tbl-title { font-size: 0.85em; margin-bottom: 4px; }
+        table { font-size: 9px; }
+        th, td { padding: 4px 1px; }
+    }
 </style>
 </head>
 <body>

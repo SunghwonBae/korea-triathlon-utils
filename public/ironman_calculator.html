@@ -50,6 +50,29 @@
             table { font-size: 11px; }
             th, td { padding: 6px 2px; }
         }
+
+        /* 모바일 가로모드 (Landscape) 최적화 */
+        @media (max-height: 600px) and (orientation: landscape) {
+            body { padding-top: 40px !important; }
+            .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; }
+            .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; }
+            .menu-btn { font-size: 1.2rem; padding: 0; }
+            .container { padding-top: 10px !important; margin-top: 0 !important; }
+            
+            .summary { padding: 10px; margin-bottom: 10px; gap: 5px; }
+            .summary div b { font-size: 1.1em; }
+            
+            .box { padding: 8px; margin-bottom: 8px; }
+            .label-row { margin-bottom: 5px; font-size: 0.85rem; }
+            input[type="range"] { margin: 8px 0; }
+            .range-track-wrapper { margin: 10px 0; }
+            
+            .toggle-row { margin-bottom: 5px; }
+            #btn-toggle { padding: 5px 10px; font-size: 0.8rem; }
+            
+            table { margin-top: 10px; font-size: 11px; }
+            th, td { padding: 5px; }
+        }
     </style>
 </head>
 <body>

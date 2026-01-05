@@ -84,6 +84,29 @@
             input[type="number"], select { font-size: 0.9rem; padding: 8px; }
             table { min-width: auto; }
         }
+
+        /* 모바일 가로모드 (Landscape) 최적화 */
+        @media (max-height: 600px) and (orientation: landscape) {
+            body { padding-top: 40px !important; }
+            .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; }
+            .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; }
+            .menu-btn { font-size: 1.2rem; padding: 0; }
+            .container { padding-top: 10px !important; margin-top: 0 !important; }
+            
+            .visual-container { height: 120px; margin-bottom: 10px; }
+            .bike { font-size: 40px; bottom: 20px; }
+            .road { bottom: -460px; }
+            
+            .status-board { padding: 10px; margin-bottom: 10px; }
+            .main-res { font-size: 1.8em; margin: 5px 0; }
+            
+            .setup-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .group { grid-column: auto !important; padding: 8px; }
+            
+            input[type="number"], select, input[type="text"] { padding: 5px; }
+            label { margin-bottom: 2px; font-size: 0.85em; }
+        }
+
         .group-header td { background: #f1f3f5; font-weight: bold; color: #495057; text-align: left; padding: 8px 15px; font-size: 0.9em; border-top: 2px solid #dee2e6; }
         
         /* 파워존 시각화 */
@@ -165,7 +188,7 @@
             <input type="text" id="baseGearDisplay" value="1.00 (34-34T)" disabled style="background:#eee; text-align:center; font-weight:bold;">
             <input type="hidden" id="baseGearVal" value="1.0">
         </div>
-        <div class="group">
+        <div class="group half-mobile">
             <label>✨ 내 언덕 기어 직접 추가</label>
             <div class="custom-row">
                 <input type="number" id="cF" placeholder="앞(T)">

@@ -363,6 +363,35 @@ export default function CyclingAnalyzer() {
             scroll-snap-align: center;
           }
         }
+
+        /* 모바일 가로모드 (Landscape) 최적화 */
+        @media (max-height: 600px) and (orientation: landscape) {
+          .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+          .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; color: #1f2937; font-weight: 700; }
+          .menu-btn { font-size: 1.2rem; padding: 0; background: none; border: none; cursor: pointer; }
+
+          .main-content { padding: 50px 20px 20px !important; gap: 20px !important; }
+          
+          .card { padding: 15px !important; max-width: 500px !important; }
+          .icon-circle { width: 40px !important; height: 40px !important; font-size: 20px !important; margin: 0 auto 10px !important; }
+          .card-header h2 { font-size: 1.1rem !important; margin-bottom: 5px !important; }
+          .desc { font-size: 0.8rem !important; margin-bottom: 10px !important; }
+          .sample-link { margin-bottom: 15px !important; font-size: 0.75rem !important; padding: 4px 10px !important; }
+          
+          .upload-box { padding: 15px !important; margin-bottom: 15px !important; }
+          .upload-icon { font-size: 1.5rem !important; margin-bottom: 2px !important; }
+          .upload-main-text { font-size: 0.9rem !important; }
+          .upload-sub-text { font-size: 0.7rem !important; }
+          
+          .action-btn { padding: 10px !important; font-size: 0.9rem !important; }
+          
+          .guide-section h3 { font-size: 1.1rem !important; margin-bottom: 10px !important; }
+          .guide-section p { font-size: 0.85rem !important; margin-bottom: 15px !important; }
+          .guide-images img { width: 25% !important; }
+          
+          .report-gallery { padding: 10px 0 !important; }
+          .report-gallery img { width: 30% !important; }
+        }
       `}</style>
     </div>
   );
