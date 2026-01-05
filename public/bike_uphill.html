@@ -402,6 +402,27 @@ function run(mode) {
     });
 }
 run();
+
+// PWA 뒤로가기 2번 종료 로직
+(function() {
+    let lastBackPressTime = 0;
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+        const now = new Date().getTime();
+        if (now - lastBackPressTime < 2000) { history.back(); return; }
+        lastBackPressTime = now;
+        history.pushState(null, null, location.href);
+        const t = document.createElement('div');
+        t.innerText = "'뒤로' 버튼을 한번 더 누르면 종료됩니다.";
+        Object.assign(t.style, {
+            position:'fixed', bottom:'20px', left:'50%', transform:'translateX(-50%)',
+            background:'rgba(0,0,0,0.7)', color:'#fff', padding:'10px 20px',
+            borderRadius:'20px', zIndex:9999, fontSize:'0.9rem', pointerEvents:'none'
+        });
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2000);
+    });
+})();
 </script>
 </body>
 </html>
