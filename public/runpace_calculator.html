@@ -85,7 +85,7 @@
 
         /* 음성 인식 모달 스타일 */
         .voice-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .voice-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .voice-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; max-height: 85vh; padding: 0; overflow: hidden; }
         .voice-close { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #999; line-height: 1; }
         .voice-mic-btn { width: 60px; height: 60px; border-radius: 50%; background: #e74c3c; color: white; border: none; font-size: 24px; margin: 10px auto; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4); transition: transform 0.2s; }
         .voice-mic-btn.listening { animation: pulse 1.5s infinite; background: #c0392b; }
@@ -103,6 +103,14 @@
         .input-group-modal label { display: block; font-size: 0.85em; font-weight: bold; color: #34495e; margin-bottom: 4px; }
         .input-group-modal input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
         .btn-voice-open { background: none; border: none; font-size: 1.2rem; cursor: pointer; margin-right: 10px; }
+
+        /* 입력란 반짝임 애니메이션 */
+        @keyframes flashInput {
+            0% { background-color: #fff; border-color: #ddd; }
+            50% { background-color: #e8f0fe; border-color: #3498db; box-shadow: 0 0 8px rgba(52, 152, 219, 0.3); }
+            100% { background-color: #fff; border-color: #ddd; }
+        }
+        .flash-highlight { animation: flashInput 0.6s ease-out; }
     </style>
 </head>
 <body>
@@ -190,38 +198,41 @@
 <!-- 음성 인식 모달 -->
 <div id="voiceModal" class="voice-modal">
     <div class="voice-content">
-        <span class="voice-close" onclick="closeVoiceModal()">&times;</span>
-        <div id="voiceStatus" class="voice-status" style="font-size:1.2rem; color:#2c3e50; margin-bottom:20px; font-weight:bold; line-height:1.4;">
-            마이크를 누르고 말하거나<br>아래에 직접 입력하세요
+        <div style="padding: 25px 25px 10px 25px; flex-shrink: 0; position: relative;">
+            <span class="voice-close" onclick="closeVoiceModal()">&times;</span>
+            <div id="voiceStatus" class="voice-status" style="font-size:1.2rem; color:#2c3e50; margin-bottom:10px; font-weight:bold; line-height:1.4;">
+                마이크를 누르고 말하거나<br>아래에 직접 입력하세요
+            </div>
         </div>
 
-        <div class="modal-inputs">
-            <div class="input-group-modal"><label>거리 (km)</label><input type="number" id="m-dist" step="0.001" placeholder="42.195"></div>
-            <div class="input-group-modal">
-                <label>목표 시간 (시 : 분 : 초)</label>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="number" id="m-time-h" placeholder="시" style="flex:1; text-align:center;"> :
-                    <input type="number" id="m-time-m" placeholder="분" style="flex:1; text-align:center;"> :
-                    <input type="number" id="m-time-s" placeholder="초" style="flex:1; text-align:center;">
+        <div style="overflow-y: auto; padding: 0 25px 25px 25px; flex-grow: 1; -webkit-overflow-scrolling: touch;">
+            <div class="modal-inputs">
+                <div class="input-group-modal"><label>거리 (km)</label><input type="number" id="m-dist" step="0.001" placeholder="42.195"></div>
+                <div class="input-group-modal">
+                    <label>목표 시간 (시 : 분 : 초)</label>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" id="m-time-h" placeholder="시" style="flex:1; text-align:center;"> :
+                        <input type="number" id="m-time-m" placeholder="분" style="flex:1; text-align:center;"> :
+                        <input type="number" id="m-time-s" placeholder="초" style="flex:1; text-align:center;">
+                    </div>
                 </div>
+                <div class="input-group-modal"><label>페이스 (분 초)</label><input type="text" id="m-pace" placeholder="5분 41초"></div>
+                <div class="input-group-modal"><label>전략 (초, -:Negative)</label><input type="number" id="m-strat" placeholder="-5"></div>
             </div>
-            <div class="input-group-modal"><label>페이스 (분 초)</label><input type="text" id="m-pace" placeholder="5분 41초"></div>
-            <div class="input-group-modal"><label>전략 (초, -:Negative)</label><input type="number" id="m-strat" placeholder="-5"></div>
-        </div>
 
-        <div style="margin-top:20px; display:flex; align-items:center; gap:15px;">
-            <button id="voiceBtn" class="voice-mic-btn" onclick="startRecognition()" style="width:60px; height:60px; font-size:28px; flex-shrink:0; margin:0;">🎤</button>
-            <button onclick="applyModalValues()" style="flex:1; padding:0; background:#2ecc71; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem; height:60px;">적용하기</button>
-        </div>
-        
-        <div class="voice-guide-box" style="margin-top:15px; font-size:1rem; margin-bottom:0; padding:0; overflow:hidden;">
-            <div style="padding:10px; border-bottom:1px solid #dee2e6; background:#fff; color:#555; line-height:1.4;">
-                ※ 마이크 버튼은 한 번만 누르면 듣기 모드가 시작되고, 말이 끝나면 자동으로 인식이 종료되므로 계속 누르고 계실 필요는 없습니다.
+            <div style="margin-top:20px; display:flex; align-items:center; gap:15px;">
+                <button id="voiceBtn" class="voice-mic-btn" onclick="startRecognition()" style="width:60px; height:60px; font-size:28px; flex-shrink:0; margin:0;">🎤</button>
+                <button onclick="applyModalValues()" style="flex:1; padding:0; background:#2ecc71; color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.1rem; height:60px;">적용하기</button>
             </div>
-            <div style="padding:10px; background:#eef2f5; border-bottom:1px solid #dee2e6; font-weight:bold; color:#2c3e50; text-align:left;">
-            💡 강력한 자기암시를 활용한 음성인식 예시^^ 
-            </div>
-            <table style="width:100%; border-collapse:collapse; text-align:left;">
+            
+            <div class="voice-guide-box" style="margin-top:15px; font-size:1rem; margin-bottom:0; padding:0; overflow:hidden;">
+                <div style="padding:10px; border-bottom:1px solid #dee2e6; background:#fff; color:#555; line-height:1.4;">
+                    ※ 마이크 버튼은 한 번만 누르면 듣기 모드가 시작되고, 말이 끝나면 자동으로 인식이 종료되므로 계속 누를 필요는 없습니다. <span style="color:#e74c3c; font-weight:bold;">인식 내용확인후 적용하기 버튼을 눌러주세요.</span>
+                </div>
+                <div style="padding:10px; background:#eef2f5; border-bottom:1px solid #dee2e6; font-weight:bold; color:#2c3e50; text-align:left;">
+                    💡 자기 암시를 활용한 다양한 음성인식 예시입니다. 
+                </div>
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
                 <tr>
                     <th style="padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; width:60px; color:#2c3e50; vertical-align:top;">관용어</th>
                     <td style="padding:8px 10px; border-bottom:1px solid #eee;">"서브 쓰리", "싱글", "삼삼공", "이사구"</td>
@@ -242,7 +253,8 @@
                     <th style="padding:8px 10px; background:#f8f9fa; color:#2c3e50; vertical-align:top;">기타</th>
                     <td style="padding:8px 10px;">"15키로 5분 30초 페이스", "3시간 40분"</td>
                 </tr>
-            </table>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -417,6 +429,15 @@
         recognition.start();
     }
 
+    function highlightElement(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('flash-highlight');
+            void el.offsetWidth; // 리플로우 강제 발생 (애니메이션 재시작용)
+            el.classList.add('flash-highlight');
+        }
+    }
+
     function parseToModal(text) {
         let dist = null, time = null, pace = null, strat = null;
 
@@ -466,7 +487,10 @@
         }
 
         // 모달 입력창에 값 적용
-        if (dist !== null) document.getElementById('m-dist').value = dist;
+        if (dist !== null) {
+            document.getElementById('m-dist').value = dist;
+            highlightElement('m-dist');
+        }
         
         // 시간/페이스 계산 로직 (거리와 시간/페이스가 있으면 나머지 하나 계산)
         let currentDist = dist !== null ? dist : parseFloat(document.getElementById('m-dist').value);
@@ -475,19 +499,32 @@
             document.getElementById('m-time-h').value = Math.floor(time / 60);
             document.getElementById('m-time-m').value = Math.floor(time % 60);
             document.getElementById('m-time-s').value = Math.round((time * 60) % 60);
+            highlightElement('m-time-h');
+            highlightElement('m-time-m');
+            highlightElement('m-time-s');
             
-            if(currentDist > 0) document.getElementById('m-pace').value = fmtPaceKr((time * 60) / currentDist);
+            if(currentDist > 0) {
+                document.getElementById('m-pace').value = fmtPaceKr((time * 60) / currentDist);
+                highlightElement('m-pace');
+            }
         } else if (pace !== null) {
             document.getElementById('m-pace').value = fmtPaceKr(pace);
+            highlightElement('m-pace');
             if(currentDist > 0) {
                 const tVal = (currentDist * pace) / 60;
                 document.getElementById('m-time-h').value = Math.floor(tVal / 60);
                 document.getElementById('m-time-m').value = Math.floor(tVal % 60);
                 document.getElementById('m-time-s').value = Math.round((tVal * 60) % 60);
+                highlightElement('m-time-h');
+                highlightElement('m-time-m');
+                highlightElement('m-time-s');
             }
         }
         
-        if (strat !== null) document.getElementById('m-strat').value = strat;
+        if (strat !== null) {
+            document.getElementById('m-strat').value = strat;
+            highlightElement('m-strat');
+        }
     }
 
     function applyModalValues() {
@@ -498,7 +535,12 @@
         const pStr = document.getElementById('m-pace').value;
         const s = parseFloat(document.getElementById('m-strat').value);
 
-        if(!isNaN(d)) elDist.value = d;
+        let targetDist = parseFloat(elDist.value);
+        let targetTime = parseFloat(elTime.value);
+        let targetPace = parseFloat(elPace.value);
+        let targetStrat = parseFloat(elStrat.value);
+
+        if(!isNaN(d)) targetDist = d;
         
         // 시간 파싱 (H, M, S -> min)
         let tMin = 0;
@@ -507,9 +549,9 @@
         }
         
         if(tMin > 0) {
-            elTime.value = tMin;
+            targetTime = tMin;
             // 페이스 자동 계산 (시간 우선)
-            elPace.value = (tMin * 60) / d;
+            targetPace = (tMin * 60) / targetDist;
         } else {
             // 페이스 파싱 (한글 "분 초" 또는 MM'SS" -> sec)
             let pSec = 0;
@@ -526,15 +568,41 @@
             }
             
             if(pSec > 0) {
-                elPace.value = pSec;
-                elTime.value = (d * pSec) / 60;
+                targetPace = pSec;
+                targetTime = (targetDist * pSec) / 60;
             }
         }
 
-        if(!isNaN(s)) elStrat.value = s;
+        if(!isNaN(s)) targetStrat = s;
         
-        update();
         closeVoiceModal();
+        animateChanges(targetDist, targetTime, targetPace, targetStrat);
+    }
+
+    function animateChanges(tDist, tTime, tPace, tStrat) {
+        const startDist = parseFloat(elDist.value);
+        const startTime = parseFloat(elTime.value);
+        const startPace = parseFloat(elPace.value);
+        const startStrat = parseFloat(elStrat.value);
+
+        const duration = 1000; // 1초 동안 부드럽게 이동
+        const startTimeStamp = performance.now();
+
+        function step(currentTime) {
+            const elapsed = currentTime - startTimeStamp;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3); // Ease Out Cubic
+
+            elDist.value = startDist + (tDist - startDist) * ease;
+            elTime.value = startTime + (tTime - startTime) * ease;
+            elPace.value = startPace + (tPace - startPace) * ease;
+            elStrat.value = startStrat + (tStrat - startStrat) * ease;
+
+            update();
+
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
     }
 </script>
 </body>
