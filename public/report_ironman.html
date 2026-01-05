@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IM GURYE - Ultimate Professional Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .chart-container { position: relative; height: 320px; width: 100%; }
+        .card { background: white; border-radius: 2.5rem; border: 1px solid #e2e8f0; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .athlete-chip { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 800; margin: 4px; color: white; cursor: pointer; transition: transform 0.2s; }
+        .athlete-chip:hover { transform: translateY(-2px); }
+        .guide-box { background: #f1f5f9; border-radius: 1.25rem; padding: 1.25rem; margin-bottom: 1.5rem; border-left: 5px solid #cbd5e1; }
+        
+        /* 테이블 스타일 */
+        th.sortable { cursor: pointer; position: relative; transition: all 0.2s; white-space: nowrap; }
+        th.sortable:hover { background-color: #f1f5f9; }
+        th.sort-asc::after { content: ' ▲'; color: #ef4444; font-size: 11px; vertical-align: middle; }
+        th.sort-desc::after { content: ' ▼'; color: #ef4444; font-size: 11px; vertical-align: middle; }
+        th.active-sort { background-color: #fef2f2 !important; color: #ef4444; }
+        
+        /* 페이지네이션 */
+        .page-num { cursor: pointer; padding: 0.6rem 1.1rem; border-radius: 0.85rem; font-weight: 800; font-size: 13px; border: 1px solid #e2e8f0; background: white; transition: all 0.2s; }
+        .page-num:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .page-num.active { background-color: #ef4444; color: white; border-color: #ef4444; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4); }
+        
+        /* 슬라이더 커스텀 */
+        input[type=range]::-webkit-slider-thumb { border: 4px solid #fff; height: 24px; width: 24px; border-radius: 50%; background: #ef4444; cursor: pointer; -webkit-appearance: none; margin-top: -8px; }
+    </style>
+</head>
+<body class="leading-tight">
+
+    <div id="setupSection" class="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+        <div class="card max-w-xl w-full text-center py-20 border-none shadow-2xl">
+            <div class="mb-8">
+                <i class="fas fa-trident text-red-600 text-6xl mb-4"></i>
+                <h1 class="text-6xl font-black italic tracking-tighter uppercase">IM <span class="text-red-600">PRO</span></h1>
+                <p class="text-slate-400 font-bold mt-2 uppercase tracking-widest">Advanced Race Analytics</p>
+            </div>
+            <label class="block w-full cursor-pointer bg-white border-4 border-dashed border-slate-200 rounded-[3rem] p-16 hover:border-red-500 hover:bg-red-50/30 transition-all group">
+                <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
+                <i class="fas fa-cloud-upload-alt text-6xl text-slate-300 group-hover:text-red-500 mb-6 transition-colors"></i>
+                <span class="block font-black text-slate-700 text-xl mb-2">CSV 파일 업로드</span>
+                <span class="block text-slate-400 text-sm font-medium">기록 데이터를 불러와 Sub-10 분석을 시작하세요</span>
+            </label>
+        </div>
+    </div>
+
+    <div id="mainDashboard" class="hidden min-h-screen pb-24">
+        <header class="bg-white/95 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200 px-6 py-4">
+            <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center gap-6">
+                <div class="font-black text-3xl italic flex-shrink-0 tracking-tighter">IM <span class="text-red-600">GURYE</span></div>
+                <div class="flex-1 flex gap-3 w-full">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchBox" placeholder="선수 이름 또는 배번을 입력하여 검색하세요" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-red-500/10 focus:bg-white font-bold transition-all">
+                    </div>
+                    <button id="addMeBtn" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-black transition-all">나로 등록</button>
+                    <button id="addCompareBtn" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-blue-700 transition-all">비교군 추가</button>
+                </div>
+                <button id="downloadHtmlBtn" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all">
+                    <i class="fas fa-file-download mr-2"></i>리포트 다운로드
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-[1600px] mx-auto p-4 md:p-8 space-y-10">
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
+                <div class="relative z-10">
+                    <h2 class="text-4xl font-black italic mb-4 tracking-tight uppercase">Sub-10 Benchmark Analysis</h2>
+                    <p class="text-slate-300 text-lg leading-relaxed max-w-4xl font-medium">
+                        현재 로드된 대시보드는 <span class="text-red-500 font-bold underline decoration-2">10시간 이내 완주자(Sub-10)들의 평균 기록</span>을 가진 가상의 선수를 기준으로 설정되었습니다. 
+                        상위권 경쟁자들과의 구간별 격차를 시각화하여 보여줍니다. 본인의 기록으로 분석하고 싶다면 검색창에 배번을 입력 후 <span class="text-white font-bold bg-white/20 px-2 py-0.5 rounded">나로 등록</span> 버튼을 눌러주세요.
+                    </p>
+                </div>
+                <i class="fas fa-bolt absolute -right-10 -bottom-10 text-[20rem] text-white/5 -rotate-12"></i>
+            </div>
+
+            <div id="athleteList" class="flex flex-wrap min-h-[50px] gap-2 px-2"></div>
+
+            <div id="simulatorCard" class="card bg-slate-900 text-white border-none shadow-2xl">
+                <div class="flex flex-col md:flex-row justify-between items-start mb-10 gap-8">
+                    <div>
+                        <h3 id="simTitle" class="font-black italic text-red-500 text-3xl uppercase mb-3 tracking-tighter">PERFORMANCE SIMULATOR</h3>
+                        <div class="space-y-2">
+                            <p class="text-slate-400 text-sm font-medium flex items-center"><i class="fas fa-info-circle mr-2"></i>슬라이더를 좌우로 움직여 전체 시간 대비 종목별 예상 기록 변화를 시뮬레이션 합니다.</p>
+                            <p class="text-slate-400 text-sm font-medium flex items-center"><i class="fas fa-check-circle mr-2 text-red-500"></i>목표 버튼을 누르면 해당 그룹에 도달하기 위한 필요 기록이 자동 계산됩니다.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="applyQuickTarget('avg')" class="bg-slate-800 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-slate-700 transition-all uppercase tracking-widest">Age Avg Target</button>
+                        <button onclick="applyQuickTarget('top10')" class="bg-slate-800 text-white px-6 py-4 rounded-2xl font-black text-xs hover:bg-slate-700 transition-all uppercase tracking-widest">Age 10% Target</button>
+                        <button onclick="applyQuickTarget('sub10')" class="bg-red-600 text-white px-8 py-4 rounded-2xl font-black text-xs hover:bg-red-700 shadow-xl shadow-red-900/20 transition-all uppercase tracking-widest">Sub-10 Target</button>
+                    </div>
+                </div>
+                <div class="px-4">
+                    <input type="range" id="simSlider" min="-120" max="60" value="0" class="w-full h-3 bg-slate-700 rounded-full appearance-none cursor-pointer accent-red-500">
+                    <div class="flex justify-between text-[10px] font-black text-slate-500 mt-4 uppercase tracking-widest">
+                        <span>-120 MIN</span>
+                        <span id="sliderLabel" class="text-2xl text-red-500 italic tracking-tighter">TARGET PERFORMANCE: CURRENT</span>
+                        <span>+60 MIN</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div class="card lg:col-span-2">
+                    <div class="guide-box border-l-slate-800">
+                        <h5 class="font-black text-slate-800 text-base mb-2 uppercase flex items-center"><i class="fas fa-chart-area mr-2"></i>기록 분포 분석 (Total Time Distribution)</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 참가자의 완주 시간 분포 그래프입니다. 회색 바가 높을수록 해당 시간대에 많은 선수가 몰려 있음을 의미합니다. <span class="text-red-600">빨간 점(Me)</span>이 그래프의 왼쪽으로 갈수록 상위권입니다. 경쟁이 가장 치열한 '팩'을 벗어나기 위한 목표 지점을 설정하세요.</p>
+                    </div>
+                    <div class="chart-container"><canvas id="distChart"></canvas></div>
+                </div>
+
+                <div class="card">
+                    <div class="guide-box border-l-red-500">
+                        <h5 class="font-black text-red-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-tachometer-alt mr-2"></i>종목별 밸런스 점수 (Ability Balance)</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 평균을 50점으로 환산했을 때 나의 종목별 상대 점수입니다. 100점에 가까울수록 해당 종목에서 압도적인 기량을 가졌음을 뜻합니다. 레이더 차트의 면적이 정삼각형에 가깝게 넓어지는 것이 이상적인 훈련 목표입니다.</p>
+                    </div>
+                    <div class="chart-container"><canvas id="radarChart"></canvas></div>
+                </div>
+
+                <div class="card">
+                    <div class="guide-box border-l-blue-600">
+                        <h5 class="font-black text-blue-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-project-diagram mr-2"></i>구간별 순위 변동 추이 (Rank Flow)</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">수영, 사이클, 런 각 구간을 마쳤을 때의 실시간 순위 변화를 추적합니다. 그래프가 우상향한다면 뒷심이 강한 것이고, 우하향한다면 해당 종목 이후 체력이 급격히 저하됨을 의미합니다. Sub-10 달성자들과의 구간별 격차를 확인하세요.</p>
+                    </div>
+                    <div class="chart-container"><canvas id="flowChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="card overflow-hidden" id="recordTableSection">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 px-2 gap-4">
+                    <div>
+                        <h3 class="font-black italic text-2xl uppercase tracking-tighter">Full Race Database</h3>
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Click headers to sort / Page size: 50</p>
+                    </div>
+                    <div id="tableStats" class="bg-red-50 text-red-600 px-5 py-2 rounded-xl text-xs font-black tracking-widest border border-red-100"></div>
+                </div>
+                
+                <div class="overflow-x-auto border-y border-slate-100">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80">
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px] active-sort sort-asc" data-col="ro">Overall Rank</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="b">Bib No.</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="n">Athlete Name</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="d">Division</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="s">Swim</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="bk">Bike</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="rn">Run</th>
+                                <th class="sortable py-6 px-6 font-black uppercase text-[11px]" data-col="t">Total Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordBody" class="font-bold text-slate-700"></tbody>
+                    </table>
+                </div>
+
+                <div class="flex flex-col items-center mt-10 space-y-4">
+                    <div class="flex items-center gap-2" id="paginationNumbers"></div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Go to page to view more athletes</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let raceData = null; let me = null; let competitors = []; let targets = { offset: 0 }; let charts = {};
+        let currentSort = { col: 'ro', dir: 'asc' };
+        let currentPage = 1; const pageSize = 50;
+        const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
+
+        const hmsToS = (s) => { if(!s || !s.includes(':')) return 0; const p = s.split(':').map(Number); return p.length===3 ? p[0]*3600+p[1]*60+p[2] : 0; };
+        const sToHms = (s) => { if(s<=0) return "--:--:--"; const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
+
+        // 로컬 파일 로드 체크
+        window.onload = () => {
+            if (window.embeddedData) {
+                raceData = window.embeddedData; me = window.embeddedMe;
+                document.getElementById('setupSection').classList.add('hidden');
+                document.getElementById('mainDashboard').classList.remove('hidden');
+                updateAthleteList(); updateDashboard();
+            }
+        };
+
+        // CSV 파일 파싱
+        document.getElementById('csvFileInput').onchange = (e) => {
+            Papa.parse(e.target.files[0], {
+                header: true, skipEmptyLines: true, encoding: "UTF-8",
+                complete: (r) => {
+                    raceData = r.data.map(x => ({
+                        b: x['Bib'], n: x['Name'], d: x['Division'],
+                        t: hmsToS(x['Overall Time']), s: hmsToS(x['Swim Time']), bk: hmsToS(x['Bike Time']), rn: hmsToS(x['Run Time']),
+                        ro: parseInt(x['Overall Rank']), ra: parseInt(x['Age Group Rank'])
+                    })).filter(v => v.t > 0);
+                    initSub10Analysis();
+                    document.getElementById('setupSection').classList.add('hidden');
+                    document.getElementById('mainDashboard').classList.remove('hidden');
+                }
+            });
+        };
+
+        // 초기 Sub-10 분석 로직
+        function initSub10Analysis() {
+            const sub10s = raceData.filter(x => x.t < 36000).sort((a,b) => a.t - b.t);
+            if (sub10s.length > 0) {
+                const avgT = sub10s.reduce((a, b) => a + b.t, 0) / sub10s.length;
+                me = sub10s.reduce((prev, curr) => Math.abs(curr.t - avgT) < Math.abs(prev.t - avgT) ? curr : prev);
+                competitors = sub10s.filter(x => x.b !== me.b).slice(0, 4);
+                updateAthleteList(); updateDashboard();
+            }
+        }
+
+        // 테이블 렌더링 및 페이지네이션
+        function renderTable() {
+            const sortedData = [...raceData].sort((a, b) => {
+                let valA = a[currentSort.col], valB = b[currentSort.col];
+                if (typeof valA === 'string') return currentSort.dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                return currentSort.dir === 'asc' ? valA - valB : valB - valA;
+            });
+
+            const totalPages = Math.ceil(raceData.length / pageSize);
+            const start = (currentPage - 1) * pageSize;
+            const paginated = sortedData.slice(start, start + pageSize);
+            
+            document.getElementById('recordBody').innerHTML = paginated.map(row => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-all ${me && row.b === me.b ? 'bg-red-50/60' : ''}">
+                    <td class="py-5 px-6 font-black ${currentSort.col === 'ro' ? 'text-red-600' : ''}">${row.ro}</td>
+                    <td class="py-5 px-6 text-slate-400 font-mono text-xs">${row.b}</td>
+                    <td class="py-5 px-6 font-black text-slate-900 text-base">${row.n}</td>
+                    <td class="py-5 px-6 text-xs font-bold text-slate-500 uppercase tracking-tighter">${row.d}</td>
+                    <td class="py-5 px-6 text-slate-500 font-medium">${sToHms(row.s)}</td>
+                    <td class="py-5 px-6 text-slate-500 font-medium">${sToHms(row.bk)}</td>
+                    <td class="py-5 px-6 text-slate-500 font-medium">${sToHms(row.rn)}</td>
+                    <td class="py-5 px-6 font-black text-slate-900">${sToHms(row.t)}</td>
+                </tr>`).join('');
+
+            document.getElementById('tableStats').innerText = `SHOWING ${start+1} - ${Math.min(start+pageSize, raceData.length)} OF ${raceData.length.toLocaleString()} ATHLETES`;
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(total) {
+            const container = document.getElementById('paginationNumbers');
+            container.innerHTML = '';
+            
+            let range = 2; // 현재 페이지 앞뒤로 보여줄 개수
+            let start = Math.max(1, currentPage - range);
+            let end = Math.min(total, currentPage + range);
+
+            if (start > 1) {
+                container.innerHTML += `<span class="page-num" onclick="goToPage(1)">1</span>`;
+                if (start > 2) container.innerHTML += `<span class="px-2 font-bold text-slate-300">...</span>`;
+            }
+
+            for (let i = start; i <= end; i++) {
+                container.innerHTML += `<span class="page-num ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</span>`;
+            }
+
+            if (end < total) {
+                if (end < total - 1) container.innerHTML += `<span class="px-2 font-bold text-slate-300">...</span>`;
+                container.innerHTML += `<span class="page-num" onclick="goToPage(${total})">${total}</span>`;
+            }
+        }
+
+        function goToPage(p) { 
+            currentPage = p; renderTable(); 
+            document.getElementById('recordTableSection').scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+        }
+
+        // 정렬 기능 (1페이지 리셋 포함)
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.col;
+                if (currentSort.col === col) currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+                else { currentSort.col = col; currentSort.dir = 'asc'; }
+                
+                currentPage = 1; // 정렬 시 무조건 1페이지로
+                
+                document.querySelectorAll('th.sortable').forEach(h => h.className = 'sortable py-6 px-6 font-black uppercase text-[11px]');
+                th.classList.add('active-sort', currentSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+                renderTable();
+            });
+        });
+
+        // 다운로드 기능
+        document.getElementById('downloadHtmlBtn').onclick = () => {
+            if (!raceData) return;
+            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};<\/script>`;
+            const finalHtml = document.documentElement.outerHTML.replace('<\/body>', dataScript + '<\/body>');
+            const blob = new Blob([finalHtml], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `IM_Report_${me ? me.n : 'Full'}.html`;
+            link.click();
+        };
+
+        // 대시보드 업데이트 (차트 렌더링)
+        function updateDashboard() {
+            const activeAthletes = [];
+            const ratio = me ? (me.t + (targets.offset * 60)) / me.t : 1;
+            if (me) activeAthletes.push({ data: { ...me, s: me.s*ratio, bk: me.bk*ratio, rn: me.rn*ratio, t: me.t+(targets.offset*60) }, color: '#ef4444', label: `${me.n} (Me)` });
+            competitors.forEach((c, i) => activeAthletes.push({ data: c, color: colors[(i + 1) % colors.length], label: c.n }));
+            
+            renderRadar(activeAthletes); renderFlow(activeAthletes); renderDist(activeAthletes);
+            renderTable();
+        }
+
+        function renderRadar(athletes) {
+            const getScore = (val, k) => {
+                const arr = raceData.map(x => x[k]).filter(v => v > 0).sort((a,b)=>a-b);
+                return 100 - (arr.findIndex(v => v >= val) / arr.length * 100);
+            };
+            const datasets = athletes.map(a => ({
+                label: a.label, data: [getScore(a.data.s,'s'), getScore(a.data.bk,'bk'), getScore(a.data.rn,'rn')],
+                borderColor: a.color, backgroundColor: a.color + '1A', fill: true, borderWidth: 4, pointRadius: 4
+            }));
+            if(charts.radar) charts.radar.destroy();
+            charts.radar = new Chart(document.getElementById('radarChart'), { 
+                type:'radar', data:{ labels:['수영 점수','사이클 점수','런 점수'], datasets }, 
+                options:{ maintainAspectRatio:false, scales:{r:{min:0, max:100, ticks:{display:false}, grid:{color:'#e2e8f0'}, angleLines:{color:'#e2e8f0'}}}, plugins:{legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}}} } 
+            });
+        }
+
+        function renderFlow(athletes) {
+            const datasets = athletes.map(a => ({
+                label: a.label, data: [a.data.ro+30, a.data.ro+15, a.data.ro],
+                borderColor: a.color, tension: 0.4, pointRadius: 6, pointHoverRadius: 10, borderWidth: 4
+            }));
+            if(charts.flow) charts.flow.destroy();
+            charts.flow = new Chart(document.getElementById('flowChart'), { 
+                type:'line', data:{ labels:['수영 피니시','사이클 피니시','런 피니시'], datasets }, 
+                options:{ maintainAspectRatio:false, scales:{y:{reverse:true, grid:{color:'#f1f5f9'}}}, plugins:{legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}}} }
+            });
+        }
+
+        function renderDist(athletes) {
+            const bins = 40; const times = raceData.map(x=>x.t).sort((a,b)=>a-b);
+            const min = times[0], max = times[times.length-1], step = (max-min)/bins;
+            const counts = Array(bins).fill(0); times.forEach(t => counts[Math.min(Math.floor((t-min)/step), bins-1)]++);
+            if(charts.dist) charts.dist.destroy();
+            charts.dist = new Chart(document.getElementById('distChart'), {
+                type:'bar',
+                data: {
+                    labels: Array(bins).fill(''),
+                    datasets: [
+                        ...athletes.map(a => ({
+                            label: a.label, type: 'line', data: counts.map((c, i) => {
+                                const athleteIdx = Math.min(Math.floor((a.data.t-min)/step), bins-1);
+                                return i === athleteIdx ? c : null;
+                            }),
+                            borderColor: a.color, backgroundColor: a.color, pointRadius: 12, pointHoverRadius: 15, showLine: false
+                        })),
+                        { type: 'bar', data: counts, backgroundColor: '#e2e8f0', barPercentage: 0.9, categoryPercentage: 0.9 }
+                    ]
+                },
+                options: { maintainAspectRatio: false, scales: { x: { display: false }, y: { display: false } }, plugins:{legend:{position:'bottom'}} }
+            });
+        }
+
+        // 상단 칩셋 관리
+        function updateAthleteList() {
+            const list = document.getElementById('athleteList');
+            list.innerHTML = '';
+            if (me) {
+                document.getElementById('simTitle').innerText = `${me.n} ANALYSIS`;
+                list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" onclick="removeAthlete('${me.b}')"><i class="fas fa-user-check mr-2"></i>나: ${me.n} ✕</div>`;
+            }
+            competitors.forEach((c, i) => {
+                const color = colors[(i + 1) % colors.length];
+                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" onclick="removeAthlete('${c.b}')">${c.n} ✕</div>`;
+            });
+        }
+
+        // 버튼 이벤트들
+        document.getElementById('addMeBtn').onclick = () => {
+            const val = document.getElementById('searchBox').value;
+            const user = raceData.find(x => x.b === val || x.n === val);
+            if (user) { me = user; targets.offset = 0; updateAthleteList(); updateDashboard(); }
+        };
+
+        document.getElementById('addCompareBtn').onclick = () => {
+            const val = document.getElementById('searchBox').value;
+            const user = raceData.find(x => x.b === val || x.n === val);
+            if (user && !competitors.find(c => c.b === user.b) && (me ? user.b !== me.b : true)) {
+                competitors.push(user); updateAthleteList(); updateDashboard();
+            }
+        };
+
+        function removeAthlete(bib) {
+            if (me && me.b === bib) me = null;
+            else competitors = competitors.filter(c => c.b !== bib);
+            updateAthleteList(); updateDashboard();
+        }
+
+        function applyQuickTarget(mode) {
+            if(!me) return;
+            let targetS = 0;
+            if (mode === 'sub10') { targetS = 35940; } 
+            else {
+                const ageGroup = raceData.filter(x => x.d === me.d);
+                targetS = (mode==='avg') ? ageGroup.reduce((a,b)=>a+b.t,0)/ageGroup.length : [...ageGroup].sort((a,b)=>a.t-b.t)[Math.floor(ageGroup.length*0.1)].t;
+            }
+            targets.offset = Math.round((targetS - me.t)/60);
+            document.getElementById('simSlider').value = targets.offset;
+            document.getElementById('sliderLabel').innerText = `TARGET PERFORMANCE: ${targets.offset} MIN`;
+            updateDashboard();
+        }
+
+        document.getElementById('simSlider').oninput = (e) => {
+            targets.offset = parseInt(e.target.value);
+            document.getElementById('sliderLabel').innerText = targets.offset === 0 ? "TARGET PERFORMANCE: CURRENT" : `TARGET PERFORMANCE: ${targets.offset} MIN`;
+            updateDashboard();
+        };
+    </script>
+</body>
+</html>

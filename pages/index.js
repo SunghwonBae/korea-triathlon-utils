@@ -184,6 +184,46 @@ export default function MainIndex() {
           }
           .card-title { margin-bottom: 4px; }
         }
+
+        /* 모바일 가로모드 (Landscape) 최적화 */
+        @media (max-height: 600px) and (orientation: landscape) {
+          .hero-header {
+            padding: 30px 20px 70px;
+          }
+          .header-content h1 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            /* 모바일 세로모드에서 설정된 absolute 위치 초기화 및 중앙 정렬 */
+            position: relative;
+            inset: auto !important;
+            width: 100%;
+            text-align: center;
+          }
+          .subtitle {
+            font-size: 0.9rem;
+          }
+          .mobile-br { display: none; }
+          .content-section {
+            margin-top: -50px;
+          }
+          .menu-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+          }
+          .menu-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 15px 10px;
+            align-items: center;
+          }
+          .card-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            margin-right: 0;
+          }
+          .card-title { font-size: 0.95rem; }
+          .card-desc { font-size: 0.8rem; line-height: 1.3; }
+        }
       `}</style>
     </div>
   );
