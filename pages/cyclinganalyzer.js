@@ -368,7 +368,7 @@ export default function CyclingAnalyzer() {
         @media (max-height: 600px) and (orientation: landscape) {
           .header-section { position: fixed !important; top: 0; left: 0; right: 0; height: 40px; padding: 0 15px; z-index: 999; display: flex; align-items: center; background: rgba(255,255,255,0.95); backdrop-filter: blur(5px); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
           .header-section h1 { font-size: 1rem; margin: 0 0 0 10px; line-height: 1; color: #1f2937; font-weight: 700; }
-          .menu-btn { font-size: 1.2rem; padding: 0; background: none; border: none; cursor: pointer; }
+          .menu-btn { width: 32px; height: 32px; font-size: 1.2rem; top: 4px; padding: 0; cursor: pointer; }
 
           .main-content { padding: 50px 20px 20px !important; gap: 20px !important; }
           

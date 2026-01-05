@@ -88,13 +88,13 @@
     <p style="text-align:center; color:#636e72; font-size:0.9em; margin-bottom:20px;">해당하는 구성을 선택하고 분석표 생성버튼을 누르세요.</p>
 
     <div class="setup-grid">
-        <div class="group"><label>구동계 브랜드</label><select id="brand" onchange="updateSubOptions()">
+        <div class="group"><label>구동계 브랜드</label><select id="brand" onchange="updateSubOptions(); hideResult()">
             <option value="sram">스램 (SRAM RED/Force/Rival)</option>
             <option value="shimano">시마노 (SHIMANO Dura-Ace/Ultegra/105)</option>
         </select></div>
-        <div class="group"><label>앞 크랭크셋</label><select id="crank"></select></div>
-        <div class="group"><label>뒤 카세트 (단수/구성)</label><select id="cassette"></select></div>
-        <div class="group"><label>휠 & 타이어</label><select id="wheel">
+        <div class="group"><label>앞 크랭크셋</label><select id="crank" onchange="hideResult()"></select></div>
+        <div class="group"><label>뒤 카세트 (단수/구성)</label><select id="cassette" onchange="hideResult()"></select></div>
+        <div class="group"><label>휠 & 타이어</label><select id="wheel" onchange="hideResult()">
             <optgroup label="700c (표준)">
                 <option value="2105">700c x 25mm</option>
                 <option value="2136">700c x 28mm</option>
@@ -213,6 +213,11 @@ function updateSubOptions() {
             let opt = document.createElement('option'); opt.value = name; opt.innerHTML = name; sel.appendChild(opt);
         }
     });
+}
+
+function hideResult() {
+    document.getElementById('slider-container').style.display = 'none';
+    document.getElementById('result').innerHTML = "";
 }
 
 function createTicks(elementId, values) {
