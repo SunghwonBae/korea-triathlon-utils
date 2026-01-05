@@ -234,20 +234,20 @@
                 </div>
                 <table style="width:100%; border-collapse:collapse; text-align:left;">
                 <tr>
-                    <th style="padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; width:60px; color:#2c3e50; vertical-align:top;">관용어</th>
-                    <td style="padding:8px 10px; border-bottom:1px solid #eee;">"서브 쓰리", "싱글", "삼삼공", "이사구"</td>
-                </tr>
-                <tr>
-                    <th style="padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; color:#2c3e50; vertical-align:top;">단축형</th>
-                    <td style="padding:8px 10px; border-bottom:1px solid #eee;">"10키로 50분", "하프 1시간 30분"</td>
-                </tr>
-                <tr>
                     <th style="padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; color:#2c3e50; vertical-align:top;">문장형</th>
                     <td style="padding:8px 10px; border-bottom:1px solid #eee;">
                         "나는 서브 쓰리 5초 네가티브로 뛴다"<br>
                         "나는 하프 1시간 30분으로 완주한다"<br>
                         "나는 싱글을 반드시 달성한다"
                     </td>
+                </tr>
+                <tr>
+                    <th style="padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; width:60px; color:#2c3e50; vertical-align:top;">관용어</th>
+                    <td style="padding:8px 10px; border-bottom:1px solid #eee;">"이사구", "서브 쓰리", "싱글", "삼이공", "삼삼공", "서브 포", "사삼공", "서브 파이브"</td>
+                </tr>
+                <tr>
+                    <th style="padding:8px 10px; background:#f8f9fa; border-bottom:1px solid #eee; color:#2c3e50; vertical-align:top;">단축형</th>
+                    <td style="padding:8px 10px; border-bottom:1px solid #eee;">"10키로 50분", "하프 1시간 30분"</td>
                 </tr>
                 <tr>
                     <th style="padding:8px 10px; background:#f8f9fa; color:#2c3e50; vertical-align:top;">기타</th>
@@ -461,6 +461,12 @@
             time = 210; // 3시간 30분
         } else if (text.includes("이사구") || (text.includes("249") && !text.includes("분"))) {
             time = 169; // 2시간 49분
+        } else if (text.includes("삼이공") || (text.includes("320") && !text.includes("분"))) {
+            time = 200; // 3시간 20분
+        } else if (text.includes("사삼공") || (text.includes("430") && !text.includes("분"))) {
+            time = 270; // 4시간 30분
+        } else if (text.includes("서브 파이브") || text.includes("서브 5") || text.includes("서브5")) {
+            time = 300; // 5시간
         } else {
             const timeMatch = text.match(/(\d+)\s*시간\s*(?:(\d+)\s*분)?/);
             if (timeMatch) {
@@ -580,6 +586,9 @@
     }
 
     function animateChanges(tDist, tTime, tPace, tStrat) {
+        // 애니메이션 중 조작 방지
+        [elDist, elTime, elPace, elStrat].forEach(el => el.disabled = true);
+
         const startDist = parseFloat(elDist.value);
         const startTime = parseFloat(elTime.value);
         const startPace = parseFloat(elPace.value);
@@ -600,9 +609,30 @@
 
             update();
 
-            if (progress < 1) requestAnimationFrame(step);
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                // 애니메이션 종료 후 조작 활성화 및 요약 박스 강조
+                [elDist, elTime, elPace, elStrat].forEach(el => el.disabled = false);
+                highlightSummary();
+            }
         }
         requestAnimationFrame(step);
+    }
+
+    function highlightSummary() {
+        const targets = [sStart, sAvg, sEnd];
+        targets.forEach(el => {
+            el.style.transition = "color 0.3s, transform 0.3s";
+            el.style.color = "#e74c3c"; // 강조색 (붉은색)
+            el.style.transform = "scale(1.2)";
+        });
+        setTimeout(() => {
+            targets.forEach(el => {
+                el.style.color = ""; 
+                el.style.transform = "scale(1)";
+            });
+        }, 800);
     }
 </script>
 </body>
