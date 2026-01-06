@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Script from 'next/script';
 
 export default function CyclingAnalyzer() {
   const [file, setFile] = useState(null);
@@ -47,33 +48,6 @@ export default function CyclingAnalyzer() {
     };
   }, [mounted]);
 
-  // PWA 뒤로가기 2번 종료 로직
-  useEffect(() => {
-    let lastBackPressTime = 0;
-    const handlePopState = () => {
-      const now = Date.now();
-      if (now - lastBackPressTime < 2000) {
-        history.back();
-        return;
-      }
-      lastBackPressTime = now;
-      history.pushState(null, null, window.location.href);
-      
-      const toast = document.createElement('div');
-      toast.innerText = "'뒤로' 버튼을 한번 더 누르면 종료됩니다.";
-      Object.assign(toast.style, {
-        position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
-        backgroundColor: 'rgba(0,0,0,0.7)', color: 'white', padding: '10px 20px',
-        borderRadius: '20px', zIndex: '9999', fontSize: '0.9rem', pointerEvents: 'none'
-      });
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
-    };
-    history.pushState(null, null, window.location.href);
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
   // 안전한 이동을 위한 보호막 함수
   const safeNav = (e, url) => {
     e.preventDefault();
@@ -109,6 +83,7 @@ export default function CyclingAnalyzer() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>📊 사이클 구간평속 리포트 생성</title>
         <link rel="icon" href="/favicon.ico" />

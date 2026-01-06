@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="back_exit_handler.js" defer></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
@@ -71,15 +72,17 @@
         </header>
 
         <main class="max-w-[1600px] mx-auto p-4 md:p-8 space-y-10">
-            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
+            <div class="bg-white rounded-3xl p-6 shadow-lg border border-slate-200 relative overflow-hidden">
                 <div class="relative z-10">
-                    <h2 class="text-4xl font-black italic mb-4 tracking-tight uppercase">Race Benchmark Analysis</h2>
-                    <p class="text-slate-300 text-lg leading-relaxed max-w-4xl font-medium">
-                        현재 로드된 대시보드는 <span class="text-red-500 font-bold underline decoration-2">전체 참가자의 평균 기록</span>에 해당하는 선수를 기준으로 설정되었습니다.
-                        기준 선수보다 20분/40분/60분 빠르거나 느린 선수들이 비교군으로 자동 설정되어 구간별 격차를 시각화합니다. 본인의 기록으로 분석하고 싶다면 검색창에 배번을 입력 후 <span class="text-white font-bold bg-white/20 px-2 py-0.5 rounded">분석기준선수로 등록</span> 버튼을 눌러주세요.
+                    <h2 class="text-2xl font-black italic mb-2 tracking-tight uppercase text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-red-500"></i> 철인 기록 분석 가이드
+                    </h2>
+                    <p class="text-slate-600 text-sm leading-relaxed font-medium max-w-5xl">
+                        현재 대시보드는 <span class="text-red-600 font-bold underline decoration-2">전체 참가자의 평균 기록</span> 선수를 기준으로 설정되었습니다.
+                        기준 선수 대비 ±20/40/60분 차이 선수들이 비교군으로 자동 설정됩니다. 본인 기록으로 분석하려면 검색창에 배번 입력 후 <span class="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300">분석기준선수로 등록</span> 버튼을 눌러주세요.
                     </p>
                 </div>
-                <i class="fas fa-bolt absolute -right-10 -bottom-10 text-[20rem] text-white/5 -rotate-12"></i>
+                <i class="fas fa-bolt absolute -right-6 -bottom-6 text-9xl text-slate-50 -rotate-12 pointer-events-none"></i>
             </div>
 
             <div id="athleteList" class="flex flex-wrap min-h-[50px] gap-2 px-2"></div>
