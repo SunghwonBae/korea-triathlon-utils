@@ -1,0 +1,39 @@
+<select id="raceSelector" onchange="loadStaticData(this.value)">
+    <option value="">-- 분석할 대회를 선택하세요 --</option>
+</select>
+
+<script>
+    // 페이지 로드 시 파일 목록 가져오기
+    window.onload = async () => {
+        try {
+            const res = await fetch('/api/data-list');
+            const files = await res.json();
+            const selector = document.getElementById('raceSelector');
+            
+            files.forEach(file => {
+                const opt = document.createElement('option');
+                opt.value = file.url;
+                opt.innerText = file.name;
+                selector.appendChild(opt);
+            });
+        } catch (e) {
+            console.error("파일 목록을 불러오지 못했습니다.");
+        }
+    };
+
+    let currentData = null;
+    async function loadStaticData(url) {
+        if (!url) return;
+        const res = await fetch(url);
+        currentData = await res.json();
+        
+        // 여기서부터 report_ironman.html의 차트 렌더링 로직 시작
+        initAnalysis(currentData); 
+    }
+    
+    // 이후 데이터 파싱 및 차트 생성 함수 (report_ironman.html 소스 이식)
+    function initAnalysis(data) {
+        console.log("분석 시작:", data);
+        // ... 차트 생성 로직 ...
+    }
+</script>

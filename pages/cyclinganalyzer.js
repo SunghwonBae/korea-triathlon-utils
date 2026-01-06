@@ -82,7 +82,7 @@ export default function CyclingAnalyzer() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#f4f7f9]">
       <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>📊 사이클 구간평속 리포트 생성</title>
@@ -114,9 +114,9 @@ export default function CyclingAnalyzer() {
             <ul className="submenu-list" style={{display: isUtilsOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
               <li><a href="/ironman_calculator.html" onClick={(e) => safeNav(e, '/ironman_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️ 킹코스 완주시간</a></li>
               <li><a href="/gelwater_calculator.html" onClick={(e) => safeNav(e, '/gelwater_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌 보급 계산</a></li>
-              <li><a href="/bike_calculator.html" onClick={(e) => safeNav(e, '/bike_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 싸이클 기어비 케이던스</a></li>
-              <li><a href="/bike_gpx_zwo.html" onClick={(e) => safeNav(e, '/bike_gpx_zwo.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 .gpx to .zwo 워크아웃생성</a></li>
-              <li><a href="/cyclinganalyzer" onClick={(e) => safeNav(e, '/cyclinganalyzer')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#0A317E', borderLeft: '5px solid #0A317E', backgroundColor: '#eef2ff'}}>📊 싸이클구간 평속 분석리포트</a></li>
+              <li><a href="/bike_calculator.html" onClick={(e) => safeNav(e, '/bike_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 자전거 기어비</a></li>
+              <li><a href="/bike_gpx_zwo.html" onClick={(e) => safeNav(e, '/bike_gpx_zwo.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 GPX to ZWO</a></li>
+              <li><a href="/cyclinganalyzer" onClick={(e) => safeNav(e, '/cyclinganalyzer')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 평속 분석</a></li>
               <li><a href="/running_calculator.html" onClick={(e) => safeNav(e, '/running_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 보폭 회전수</a></li>
               <li><a href="/runpace_calculator.html" onClick={(e) => safeNav(e, '/runpace_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 페이스</a></li>
               <li><a href="/run_mileage_calculator.html" onClick={(e) => safeNav(e, '/run_mileage_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 마일리지</a></li>
@@ -231,7 +231,38 @@ export default function CyclingAnalyzer() {
 
       <style jsx>{`
         /* bucheonTriStyle.css에서 제공하지 않는 로컬 스타일만 유지 */
-        .main-content { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 60px 20px; gap: 60px; }
+        .header-section {
+          display: flex;
+          align-items: center;
+          padding: 15px 20px;
+          border-bottom: 2px solid var(--primary-blue);
+          background-color: var(--header-bg);
+          border-bottom: 2px solid #007bff;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 100;
+        }
+        .header-section h1 {
+          font-size: 1.3rem;
+          font-weight: 800;
+          margin: 0 0 0 12px;
+          color: #1f2937;
+          line-height: 1.2;
+        }
+        .menu-btn {
+          font-size: 1.6rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          color: #374151;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .main-content { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 90px 20px 60px; gap: 60px; }
         .card { 
           background: white; 
           padding: 40px; 
@@ -262,7 +293,7 @@ export default function CyclingAnalyzer() {
           font-weight: 500;
           transition: all 0.2s;
         }
-        .sample-link:hover { background: #e5e7eb; color: #0A317E; }
+        .sample-link:hover { background: #e5e7eb; color: #007bff; }
         
         .upload-box {
           display: block;
@@ -274,8 +305,8 @@ export default function CyclingAnalyzer() {
           background: #f9fafb;
           margin-bottom: 25px;
         }
-        .upload-box:hover { border-color: #0A317E; background: #f0fdfa; }
-        .upload-box.has-file { border-style: solid; border-color: #0A317E; background: #eef2ff; padding: 20px; }
+        .upload-box:hover { border-color: #007bff; background: #f0f9ff; }
+        .upload-box.has-file { border-style: solid; border-color: #007bff; background: #eef2ff; padding: 20px; }
         
         .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .upload-icon { font-size: 2rem; margin-bottom: 5px; opacity: 0.7; }
@@ -287,10 +318,10 @@ export default function CyclingAnalyzer() {
         .file-text { flex: 1; overflow: hidden; }
         .file-name { display: block; font-weight: 600; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .file-size { font-size: 0.8rem; color: #6b7280; }
-        .change-badge { font-size: 0.75rem; background: white; padding: 4px 8px; border-radius: 12px; color: #0A317E; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .change-badge { font-size: 0.75rem; background: white; padding: 4px 8px; border-radius: 12px; color: #007bff; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        .action-btn { width: 100%; padding: 16px; background: #0A317E; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(10, 49, 126, 0.2); display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .action-btn:hover:not(:disabled) { background: #1e40af; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(10, 49, 126, 0.3); }
+        .action-btn { width: 100%; padding: 16px; background: #007bff; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .action-btn:hover:not(:disabled) { background: #0069d9; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 105, 217, 0.3); }
         .action-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none; }
         
         .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }

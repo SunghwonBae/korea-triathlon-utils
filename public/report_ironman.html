@@ -30,6 +30,11 @@
         .page-num { cursor: pointer; padding: 0.6rem 1.1rem; border-radius: 0.85rem; font-weight: 800; font-size: 13px; border: 1px solid #e2e8f0; background: white; transition: all 0.2s; }
         .page-num:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
         .page-num.active { background-color: #ef4444; color: white; border-color: #ef4444; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4); }
+
+        /* 커스텀 테이블 */
+        .decile-row:nth-child(odd) { background-color: #f8fafc; }
+        .decile-row.me-row { background-color: #fee2e2; border: 2px solid #ef4444; }
+        .stat-value { font-family: 'Pretendard', monospace; font-weight: 700; }
     </style>
 </head>
 <body class="leading-tight">
@@ -38,16 +43,23 @@
         <div class="card max-w-xl w-full text-center py-20 border-none shadow-2xl">
             <div class="mb-8">
                 <i class="fas fa-trident text-red-600 text-6xl mb-4"></i>
-                <h1 class="text-6xl font-black italic tracking-tighter uppercase">킹코스기록줄께 <BR><span class="text-red-600">차트다오</span></h1>
-                <p class="text-slate-400 font-bold mt-2 uppercase tracking-widest">구례기록 CSV 파일분석 차트생성기</p>
+                <h1 class="text-6xl font-black italic tracking-tighter uppercase">기록줄께<BR><span class="text-red-600">차트다오</span></h1>
+                <p class="text-slate-400 font-bold mt-2 uppercase tracking-widest">철인기록 CSV 파일분석 차트생성기</p>
             </div>
             <label class="block w-full cursor-pointer bg-white border-4 border-dashed border-slate-200 rounded-[3rem] p-16 hover:border-red-500 hover:bg-red-50/30 transition-all group">
                 <input type="file" id="csvFileInput" accept=".csv" class="hidden" />
                 <i class="fas fa-cloud-upload-alt text-6xl text-slate-300 group-hover:text-red-500 mb-6 transition-colors"></i>
-                <span class="block font-black text-slate-700 text-xl mb-2">킹코스기록 CSV 파일 업로드</span>
+                <span class="block font-black text-slate-700 text-xl mb-2">기록 CSV 파일 업로드</span>
                 <span class="block text-slate-400 text-sm font-medium mb-4">기록 데이터를 불러와 분석을 시작하세요.</span>
                 <div class="text-left text-[11px] text-slate-400 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    https://www.coachcox.co.uk/imstats/race/2460/results/에서 제공하는 CSV파일을 다운받아서 보면 한글이 깨지면서 셀이 제자리를 못찾는 행이 생겨보입니다. 분석프로그램에서는 수정없이 그대로 업로드하면 저절로 파싱해서 문제없이 분석합니다. 다만, 분석대상은 Rank가 기록되어 있는 Finisher 만 대상으로 합니다. 특히, 구례대회 등록할때 꼭 에이지 그룹으로 신청하세요. 오픈디비젼(ODIV)으로 신청하면 저 CSV에 기록이 포함되지 않습니다.
+                    https://www.coachcox.co.uk 에서 제공하는 
+                    CSV파일을 다운받아서 보면 한글이 깨지면서 셀이 제자리를 못찾는 행이 생겨보입니다. 
+                    분석프로그램에서는 수정없이 그대로 업로드하면 저절로 파싱해서 문제없이 분석합니다. 
+                    다만, 분석대상은 Rank가 기록되어 있는 Finisher 만 대상으로 합니다. 
+                    특히, 구례대회 등록할때 꼭 에이지 그룹으로 신청하세요. 
+                    오픈디비젼(ODIV)으로 신청하면 저 CSV에 기록이 포함되지 않습니다.
+                    구례IRONMAN 기록 다운 :https://www.coachcox.co.uk/imstats/series/61/
+                    고성70.3 기록 다운 : https://www.coachcox.co.uk/imstats/series/104/
                 </div>
             </label>
         </div>
@@ -56,7 +68,13 @@
     <div id="mainDashboard" class="hidden min-h-screen pb-24">
         <header class="bg-white/95 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200 px-6 py-4">
             <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center gap-6">
-                <div class="font-black text-3xl italic flex-shrink-0 tracking-tighter">나는 차트<span class="text-red-600">구례</span></div>
+                <div class="flex flex-col flex-shrink-0 leading-none select-none">
+                    <div class="text-3xl font-black italic tracking-tighter text-slate-900">
+                        나는 <span class="text-red-600">차트</span>
+                    </div>
+                    <div class="text-[10px] font-black text-slate-400 tracking-[0.35em] pl-1 mt-1">IM CHART</div>
+                    <div class="text-[9px] font-bold text-red-400 tracking-widest pl-1 mt-0.5 text-right">킹 차트</div>
+                </div>
                 <div class="flex-1 flex gap-3 w-full">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -129,6 +147,53 @@
                 </div>
             </div>
 
+            <div id="advancedStats" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="card lg:col-span-3">
+                    <div class="guide-box border-l-purple-600">
+                        <h5 class="font-black text-purple-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-list-ol mr-2"></i>전체 기록 기준 상위 10% 구간별 평속 분석</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 완주자를 기록순으로 10%씩 그룹핑하여 각 그룹의 종목별 평균 속도를 산출했습니다. 본인이 속한 그룹이 붉은색으로 표시됩니다.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-center">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 uppercase text-xs font-black tracking-wider">
+                                    <th class="py-3 px-4 text-left">Group (Decile)</th>
+                                    <th class="py-3 px-4">Finish Time Range</th>
+                                    <th class="py-3 px-4">Swim Pace<br><span class="text-[10px] font-normal">(min/100m)</span></th>
+                                    <th class="py-3 px-4">Bike Speed<br><span class="text-[10px] font-normal">(km/h)</span></th>
+                                    <th class="py-3 px-4">Run Pace<br><span class="text-[10px] font-normal">(min/km)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="decileTableBody" class="font-bold text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="guide-box border-l-emerald-500">
+                        <h5 class="font-black text-emerald-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-stopwatch mr-2"></i>바꿈터(T1+T2) 시간 단축 시뮬레이터</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">초기값은 분석기준선수 에이지 그룹 상위 10% 선수들의 평균 바꿈터 시간과 비교값입니다.</p>
+                    </div>
+                    <div id="transSimContent" class="space-y-4"></div>
+                </div>
+
+                <div class="card">
+                    <div class="guide-box border-l-orange-500">
+                        <h5 class="font-black text-orange-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-balance-scale mr-2"></i>Bike/Run 페이스 효율 지수</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">내 바로 앞 순위 100명의 비율과 비교하여 오버바이크 여부를 진단합니다.</p>
+                    </div>
+                    <div id="brRatioContent" class="flex flex-col items-center justify-center h-full"></div>
+                </div>
+
+                <div class="card">
+                    <div class="guide-box border-l-indigo-500">
+                        <h5 class="font-black text-indigo-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-trophy mr-2"></i>월드 챔피언십 슬롯(Qualified) 갭 분석</h5>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">내 에이지 그룹에서 슬롯을 획득한 선수들의 평균 기록과 비교합니다.</p>
+                    </div>
+                    <div id="slotGapContent" class="space-y-4"></div>
+                </div>
+            </div>
+
             <div class="card overflow-hidden" id="recordTableSection">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-8 px-2 gap-4">
                     <div>
@@ -196,6 +261,11 @@
         };
         const sToHms = (s) => { if(s<=0) return "--:--:--"; const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
 
+        // Helper functions for Advanced Stats
+        const getSwimPace = (s) => (s > 0) ? sToHms((s / 3800) * 100).substring(3, 8) : "-"; // min/100m
+        const getBikeSpeed = (s) => (s > 0) ? (180.2 / (s / 3600)).toFixed(1) : "-"; // km/h (Gurye 180.2km)
+        const getRunPace = (s) => (s > 0) ? sToHms(s / 42.195).substring(3, 8) : "-"; // min/km
+
         // 로컬 파일 로드 체크
         window.onload = () => {
             if (window.embeddedData) {
@@ -214,7 +284,7 @@
                 header: true, skipEmptyLines: true, encoding: "UTF-8",
                 complete: (r) => {
                     raceData = r.data.map(x => ({
-                        b: x['Bib'], n: x['Name'], d: x['Division'],
+                        b: x['Bib'], n: x['Name'], d: x['Division'], c: x['Country'], q: x['Qualified'],
                         t: hmsToS(x['Overall Time']), s: hmsToS(x['Swim Time']), t1: hmsToS(x['Transition 1 Time'] || x['T1 Time'] || x['T1']),
                         bk: hmsToS(x['Bike Time']), t2: hmsToS(x['Transition 2 Time'] || x['T2 Time'] || x['T2']), rn: hmsToS(x['Run Time']),
                         ro: parseInt(x['Overall Rank']), ra: parseInt(x['Age Group Rank'])
@@ -402,8 +472,292 @@
             competitors.forEach((c, i) => activeAthletes.push({ data: c, color: colors[(i + 1) % colors.length], label: c.n }));
             
             renderRadar(activeAthletes); renderFlow(activeAthletes); renderDist(activeAthletes);
+            
+            // New Features
+            if (me) {
+                renderDecileTable();
+                renderTransitionSim();
+                renderBikeRunRatio();
+                renderSlotGap();
+            } else {
+                document.getElementById('decileTableBody').innerHTML = '<tr><td colspan="5" class="py-4 text-slate-400">분석기준선수(Me)를 설정하면 데이터가 표시됩니다.</td></tr>';
+                document.getElementById('transSimContent').innerHTML = '';
+                document.getElementById('brRatioContent').innerHTML = '';
+                document.getElementById('slotGapContent').innerHTML = '';
+            }
+
             renderTable();
         }
+
+        // --- NEW FEATURES IMPLEMENTATION ---
+
+        function renderDecileTable() {
+            const tbody = document.getElementById('decileTableBody');
+            tbody.innerHTML = '';
+            
+            // Sort by Total Time (descending ranks, ascending time)
+            const sorted = [...raceData].filter(x => x.t > 0).sort((a, b) => a.t - b.t);
+            const totalCount = sorted.length;
+            const decileSize = Math.ceil(totalCount / 10);
+            
+            let meDecileIndex = -1;
+
+            for (let i = 0; i < 10; i++) {
+                const start = i * decileSize;
+                const end = Math.min(start + decileSize, totalCount);
+                const group = sorted.slice(start, end);
+                
+                if (group.length === 0) break;
+
+                // Calculate Averages
+                const avgS = group.reduce((a,b)=>a+b.s,0) / group.length;
+                const avgBk = group.reduce((a,b)=>a+b.bk,0) / group.length;
+                const avgRn = group.reduce((a,b)=>a+b.rn,0) / group.length;
+                
+                const rangeStart = sToHms(group[0].t);
+                const rangeEnd = sToHms(group[group.length-1].t);
+
+                // Check if 'me' is in this group
+                const isMeHere = me && group.some(x => x.b === me.b);
+                if (isMeHere) meDecileIndex = i;
+
+                const tr = document.createElement('tr');
+                tr.className = `decile-row border-b border-slate-100 ${isMeHere ? 'me-row' : ''}`;
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-left">
+                        <span class="font-black text-slate-800">Top ${(i+1)*10}%</span>
+                        ${isMeHere ? '<span class="ml-2 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">ME</span>' : ''}
+                    </td>
+                    <td class="py-3 px-4 text-slate-500 text-xs">${rangeStart} ~ ${rangeEnd}</td>
+                    <td class="py-3 px-4 stat-value text-blue-600">${getSwimPace(avgS)}</td>
+                    <td class="py-3 px-4 stat-value text-green-600">${getBikeSpeed(avgBk)}</td>
+                    <td class="py-3 px-4 stat-value text-orange-600">${getRunPace(avgRn)}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function renderTransitionSim() {
+            const container = document.getElementById('transSimContent');
+            if (!me) return;
+
+            const myT = me.t1 + me.t2;
+            
+            // 1. Get Top 10% T-time in AG
+            const myDiv = raceData.filter(x => x.d === me.d);
+            const sortedTrans = [...myDiv].sort((a,b) => (a.t1+a.t2) - (b.t1+b.t2));
+            const top10Count = Math.max(1, Math.ceil(sortedTrans.length * 0.1));
+            const top10Group = sortedTrans.slice(0, top10Count);
+            const targetT = Math.floor(top10Group.reduce((a,b) => a + b.t1 + b.t2, 0) / top10Group.length);
+
+            const initialVal = targetT;
+            const maxVal = Math.max(myT, targetT);
+            
+            const saved = myT - initialVal;
+            const projectedTime = me.t - saved;
+            
+            const fasterCount = raceData.filter(x => x.b !== me.b && x.t < projectedTime).length;
+            const newRank = fasterCount + 1;
+            const rankDiff = me.ro - newRank;
+            
+            const formatSaved = (s) => {
+                if (s === 0) return '0초 단축';
+                const absS = Math.abs(s);
+                let str = sToHms(absS);
+                if (absS < 3600) str = str.substring(3);
+                return s > 0 ? `-${str} 단축` : `+${str} 증가`;
+            };
+            
+            // Initial HTML Structure
+            container.innerHTML = `
+                <div class="space-y-5">
+                    <!-- Current Status Header -->
+                    <div class="grid grid-cols-3 gap-2 text-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div>
+                            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Current Rank</div>
+                            <div class="text-lg font-black text-slate-800">${me.ro} <span class="text-xs font-normal text-slate-400">/ ${raceData.length}</span></div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">T1+T2 Time</div>
+                            <div class="text-lg font-black text-blue-600">${sToHms(myT)}</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Finish Time</div>
+                            <div class="text-lg font-black text-slate-800">${sToHms(me.t)}</div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Slider -->
+                    <div class="px-1 py-2">
+                        <div class="flex justify-between items-end mb-3">
+                            <label for="transSlider" class="text-xs font-bold text-slate-600 flex items-center">
+                                <i class="fas fa-sliders-h mr-2 text-emerald-500"></i>바꿈터 시간 조정
+                            </label>
+                            <span id="simTargetTime" class="text-xl font-black text-emerald-600 font-mono">${sToHms(initialVal)}</span>
+                        </div>
+                        <input type="range" id="transSlider" min="0" max="${maxVal}" value="${initialVal}" step="1" 
+                            class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 hover:accent-emerald-400 transition-all">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-bold mt-2 font-mono">
+                            <span>00:00:00</span>
+                            <span>Current (${sToHms(myT)})</span>
+                        </div>
+                    </div>
+
+                    <!-- Simulation Results -->
+                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-100 relative overflow-hidden shadow-sm">
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-center mb-4 border-b border-emerald-100/50 pb-2">
+                                <span class="text-xs font-black text-emerald-800 uppercase tracking-widest"><i class="fas fa-chart-line mr-1"></i>Simulation Result</span>
+                                <span id="simSavedTime" class="text-xs font-bold text-white bg-emerald-500 px-2 py-1 rounded-md shadow-sm shadow-emerald-200">${formatSaved(saved)}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6 text-center">
+                                <div>
+                                    <div class="text-[10px] text-emerald-600 uppercase font-bold mb-1">Projected Rank</div>
+                                    <div id="simNewRank" class="text-3xl font-black text-slate-800 leading-none">${newRank} <span class="text-sm text-emerald-600 align-top font-bold">${rankDiff > 0 ? '(▲' + rankDiff + ')' : (rankDiff < 0 ? '(▼' + Math.abs(rankDiff) + ')' : '-')}</span></div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] text-emerald-600 uppercase font-bold mb-1">Projected Time</div>
+                                    <div id="simNewTime" class="text-xl font-black text-slate-800 leading-tight mt-1">${sToHms(projectedTime)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fas fa-stopwatch absolute -right-2 -bottom-4 text-7xl text-emerald-100/60 -rotate-12 pointer-events-none"></i>
+                    </div>
+                </div>
+            `;
+
+            // Logic
+            const slider = document.getElementById('transSlider');
+            const targetTimeDisplay = document.getElementById('simTargetTime');
+            const savedTimeDisplay = document.getElementById('simSavedTime');
+            const newRankDisplay = document.getElementById('simNewRank');
+            const newTimeDisplay = document.getElementById('simNewTime');
+
+            slider.oninput = (e) => {
+                const targetVal = parseInt(e.target.value);
+                const saved = myT - targetVal;
+                const projectedTime = me.t - saved;
+                
+                // Calculate Rank
+                const fasterCount = raceData.filter(x => x.b !== me.b && x.t < projectedTime).length;
+                const newRank = fasterCount + 1;
+                const rankDiff = me.ro - newRank;
+
+                targetTimeDisplay.innerText = sToHms(targetVal);
+                savedTimeDisplay.innerText = formatSaved(saved);
+                const diffStr = rankDiff > 0 ? '(▲' + rankDiff + ')' : (rankDiff < 0 ? '(▼' + Math.abs(rankDiff) + ')' : '-');
+                newRankDisplay.innerHTML = `${newRank} <span class="text-sm text-emerald-600 align-top font-bold">${diffStr}</span>`;
+                newTimeDisplay.innerText = sToHms(projectedTime);
+            };
+        }
+
+        function renderBikeRunRatio() {
+            const container = document.getElementById('brRatioContent');
+            if (!me) return;
+
+            const sortedByRank = [...raceData].sort((a,b) => a.ro - b.ro);
+            const myIdx = sortedByRank.findIndex(x => x.b === me.b);
+            
+            // Benchmark: 100 people ahead (or all ahead if < 100)
+            const startIdx = Math.max(0, myIdx - 100);
+            const benchmarkSet = sortedByRank.slice(startIdx, myIdx);
+            
+            if (benchmarkSet.length === 0) {
+                container.innerHTML = '<div class="text-slate-400 text-xs">비교 대상(앞선 순위)이 없습니다.</div>';
+                return;
+            }
+
+            const calcRatio = (p) => p.rn > 0 ? p.bk / p.rn : 0;
+            const avgRatio = benchmarkSet.reduce((a,b) => a + calcRatio(b), 0) / benchmarkSet.length;
+            const myRatio = calcRatio(me);
+            
+            // Interpret: Higher ratio = Bike took longer relative to Run (Good run or slow bike). 
+            // Lower ratio = Bike was fast relative to run (Bad run? Overbiking?).
+            // Usually Bike is ~1.2 - 1.5x of Run.
+            // If myRatio < avgRatio, I biked relatively faster (ratio smaller), maybe Overbiked? 
+            // Actually: Ratio = Bike / Run. 
+            // High Ratio: Bike 6h, Run 3h = 2.0. Low Ratio: Bike 5h, Run 5h = 1.0 (Bonked run).
+            // Wait, usually Bike Time > Run Time. 
+            // Overbiking -> Fast Bike, Slow Run -> Ratio decreases (Run gets bigger).
+            // Good Pacing -> Fast Bike, Solid Run -> Ratio stays high.
+            
+            // Let's invert for clarity: Run Efficiency = (Bike Time / Run Time).
+            // If I overbike: Run Time increases -> Ratio decreases.
+            // Benchmark: 1.4. Me: 1.1 -> Potential Overbike.
+            
+            const diff = myRatio - avgRatio;
+            let status = "Good Balance";
+            let color = "text-green-600";
+            
+            if (diff < -0.1) { status = "Over-Biking Risk"; color = "text-red-600"; } // Run took too long compared to bike
+            else if (diff > 0.2) { status = "Conservative Bike"; color = "text-blue-600"; } // Run was very fast compared to bike
+
+            container.innerHTML = `
+                <div class="text-center w-full">
+                    <div class="text-4xl font-black ${color} mb-1">${myRatio.toFixed(2)}</div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Your Bike/Run Ratio</div>
+                    
+                    <div class="flex justify-between items-center text-xs font-medium text-slate-600 bg-slate-50 p-3 rounded-lg">
+                        <span>Benchmark (Ahead 100)</span>
+                        <span class="font-bold">${avgRatio.toFixed(2)}</span>
+                    </div>
+                    <div class="mt-4 text-sm font-bold ${color} border border-slate-100 p-2 rounded-lg">
+                        ${status}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSlotGap() {
+            const container = document.getElementById('slotGapContent');
+            if (!me) return;
+
+            // Find qualifiers in my division
+            // Check mapping: q = x['Qualified'] (Need to update parsing logic if not present)
+            // Assuming data is mapped. If 'Qualified' column is '1', 'Yes', etc.
+            // Based on prompt csv: Qualified column has '1'.
+            
+            const qualifiers = raceData.filter(x => x.d === me.d && (x.q === '1' || x.q === 'Yes' || x.q === 'yes'));
+            
+            if (qualifiers.length === 0) {
+                container.innerHTML = '<div class="text-slate-400 text-xs">해당 에이지 그룹에 슬롯 획득자가 없거나 데이터가 없습니다.</div>';
+                return;
+            }
+
+            const avgQ = {
+                s: qualifiers.reduce((a,b)=>a+b.s,0)/qualifiers.length,
+                bk: qualifiers.reduce((a,b)=>a+b.bk,0)/qualifiers.length,
+                rn: qualifiers.reduce((a,b)=>a+b.rn,0)/qualifiers.length,
+                t: qualifiers.reduce((a,b)=>a+b.t,0)/qualifiers.length,
+            };
+
+            const diffT = me.t - avgQ.t;
+            const diffS = me.s - avgQ.s;
+            const diffBk = me.bk - avgQ.bk;
+            const diffRn = me.rn - avgQ.rn;
+
+            const formatDiff = (d) => {
+                const s = sToHms(Math.abs(d));
+                return d > 0 ? `<span class="text-red-500">+${s}</span>` : `<span class="text-blue-500">-${s}</span>`;
+            };
+
+            container.innerHTML = `
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                    <span class="text-xs font-bold text-slate-500">Gap to Qualifier Avg</span>
+                    <span class="font-black text-lg text-slate-800">${formatDiff(diffT)}</span>
+                </div>
+                <div class="space-y-2 text-sm font-medium text-slate-600">
+                    <div class="flex justify-between"><span>Swim Gap</span> ${formatDiff(diffS)}</div>
+                    <div class="flex justify-between"><span>Bike Gap</span> ${formatDiff(diffBk)}</div>
+                    <div class="flex justify-between"><span>Run Gap</span> ${formatDiff(diffRn)}</div>
+                </div>
+                <div class="mt-3 text-[10px] text-slate-400 text-right">
+                    Based on ${qualifiers.length} qualifiers in ${me.d}
+                </div>
+            `;
+        }
+
+        // --- OLD CHART FUNCTIONS ---
 
         function renderRadar(athletes) {
             const getScore = (val, k) => {

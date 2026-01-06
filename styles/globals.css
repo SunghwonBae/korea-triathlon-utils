@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* Tailwind v3 표준 지시어 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 브라우저 기본 여백 제거 및 전체 폰트 설정 */
 html, body {

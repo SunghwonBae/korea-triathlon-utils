@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 크롤러</title>
+</head>
+<body>
+    <h1>철인3종 데이터 수집기</h1>
+    <input type="text" id="raceName" placeholder="대회명 (예: 고령대회)">
+    <input type="text" id="tourcd" placeholder="대회코드 (예: 1916)">
+    <input type="text" id="sYear" placeholder="연도 (예: 2024)">
+    <button onclick="startCrawl()">크롤링 시작 및 다운로드</button>
+
+    <script>
+        async function startCrawl() {
+            const raceName = document.getElementById('raceName').value;
+            const tourcd = document.getElementById('tourcd').value;
+            const sYear = document.getElementById('sYear').value;
+
+            const url = `/api/admin/crawl?raceName=${raceName}&tourcd=${tourcd}&sYear=${sYear}`;
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // 데이터를 브라우저에서 JSON 파일로 변환하여 다운로드
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `${raceName}_${tourcd}_${sYear}.json`;
+                a.click();
+                alert('수집 완료!');
+            } catch (e) {
+                alert('에러 발생: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
