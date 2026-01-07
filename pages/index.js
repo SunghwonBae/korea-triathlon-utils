@@ -1,7 +1,45 @@
+import { useState, useEffect } from 'react'; // 추가
 import Head from 'next/head';
 import Script from 'next/script';
 
 export default function MainIndex() {
+
+  // PWA 설치 관련 상태 관리
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallLayer, setShowInstallLayer] = useState(false);
+
+  useEffect(() => {
+    // 1. 브라우저의 설치 가능 이벤트를 가로챕니다.
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      // 이미 설치되어 있지 않은 경우에만 레이어를 보여줍니다.
+      setShowInstallLayer(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    
+    // 설치 팝업 표시
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    }
+    setDeferredPrompt(null);
+    setShowInstallLayer(false);
+  };
+
+  const closeLayer = () => {
+    setShowInstallLayer(false);
+  };
+
   const safeNav = (e, url) => {
     e.preventDefault();
     window.location.href = url;
@@ -21,6 +59,18 @@ export default function MainIndex() {
 
   return (
     <div className="main-container">
+      {/* PWA 설치 유도 레이어 */}
+      {showInstallLayer && (
+        <div className="install-overlay">
+          <div className="install-card">
+            <button className="close-btn" onClick={closeLayer}>&times;</button>
+            <span className="install-icon">📲</span>
+            <h3>KTriUtils 설치</h3>
+            <p>홈 화면에 추가하면 브라우저 주소창 없이<br/>앱처럼 쾌적하게 사용할 수 있습니다.</p>
+            <button className="install-action-btn" onClick={handleInstallClick}>홈 화면에 추가하기</button>
+          </div>
+        </div>
+      )}
       <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>Korea Triathlon Utils</title>
@@ -226,6 +276,55 @@ export default function MainIndex() {
           .card-title { font-size: 0.95rem; }
           .card-desc { font-size: 0.8rem; line-height: 1.3; }
         }
+          /* 기존 스타일 하단에 추가 */
+        .install-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+        .install-card {
+          background: white;
+          padding: 30px;
+          border-radius: 25px;
+          width: 100%;
+          max-width: 320px;
+          text-align: center;
+          position: relative;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp {
+          from { transform: translateY(50px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .close-btn {
+          position: absolute;
+          top: 15px; right: 15px;
+          background: none; border: none;
+          font-size: 24px; color: #9ca3af;
+          cursor: pointer;
+        }
+        .install-icon { font-size: 3.5rem; display: block; margin-bottom: 15px; }
+        .install-card h3 { margin: 0 0 10px; font-size: 1.3rem; color: #1f2937; }
+        .install-card p { font-size: 0.95rem; color: #6b7280; line-height: 1.5; margin-bottom: 25px; }
+        .install-action-btn {
+          background: #0984e3;
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          border-radius: 12px;
+          font-weight: bold;
+          width: 100%;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .install-action-btn:active { background: #0773c5; }
       `}</style>
     </div>
   );
