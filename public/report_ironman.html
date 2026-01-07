@@ -179,7 +179,7 @@
                 <div class="card">
                     <div class="guide-box border-l-orange-500">
                         <h5 class="font-black text-orange-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-balance-scale mr-2"></i>Bike/Run 페이스 효율 지수</h5>
-                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">내 바로 앞 순위 100명의 비율과 비교하여 오버바이크 여부를 진단합니다.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">내 바로 앞 순위 100명의 비율과 비교하여 오버바이크 여부를 진단합니다. 수치가 높을수록 런 퍼포먼스가 좋았다는 뜻이고, 낮을수록 바이크에서 힘을 너무 많이 썼을(오버바이크) 가능성이 높습니다.</p>
                     </div>
                     <div id="brRatioContent" class="flex flex-col items-center justify-center h-full"></div>
                 </div>
@@ -715,9 +715,9 @@
                     <div class="text-4xl font-black ${color} mb-1">${myRatio.toFixed(2)}</div>
                     <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Your Bike/Run Ratio</div>
                     
-                    <div class="flex justify-between items-center text-xs font-medium text-slate-600 bg-slate-50 p-3 rounded-lg">
-                        <span>Benchmark (Ahead 100)</span>
-                        <span class="font-bold">${avgRatio.toFixed(2)}</span>
+                    <div class="flex justify-between items-center text-base font-bold text-slate-700 bg-slate-50 p-4 rounded-xl">
+                        <span>상위 100명 평균</span>
+                        <span class="font-black text-xl">${avgRatio.toFixed(2)}</span>
                     </div>
                     <div class="mt-4 text-sm font-bold ${color} border border-slate-100 p-2 rounded-lg">
                         ${status}

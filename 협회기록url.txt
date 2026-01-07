@@ -13,3 +13,10 @@ https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1953&page
 https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1979&page=1&sYear=2025&field=&keyword=
 대구대회
 https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1965&page=1&sYear=2025&field=&keyword=
+
+
+
+구례
+https://www.coachcox.co.uk/imstats/series/61/
+고성
+https://www.coachcox.co.uk/imstats/series/104/
