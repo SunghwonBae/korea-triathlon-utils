@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Triathlon Analyzer - 고령대가야</title>
+    <title>Triathlon Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -91,7 +91,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-lg border border-slate-200 relative overflow-hidden">
                 <div class="relative z-10">
                     <h2 class="text-2xl font-black italic mb-2 tracking-tight uppercase text-slate-800 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-blue-500"></i> 트라이애슬론 기록 분석 가이드
+                        <i class="fas fa-info-circle text-blue-500"></i> 트라이애슬론 기록 분석 가이드<span id="raceTitleDisplay" class="text-blue-600 ml-2"></span>
                     </h2>
                     <p class="text-slate-600 text-sm leading-relaxed font-medium max-w-5xl">
                         현재 대시보드는 <span class="text-blue-600 font-bold underline decoration-2">전체 참가자의 평균 기록</span> 선수를 기준으로 설정되었습니다.
@@ -296,8 +296,11 @@
 
         // JSON 데이터 로드 및 분석 시작
         document.getElementById('btnLoadRace').onclick = async () => {
-            const filename = document.getElementById('raceSelector').value;
+            const sel = document.getElementById('raceSelector');
+            const filename = sel.value;
             if (!filename) return alert("대회를 선택해주세요.");
+
+            document.getElementById('raceTitleDisplay').innerText = sel.options[sel.selectedIndex].text;
 
             try {
                 const res = await fetch(`/data/triathlon/${filename}`);

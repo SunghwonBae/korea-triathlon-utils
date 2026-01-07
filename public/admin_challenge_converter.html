@@ -2,112 +2,206 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Challenge Gunsan Master Parser</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Gunsan Unified Parser (2022-2025)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
-<body class="bg-slate-900 p-10 text-slate-100">
-    <div class="max-w-2xl mx-auto bg-white p-10 rounded-[3rem] shadow-2xl text-slate-800 text-center">
-        <h2 class="text-3xl font-black mb-6 text-indigo-600">Challenge Gunsan Parser (22-24)</h2>
-        <input type="file" id="pdfInput" class="hidden" />
-        <label for="pdfInput" class="block w-full cursor-pointer bg-indigo-600 text-white py-6 rounded-3xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
-            PDF 파일 업로드 (모든 연도 통합)
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6 text-slate-800">
+
+    <div class="bg-white rounded-[2.5rem] p-10 max-w-xl w-full shadow-2xl text-center">
+        <h1 class="text-3xl font-black mb-4 text-red-600">통합 기록 변환기</h1>
+        <p class="text-slate-500 mb-8 text-sm font-bold">2022 ~ 2025 시즌 통합 (완주자 전용)</p>
+        
+        <label class="block w-full cursor-pointer bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 hover:border-red-500 transition-all">
+            <input type="file" id="pdfInput" accept=".pdf,.csv" class="hidden" />
+            <span class="font-bold text-lg text-slate-600">PDF 또는 CSV 파일 업로드</span>
+            <p id="fileLabel" class="text-xs text-gray-400 mt-2">파일을 선택하면 자동으로 JSON 다운로드가 시작됩니다.</p>
         </label>
-        <div id="status" class="mt-4 text-indigo-600 font-bold h-6"></div>
+
+        <div id="status" class="mt-6 hidden text-red-600 font-bold italic">
+            데이터 분석 및 변환 중...
+        </div>
     </div>
 
     <script>
+        // PDF.js 워커 설정
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // --- 필드 정의 영역 ---
+        
+        // 1. 2025/2023 Full(King) 코스 마스터 키 (33개)
+        const MASTER_KEYS = [
+            "Bib", "NameKR", "NameEN", "CourseInfo", "Category", "Gender", "RaceTime", 
+            "Swim", "T1", "Bike", "T2", "Run", "Start", "swimCheck", "swimEnd", 
+            "bikeStart", "bike1Check1", "bike3Check1", "bike4Check1", "bike1Check2", 
+            "bike3Check2", "bike4Check2", "bikeEnd", "runStart", "run2Check1", 
+            "run1Check1", "run2Check2", "run1Check2", "run2Check3", "run1Check3", 
+            "run2Check4", "run1Check4", "Finish"
+        ];
+
+        // 2. 2023/2025 Half/Short 코스 키 (23개)
+        const KEYS_HALF_DETAILED = [
+            "Bib", "NameKR", "NameEN", "CourseInfo", "Category", "Gender", "RaceTime", 
+            "Swim", "T1", "Bike", "T2", "Run", 
+            "Start", "swimCheck", "swimEnd", "bikeStart", 
+            "bike1Check1", "bike4Check1", "bikeEnd", "runStart", "run2Check1", "run2Check2", "Finish"
+        ];
+
+        // 3. 2022년 전용 키 (10개)
+        const KEYS_2022 = ["Bib", "FirstName", "FamilyName", "PlaceCat", "RaceTime", "Swim", "T1", "Bike", "T2", "Run"];
 
         document.getElementById('pdfInput').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const status = document.getElementById('status');
-            status.innerText = "데이터 통합 분석 중...";
 
-            const is2024 = file.name.includes("2024");
-            const is2023 = file.name.includes("2023");
-            const isHalf = file.name.toLowerCase().includes("half");
-
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            const originalName = file.name.substring(0, file.name.lastIndexOf('.'));
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            document.getElementById('fileLabel').innerText = file.name;
+            document.getElementById('status').classList.remove('hidden');
+            document.getElementById('status').innerText = "데이터 분석 중...";
+            
             let results = [];
 
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                
-                if (is2024) {
-                    // --- 2024년: 세로 열(Column) 기반 재조립 로직 ---
-                    const cols = { rank: [], bib: [], name: [], club: [], event: [], cat: [], nat: [], gen: [], race: [], s1: [], t1: [], s2: [], t2: [], s3: [], st: [] };
+            try {
+                // --- [CASE 1] CSV 파일 처리 (2024년 등) ---
+                if (ext === 'csv') {
+                    const text = await file.text();
+                    const lines = text.trim().split(/\r?\n/);
                     
-                    textContent.items.forEach(item => {
-                        const x = item.transform[4];
-                        const str = item.str.trim();
-                        if (!str || ["순위","Bib","이름","Club","Event","Category","Nationality","Gender","RaceTime"].includes(str)) return;
+                    const parseCSVLine = (line) => {
+                        const res = [];
+                        let current = '';
+                        let inQuote = false;
+                        for(let i=0; i<line.length; i++) {
+                            const char = line[i];
+                            if(char === '"') inQuote = !inQuote;
+                            else if(char === ',' && !inQuote) { res.push(current.trim()); current = ''; }
+                            else current += char;
+                        }
+                        res.push(current.trim());
+                        return res.map(f => f.replace(/^"|"$/g, '').trim());
+                    };
 
-                        if (x < 60) cols.rank.push(str);
-                        else if (x < 110) cols.bib.push(str);
-                        else if (x < 240) cols.name.push(str);
-                        else if (x < 400) cols.club.push(str);
-                        else if (x < 480) cols.event.push(str);
-                        else if (x < 600) cols.cat.push(str);
-                        else if (x < 680) cols.nat.push(str);
-                        else if (x < 720) cols.gen.push(str);
-                        else if (x < 800) cols.race.push(str);
-                        else if (x < 880) cols.s1.push(str);
-                        else if (x < 940) cols.t1.push(str);
-                        else if (x < 1010) cols.s2.push(str);
-                        else if (x < 1070) cols.t2.push(str);
-                        else if (x < 1150) cols.s3.push(str);
-                        else cols.st.push(str);
-                    });
+                    for (let i = 1; i < lines.length; i++) {
+                        const cols = parseCSVLine(lines[i]);
+                        if (cols.length < 5) continue; 
+                        // DNS/DNF 제외
+                        if (cols.some(c => c.includes("DNS") || c.includes("DNF"))) continue;
 
-                    const maxRows = Math.max(cols.bib.length, cols.name.length);
-                    for (let j = 0; j < maxRows; j++) {
                         results.push({
                             year: "2024",
-                            PlaceCat: cols.rank[j] || "", Bib: cols.bib[j] || "", 이름: cols.name[j] || "",
-                            Club: cols.club[j] || "", Event: cols.event[j] || "", Category: cols.cat[j] || "",
-                            nationality: cols.nat[j] || "", gender: cols.gen[j] || "", RaceTime: cols.race[j] || "",
-                            Swim: cols.s1[j] || "", T1: cols.t1[j] || "", Bike: cols.s2[j] || "",
-                            T2: cols.t2[j] || "", Run: cols.s3[j] || "", status: cols.st[j] || ""
+                            Rank: cols[0],
+                            Bib: cols[1],
+                            Name: cols[2],
+                            Category: cols[3],
+                            Gender: cols[4],
+                            RaceTime: cols[5],
+                            Swim: cols[6],
+                            T1: cols[7],
+                            Bike: cols[8],
+                            T2: cols[9],
+                            Run: cols[10]
                         });
                     }
-                } else {
-                    // --- 2022, 2023년: 가로 행(Row) 기반 로직 ---
-                    const rows = {};
-                    textContent.items.forEach(item => {
-                        const y = Math.round(item.transform[5]);
-                        if (!rows[y]) rows[y] = [];
-                        rows[y].push({ x: item.transform[4], str: item.str.trim() });
-                    });
+                } 
+                // --- [CASE 2] PDF 파일 처리 (2022, 2023, 2025) ---
+                else {
+                    const is2023 = file.name.includes("2023");
+                    const is2025 = file.name.includes("2025");
+                    
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                    let lastCategory = "";
 
-                    Object.keys(rows).sort((a, b) => b - a).forEach(y => {
-                        const rowItems = rows[y].sort((a, b) => a.x - b.x);
-                        const texts = rowItems.map(r => r.str).filter(s => s !== "");
-                        if (texts.length < 5 || !/\d/.test(texts[0])) return;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const rows = {};
 
-                        let data = { year: is2023 ? "2023" : "2022" };
-                        if (is2023) {
-                            const keys23 = isHalf 
-                                ? ["Bib", "FirstName", "FamilyName", "이름", "State", "PlaceCat", "RaceTime", "Swim", "T1", "Bike", "T2", "Run", "Start", "swimCheck", "swimEnd", "bikeStart", "bike1Check1", "bike4Check1", "bikeEnd", "runStart", "run2Check1", "run2Check2", "Finish"]
-                                : ["Bib", "FirstName", "FamilyName", "이름", "State", "PlaceCat", "RaceTime", "Swim", "T1", "Bike", "T2", "Run", "Start", "swimCheck", "swimEnd", "bikeStart", "bike1Check1", "bike3Check1", "bike4Check1", "bike1Check2", "bike3Check2", "bike4Check2", "bikeEnd", "runStart", "run2Check1", "run1Check1", "run2Check2", "run1Check2", "run2Check3", "run1Check3", "run2Check4", "run1Check4", "Finish"];
-                            keys23.forEach((k, idx) => { if(texts[idx]) data[k] = texts[idx]; });
-                        } else {
-                            const keys22 = ["Bib", "FirstName", "FamilyName", "PlaceCat", "RaceTime", "Swim", "T1", "Bike", "T2", "Run"];
-                            keys22.forEach((k, idx) => { if(texts[idx]) data[k] = texts[idx]; });
-                        }
-                        if (data.Bib) results.push(data);
-                    });
+                        // 텍스트 항목을 Y 좌표별로 그룹화
+                        textContent.items.forEach(item => {
+                            const y = Math.round(item.transform[5]);
+                            if (!rows[y]) rows[y] = [];
+                            rows[y].push({ x: item.transform[4], str: item.str.trim() });
+                        });
+
+                        const sortedY = Object.keys(rows).sort((a, b) => b - a);
+
+                        sortedY.forEach(y => {
+                            const row = rows[y].sort((a, b) => a.x - b.x);
+                            const texts = row.map(r => r.str).filter(s => s !== "");
+                            const lineText = texts.join(" ");
+
+                            // [필터 1] DNS, DNF 선수는 데이터 꼬임 방지를 위해 즉시 제외
+                            const upperLine = lineText.toUpperCase();
+                            if (upperLine.includes("DNS") || upperLine.includes("DNF")) return;
+
+                            // [카테고리 감지] 
+                            if (lineText.includes("Full") || lineText.includes("Half") || lineText.includes("Age") || lineText.includes("코스")) {
+                                if (!lineText.includes("Bib") && !/^\d/.test(lineText)) { 
+                                    lastCategory = lineText; 
+                                    return; 
+                                }
+                            }
+
+                            // 헤더 행 무시
+                            if (lineText.includes("Bib") || lineText.includes("배번호")) return;
+
+                            // [데이터 추출] 첫 번째 요소가 숫자(Bib)인 경우만 처리
+                            const cleanBib = texts[0]?.replace(/[^0-9]/g, '');
+                            if (texts.length >= 5 && cleanBib && !isNaN(cleanBib)) {
+                                let yearVal = is2025 ? "2025" : (is2023 ? "2023" : "2022");
+                                let data = { year: yearVal, category: lastCategory };
+
+                                if (!is2023 && !is2025) {
+                                    // 2022년 로직
+                                    KEYS_2022.forEach((key, idx) => {
+                                        if (texts[idx]) data[key] = texts[idx];
+                                    });
+                                } else {
+                                    // 2023년 & 2025년 로직
+                                    let currentTargetKeys = MASTER_KEYS;
+                                    // 컬럼 수가 적으면 Half용 키셋 적용
+                                    if (texts.length < 28) currentTargetKeys = KEYS_HALF_DETAILED;
+
+                                    MASTER_KEYS.forEach(k => data[k] = ""); // 초기화
+                                    currentTargetKeys.forEach((key, idx) => {
+                                        if (texts[idx]) data[key] = texts[idx];
+                                    });
+
+                                    // [필터 2] RaceTime 자리에 성별이 들어간 경우(데이터 밀림) 제외
+                                    if (data["RaceTime"] === "남" || data["RaceTime"] === "여") return;
+                                    // [필터 3] 잘못된 배번 제외
+                                    if (data["Bib"] === "0" || data["Bib"] === "") return;
+                                }
+                                results.push(data);
+                            }
+                        });
+                    }
                 }
+
+                if (results.length === 0) {
+                    alert("추출된 데이터가 없습니다. 파일 내용을 확인해주세요.");
+                    document.getElementById('status').innerText = "추출 실패";
+                    return;
+                }
+
+                // 결과 다운로드
+                const blob = new Blob([JSON.stringify(results, null, 2)], {type: "application/json"});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${originalName}_converted.json`;
+                a.click();
+                
+                document.getElementById('status').innerText = `성공! ${results.length}건 다운로드됨.`;
+                
+            } catch (err) {
+                console.error(err);
+                alert("오류가 발생했습니다: " + err.message);
+                document.getElementById('status').innerText = "오류 발생";
             }
-            const blob = new Blob([JSON.stringify(results, null, 2)], {type: "application/json"});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `${file.name.split('.')[0]}.json`;
-            a.click();
-            status.innerText = "변환 완료!";
         };
     </script>
 </body>
