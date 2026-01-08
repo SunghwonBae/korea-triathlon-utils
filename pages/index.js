@@ -46,6 +46,12 @@ export default function MainIndex() {
   };
 
   const menuItems = [
+     /* Reports 메뉴 임시 비공개
+    { icon: "🔴", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
+    { icon: "🟠", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
+    { icon: "🔵", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
+     */
+    
     { icon: "⚖️", title: "킹코스 완주시간", desc: "철인3종 예상 기록 계산", url: "/ironman_calculator.html" },
     { icon: "🍌", title: "보급 계산기", desc: "경기 중 필요한 에너지 보급량", url: "/gelwater_calculator.html" },
     { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/bike_calculator.html" },
@@ -55,12 +61,6 @@ export default function MainIndex() {
     { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/running_calculator.html" },
     { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/runpace_calculator.html" },
     { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/run_mileage_calculator.html" },
-    /* Reports 메뉴 임시 비공개
-    { icon: "🔴", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
-    { icon: "📊", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
-    { icon: "📊", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
-    { icon: "📊", title: "사이클 구간평속 분석", desc: "사이클 구간별속도 분석", url: "/cyclinganalyzer" },
-    */
   ];
 
   return (
@@ -80,8 +80,10 @@ export default function MainIndex() {
       <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>Korea Triathlon Utils</title>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
+        <link rel="manifest" href="/site.webmanifest"/>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
