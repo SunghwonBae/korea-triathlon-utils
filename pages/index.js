@@ -51,10 +51,16 @@ export default function MainIndex() {
     { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/bike_calculator.html" },
     { icon: "🏔️", title: "업힐 분석기", desc: "경사도/파워별 기어비 분석", url: "/bike_uphill.html" },
     { icon: "🚴", title: "GPX to ZWO", desc: "코스 파일을 워크아웃으로 변환", url: "/bike_gpx_zwo.html" },
-    { icon: "📊", title: "사이클 평속 분석", desc: "라이딩 구간별속도 분석 리포트생성", url: "/cyclinganalyzer" },
+    { icon: "📊", title: "사이클 구간평속 분석", desc: "사이클 구간별속도 분석", url: "/cyclinganalyzer" },
     { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/running_calculator.html" },
     { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/runpace_calculator.html" },
     { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/run_mileage_calculator.html" },
+    /* Reports 메뉴 임시 비공개
+    { icon: "🔴", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
+    { icon: "📊", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
+    { icon: "📊", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
+    { icon: "📊", title: "사이클 구간평속 분석", desc: "사이클 구간별속도 분석", url: "/cyclinganalyzer" },
+    */
   ];
 
   return (
@@ -146,7 +152,7 @@ export default function MainIndex() {
         }
         .menu-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(4, 1fr);
           gap: 20px;
         }
         .menu-card {
@@ -204,7 +210,7 @@ export default function MainIndex() {
         }
         @media (max-width: 1024px) {
           .menu-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
           }
         }
         @media (max-width: 640px) {
@@ -222,19 +228,22 @@ export default function MainIndex() {
           }
           .subtitle { font-size: 1rem; }
           .mobile-br { display: block; }
-          .menu-grid { grid-template-columns: 1fr; gap: 15px; }
+          .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
           .menu-card {
-            flex-direction: row;
-            text-align: left;
-            padding: 20px;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px 10px;
             align-items: center;
+            justify-content: flex-start;
+            min-height: 150px;
           }
           .card-icon {
             font-size: 2.5rem;
-            margin-bottom: 0;
-            margin-right: 20px;
+            margin-bottom: 10px;
+            margin-right: 0;
           }
-          .card-title { margin-bottom: 4px; }
+          .card-title { font-size: 1rem; margin-bottom: 6px; word-break: keep-all; }
+          .card-desc { font-size: 0.75rem; line-height: 1.3; color: #6b7280; }
         }
 
         /* 모바일 가로모드 (Landscape) 최적화 */
@@ -259,7 +268,7 @@ export default function MainIndex() {
             margin-top: -50px;
           }
           .menu-grid {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
           }
           .menu-card {

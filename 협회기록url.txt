@@ -15,6 +15,24 @@ https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1979&page
 https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1965&page=1&sYear=2025&field=&keyword=
 
 
+고령대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1916&page=1&sYear=2024&field=&keyword=
+통영대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1886&page=1&sYear=2024&field=&keyword=
+시흥대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1923&page=1&sYear=2024&field=&keyword=
+익산대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1881&page=1&sYear=2024&field=&keyword=
+이천대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1919&page=1&sYear=2024&field=&keyword=
+보령대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1880&page=1&sYear=2024&field=&keyword=
+창원대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1914&page=1&sYear=2024&field=&keyword=
+충주대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1906&page=1&sYear=2024&field=&keyword=
+대구대회
+https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=1890&page=1&sYear=2024&field=&keyword=
 
 구례
 https://www.coachcox.co.uk/imstats/series/61/

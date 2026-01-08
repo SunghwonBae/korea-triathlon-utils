@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IM GURYE - Ultimate Professional Analyzer</title>
+    <title>IM CHART</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <script src="back_exit_handler.js" defer></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -34,6 +36,11 @@
         .decile-row:nth-child(odd) { background-color: #f8fafc; }
         .decile-row.me-row { background-color: #fee2e2; border: 2px solid #ef4444; }
         .stat-value { font-family: 'Pretendard', monospace; font-weight: 700; }
+
+        /* 슬라이더 커스텀 */
+        .noUi-connect { background: #ef4444; }
+        .noUi-handle { border-radius: 99px; box-shadow: none; border: 2px solid #ef4444; background: white; cursor: grab; }
+        .noUi-handle:before, .noUi-handle:after { display: none; }
     </style>
 </head>
 <body class="leading-tight">
@@ -56,18 +63,17 @@
                         분석 시작하기
                     </button>
                 </div>
-                <p class="text-slate-400 text-xs font-medium mt-6">
-                    * https://www.coachcox.co.uk 에서 제공하는 <br>
-                    CSV파일을 다운받아서 보면 한글이 깨지면서 셀이 제자리를 못찾는 행이 생겨보입니다. <br>
-                    분석프로그램에서는 한글깨짐 없이 JSON파일로 파싱하고 문제없이 분석합니다. <br>
-                    그래도 오류가 있을 수 있으니, 공식 기록과 차이가 있을 경우 양해 부탁드립니다.<br>
-                    다만, 분석대상은 Rank가 기록되어 있는 Finisher 만 대상으로 합니다. <br>
-                    특히, IRONMAN 대회 등록할때 꼭 에이지 그룹으로 신청하세요!!! <br>
-                    오픈디비젼(ODIV)으로 신청하면 저 CSV에 기록이 포함되지 않습니다!!!<br>
-                    구례IRONMAN 기록 : https://www.coachcox.co.uk/imstats/series/61/<br>
-                    고성70.3 기록 : https://www.coachcox.co.uk/imstats/series/104/<br><br>
-                    ** 본 서비스는 IRONMAN Group 과 무관하며 비영리 목적으로 제작되었습니다.<br>
-                </p>
+                <div class="mt-8 text-left bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h5 class="font-bold text-slate-700 mb-3 flex items-center text-sm">
+                        <i class="fas fa-info-circle mr-2 text-red-500"></i> 데이터 출처 및 유의사항
+                    </h5>
+                    <div class="text-sm text-slate-600 space-y-2 leading-relaxed">
+                        <p>• <b>CoachCox</b>에서 제공하는 CSV 데이터를 기반으로 분석합니다. (한글 깨짐 자동 보정)</p>
+                        <p>• <span class="text-red-600 font-bold">주의:</span> Rank가 기록된 Finisher만 분석 대상입니다. 대회 등록 시 <b>Age Group</b>으로 신청해야 기록이 포함됩니다. (ODIV 제외)</p>
+                        <p>• <a href="https://www.coachcox.co.uk/imstats/series/61/" target="_blank" class="text-blue-500 hover:underline font-bold">구례 IRONMAN 기록 확인</a> / <a href="https://www.coachcox.co.uk/imstats/series/104/" target="_blank" class="text-blue-500 hover:underline font-bold">고성 70.3 기록 확인</a></p>
+                        <p class="pt-2 text-xs text-slate-400">** 본 서비스는 IRONMAN Group과 무관하며 비영리 목적으로 제작되었습니다.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -214,6 +220,51 @@
                         <div id="tableStats" class="bg-red-50 text-red-600 px-5 py-2 rounded-xl text-xs font-black tracking-widest border border-red-100"></div>
                     </div>
                 </div>
+
+                <!-- 고급 필터 영역 -->
+                <div class="px-6 mb-6">
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                        <!-- 검색창 -->
+                        <div class="relative mb-4">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="tableSearch" placeholder="이름(한글/영문) 또는 배번 검색 (예: 오영환, 123)" 
+                                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all font-bold text-slate-700">
+                        </div>
+                        
+                        <!-- 슬라이더 토글 -->
+                        <button id="toggleFilterBtn" class="text-xs font-bold text-slate-500 hover:text-red-600 flex items-center gap-1 mb-2 transition-colors">
+                            <i class="fas fa-sliders-h"></i> 상세 기록 필터 (시간 범위 설정) <span id="filterArrow">▼</span>
+                        </button>
+                        
+                        <!-- 슬라이더 패널 (숨김) -->
+                        <div id="filterPanel" class="hidden mt-6 space-y-8 pt-2 border-t border-slate-200 px-2">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                                <!-- Total -->
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Total Time</span><span id="valTotal" class="text-red-600 font-mono"></span></div>
+                                    <div id="sliderTotal" class="mx-1"></div>
+                                </div>
+                                <!-- Swim -->
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Swim</span><span id="valSwim" class="text-blue-600 font-mono"></span></div>
+                                    <div id="sliderSwim" class="mx-1"></div>
+                                </div>
+                                <!-- Bike -->
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Bike</span><span id="valBike" class="text-green-600 font-mono"></span></div>
+                                    <div id="sliderBike" class="mx-1"></div>
+                                </div>
+                                <!-- Run -->
+                                <div>
+                                    <div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Run</span><span id="valRun" class="text-orange-600 font-mono"></span></div>
+                                    <div id="sliderRun" class="mx-1"></div>
+                                </div>
+                            </div>
+                            <div class="text-center pt-2"><button onclick="resetAdvancedFilter()" class="text-xs text-slate-400 underline hover:text-slate-600 font-bold">필터 초기화</button></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex flex-wrap items-center gap-2 mb-4 px-6">
                     <button onclick="applyBenchmarkFilter('s')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-swimmer mr-1"></i>수영 빠른 20명</button>
                     <button onclick="applyBenchmarkFilter('bk')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-biking mr-1"></i>사이클 빠른 20명</button>
@@ -258,6 +309,7 @@
         let currentSort = { col: 'ro', dir: 'asc' };
         let currentPage = 1; const pageSize = 50;
         const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
+        let sliders = {}; // 슬라이더 인스턴스 저장
 
         const hmsToS = (s) => { 
             if(!s || !s.includes(':')) return 0; 
@@ -293,6 +345,7 @@
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
                 initDistFilterOptions();
+                initAdvancedFilters(); // 슬라이더 초기화
                 updateAthleteList(); updateDashboard();
             } else {
                 // API를 통해 파일 목록 로드 (가정: /api/ironmanfiles 엔드포인트 사용)
@@ -328,6 +381,7 @@
                 
                 initDistFilterOptions();
                 initSub10Analysis();
+                initAdvancedFilters(); // 슬라이더 초기화
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
             } catch (e) {
@@ -405,6 +459,8 @@
             const resetBtn = document.getElementById('resetFilterBtn');
             if (filteredData) resetBtn.classList.remove('hidden');
             else resetBtn.classList.add('hidden');
+            
+            // 검색창이 비어있지 않거나 슬라이더가 움직였으면 리셋 버튼 보이기 (고급 필터 로직에서 처리됨)
 
             const reasonText = filterReason ? ` (${filterReason})` : (filteredData ? ' (FILTERED)' : '');
             document.getElementById('tableStats').innerText = `SHOWING ${start+1} - ${Math.min(start+pageSize, sourceData.length)} OF ${sourceData.length.toLocaleString()} ATHLETES${reasonText}`;
@@ -416,11 +472,13 @@
             filteredData = null;
             filterReason = "";
             currentPage = 1;
+            document.getElementById('tableSearch').value = ''; // 검색창 초기화
+            resetSliders(); // 슬라이더 초기화
             renderTable();
             updateDashboard(); // 차트도 초기화
         }
 
-                function applyBenchmarkFilter(type) {
+        function applyBenchmarkFilter(type) {
             if (!me) return showToast("먼저 분석기준선수를 등록해주세요.");
             
             // 해당 종목 기록순 정렬
@@ -1109,6 +1167,183 @@
             if (me && me.b === bib) me = null;
             else competitors = competitors.filter(c => c.b !== bib);
             updateAthleteList(); updateDashboard();
+        }
+
+        // --- 고급 필터 및 한글 검색 로직 ---
+
+        // 한글 발음 매핑 테이블 (자주 쓰이는 성씨/이름)
+        const KO_ROMAN = {
+            '김': '(kim|gim)', '이': '(lee|yi|ri|i)', '박': '(park|bak|pak)', '최': '(choi|choe)', '정': '(jung|jeong|chung)', 
+            '강': '(kang|gang)', '조': '(cho|jo)', '윤': '(yoon|yun)', '장': '(jang|chang)', '임': '(lim|im)', '한': '(han)', 
+            '오': '(oh|o)', '서': '(seo|suh)', '신': '(shin|sin)', '권': '(kwon|gwon)', '황': '(hwang)', '안': '(ahn|an)', 
+            '송': '(song)', '전': '(jeon|jun)', '홍': '(hong)', '유': '(yoo|yu|ryu)', '고': '(ko|go)', '문': '(moon|mun)', 
+            '양': '(yang)', '손': '(son)', '배': '(bae)', '백': '(baek|paik)', '허': '(hur|heo)', '남': '(nam)', '심': '(shim|sim)', 
+            '노': '(noh|roh)', '하': '(ha)', '곽': '(kwak)', '성': '(sung|seong)', '차': '(cha)', '주': '(joo|ju)', '우': '(woo|wu)', 
+            '구': '(koo|gu)', '나': '(na)', '민': '(min)', '진': '(jin)', '지': '(ji)', '엄': '(um|eom)', '채': '(chae)', 
+            '원': '(won)', '천': '(cheon)', '방': '(bang)', '공': '(gong|kong)', '현': '(hyun|hyeon)', '함': '(ham)', 
+            '변': '(byun|byeon)', '염': '(yeom)', '여': '(yeo)', '추': '(chu)', '도': '(do)', '소': '(so)', '석': '(seok|suk)', 
+            '선': '(sun|seon)', '설': '(seol|sul)', '마': '(ma)', '길': '(gil)', '연': '(yeon)', '위': '(wi)', '표': '(pyo)', 
+            '명': '(myung|myeong)', '기': '(ki|gi)', '반': '(ban)', '왕': '(wang)', '금': '(geum|keum)', '옥': '(ok)', '육': '(yuk)', 
+            '인': '(in)', '맹': '(maeng)', '제': '(je)', '모': '(mo)', '탁': '(tak)', '국': '(kook|guk)', '어': '(eo)', 
+            '은': '(eun)', '편': '(pyeon)', '용': '(yong)',
+            // 이름 글자
+            '영': '(young|yeong)', '환': '(hwan)', '수': '(soo|su)', '호': '(ho)', '재': '(jae)', '훈': '(hoon|hun)', 
+            '건': '(gun|geon)', '규': '(kyu|gyu)', '태': '(tae)', '광': '(kwang|gwang)', '동': '(dong)', '경': '(kyung|gyeong)', 
+            '승': '(seung)', '철': '(cheol|chul)', '상': '(sang)', '혜': '(hye)', '미': '(mi)', '아': '(a|ah)', '희': '(hee)', 
+            '숙': '(sook|suk)', '자': '(ja)', '웅': '(woong|ung)', '일': '(il)', '식': '(sik)', '만': '(man)', '종': '(jong)', 
+            '대': '(dae)', '병': '(byung|byeong)', '창': '(chang)', '세': '(se)', '혁': '(hyuk|hyeok)', '빈': '(bin)', 
+            '범': '(beom|bum)', '욱': '(wook|uk)', '찬': '(chan)', '익': '(ik)', '근': '(keun|geun)', '학': '(hak)', 
+            '덕': '(deok|duk)', '록': '(rok|lok)', '복': '(bok)', '봉': '(bong)', '삼': '(sam)', '섭': '(seop|sub)', 
+            '순': '(soon|sun)', '시': '(si)', '억': '(eok)', '완': '(wan)', '운': '(woon|un)', '율': '(yul)', '의': '(ui)', 
+            '중': '(jung|joong)', '춘': '(chun)', '충': '(chung)', '치': '(chi)', '택': '(taek)', '판': '(pan)', '해': '(hae)', 
+            '형': '(hyeong|hyung)', '화': '(hwa)', '회': '(hoe)', '효': '(hyo)', '휘': '(hwi)'
+        };
+
+        function getKoreanRegex(text) {
+            // 한글이 아니면 그대로 반환
+            if (!/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text)) return null;
+            
+            let pattern = "";
+            let reversePattern = ""; // 성/이름 순서 바뀐 경우 대비
+            
+            for (let char of text) {
+                const roman = KO_ROMAN[char];
+                if (roman) {
+                    pattern += roman + ".*";
+                    reversePattern = roman + ".*" + reversePattern;
+                } else {
+                    // 매핑 없는 글자는 임의의 문자로 처리하거나 무시
+                    pattern += ".*";
+                    reversePattern = ".*" + reversePattern;
+                }
+            }
+            // 정방향 또는 역방향 매칭
+            return new RegExp(`(${pattern}|${reversePattern})`, 'i');
+        }
+
+        function initAdvancedFilters() {
+            // 1. 슬라이더 패널 토글
+            const btn = document.getElementById('toggleFilterBtn');
+            const panel = document.getElementById('filterPanel');
+            const arrow = document.getElementById('filterArrow');
+            btn.onclick = () => {
+                panel.classList.toggle('hidden');
+                arrow.innerText = panel.classList.contains('hidden') ? '▼' : '▲';
+            };
+
+            // 2. 슬라이더 생성
+            createSlider('sliderTotal', 'valTotal', 't');
+            createSlider('sliderSwim', 'valSwim', 's');
+            createSlider('sliderBike', 'valBike', 'bk');
+            createSlider('sliderRun', 'valRun', 'rn');
+
+            // 3. 검색창 이벤트
+            const searchInput = document.getElementById('tableSearch');
+            let debounceTimer;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => applyAdvancedFilter(), 300);
+            });
+        }
+
+        function createSlider(id, valId, key) {
+            const el = document.getElementById(id);
+            if (!el || !raceData) return;
+            
+            const values = raceData.map(x => x[key]).filter(v => v > 0);
+
+            if (values.length === 0) {
+                if (el.noUiSlider) {
+                    el.noUiSlider.destroy();
+                    delete sliders[key];
+                }
+                el.setAttribute('disabled', true);
+                document.getElementById(valId).innerText = 'N/A';
+                return;
+            }
+            el.removeAttribute('disabled');
+
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            
+            if (el.noUiSlider) {
+                el.noUiSlider.updateOptions({
+                    range: { 'min': min, 'max': max }
+                });
+                el.noUiSlider.set([min, max]);
+            } else {
+                noUiSlider.create(el, {
+                    start: [min, max], connect: true,
+                    range: { 'min': min, 'max': max },
+                    step: 60, tooltips: false
+                });
+                sliders[key] = el.noUiSlider;
+
+                el.noUiSlider.on('update', (values) => { document.getElementById(valId).innerText = `${sToHms(parseInt(values[0])).substring(0,5)} - ${sToHms(parseInt(values[1])).substring(0,5)}`; });
+                el.noUiSlider.on('change', () => { applyAdvancedFilter(); });
+            }
+        }
+
+        function resetSliders() {
+            if (!sliders.t) return;
+            ['t', 's', 'bk', 'rn'].forEach(k => {
+                const s = sliders[k];
+                s.set([s.options.range.min, s.options.range.max]); // Reset to full range
+            });
+        }
+
+        function resetAdvancedFilter() {
+            document.getElementById('tableSearch').value = '';
+            resetSliders();
+            applyAdvancedFilter();
+        }
+
+        function applyAdvancedFilter() {
+            const searchVal = document.getElementById('tableSearch').value.trim().toLowerCase();
+            const rangeT = sliders.t.get().map(Number);
+            const rangeS = sliders.s.get().map(Number);
+            const rangeBk = sliders.bk.get().map(Number);
+            const rangeRn = sliders.rn.get().map(Number);
+
+            // 한글 검색 정규식 생성
+            const koRegex = getKoreanRegex(searchVal);
+
+            filteredData = raceData.filter(p => {
+                // 1. 시간 범위 체크
+                if (p.t < rangeT[0] || p.t > rangeT[1]) return false;
+                if (p.s > 0 && (p.s < rangeS[0] || p.s > rangeS[1])) return false;
+                if (p.bk > 0 && (p.bk < rangeBk[0] || p.bk > rangeBk[1])) return false;
+                if (p.rn > 0 && (p.rn < rangeRn[0] || p.rn > rangeRn[1])) return false;
+
+                // 2. 검색어 체크
+                if (searchVal) {
+                    // 배번 검색
+                    if (p.b.toLowerCase().includes(searchVal)) return true;
+                    // 영문 이름 검색
+                    if (p.n.toLowerCase().includes(searchVal)) return true;
+                    // 한글 발음 검색
+                    if (koRegex && koRegex.test(p.n)) return true;
+                    
+                    return false;
+                }
+                return true;
+            });
+
+            // 필터 이유 텍스트 생성
+            let reasons = [];
+            if (searchVal) reasons.push(`"${searchVal}"`);
+            // 전체 범위가 아니면 이유에 추가 (간단히 체크)
+            const isFullRange = (s, r) => Math.abs(s.options.range.min - r[0]) < 1 && Math.abs(s.options.range.max - r[1]) < 1;
+            if (!isFullRange(sliders.t, rangeT)) reasons.push("Time Filter");
+            else if (!isFullRange(sliders.s, rangeS) || !isFullRange(sliders.bk, rangeBk) || !isFullRange(sliders.rn, rangeRn)) reasons.push("Split Filter");
+
+            filterReason = reasons.length > 0 ? reasons.join(", ") : "";
+            if (reasons.length === 0 && !searchVal) filteredData = null; // 필터 없음
+
+            currentPage = 1;
+            renderTable();
+            // updateDashboard(); // 차트 업데이트는 너무 무거울 수 있으니 테이블만? -> 사용자 경험상 차트도 바뀌는게 좋음
+            // 하지만 필터링된 데이터로 차트를 그리면 분포도가 깨질 수 있음. renderDist는 filteredData를 반영하도록 되어있음.
         }
     </script>
 </body>

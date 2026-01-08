@@ -6,21 +6,34 @@
     <title>Challenge Gunsan Unified Parser (2022-2025)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6 text-slate-800">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 text-slate-800">
 
-    <div class="bg-white rounded-[2.5rem] p-10 max-w-xl w-full shadow-2xl text-center">
-        <h1 class="text-3xl font-black mb-4 text-red-600">통합 기록 변환기</h1>
-        <p class="text-slate-500 mb-8 text-sm font-bold">2022 ~ 2025 시즌 통합 (완주자 전용)</p>
+    <div class="bg-white rounded-3xl p-10 max-w-xl w-full shadow-xl border border-slate-100 text-center">
+        <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 mb-6 text-blue-600">
+                <i class="fas fa-file-pdf text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-black text-slate-800 mb-2">챌린지 기록 변환기</h1>
+            <p class="text-slate-500 font-medium">2022 ~ 2025 시즌 통합 (PDF/CSV to JSON)</p>
+        </div>
         
-        <label class="block w-full cursor-pointer bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 hover:border-red-500 transition-all">
+        <label class="block w-full cursor-pointer bg-slate-50 border-4 border-dashed border-slate-200 rounded-3xl p-12 hover:border-blue-500 hover:bg-blue-50/30 transition-all group">
             <input type="file" id="pdfInput" accept=".pdf,.csv" class="hidden" />
-            <span class="font-bold text-lg text-slate-600">PDF 또는 CSV 파일 업로드</span>
-            <p id="fileLabel" class="text-xs text-gray-400 mt-2">파일을 선택하면 자동으로 JSON 다운로드가 시작됩니다.</p>
+            <i class="fas fa-cloud-upload-alt text-5xl text-slate-300 group-hover:text-blue-500 mb-4 transition-colors"></i>
+            <span class="block font-bold text-slate-700 text-lg mb-1">PDF/CSV 파일 선택</span>
+            <p id="fileLabel" class="text-sm text-slate-400">클릭하거나 파일을 여기로 드래그하세요</p>
         </label>
 
-        <div id="status" class="mt-6 hidden text-red-600 font-bold italic">
-            데이터 분석 및 변환 중...
+        <div id="status" class="mt-8 hidden">
+            <div class="flex items-center justify-center gap-2 text-blue-600 font-bold animate-pulse">
+                <i class="fas fa-spinner fa-spin"></i> 데이터 분석 및 변환 중...
+            </div>
         </div>
     </div>
 
