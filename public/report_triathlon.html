@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    <script src="menu_full_handler.js" defer></script>
     <script src="back_exit_handler.js" defer></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -41,12 +42,30 @@
         .noUi-connect { background: #3b82f6; }
         .noUi-handle { border-radius: 99px; box-shadow: none; border: 2px solid #3b82f6; background: white; cursor: grab; }
         .noUi-handle:before, .noUi-handle:after { display: none; }
+
+        /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #2563eb; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="leading-tight">
 
-    <div id="setupSection" class="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-        <div class="card max-w-xl w-full text-center py-20 border-none shadow-2xl">
+    <div id="setupSection" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm overflow-y-auto flex items-center justify-center p-6">
+        <div class="card max-w-xl w-full text-center py-20 border-none shadow-2xl relative">
+            <button id="setupMenuBtn" class="absolute top-8 left-8 text-slate-400 hover:text-slate-600 transition-colors" onclick="document.getElementById('menuToggle').click()"><i class="fas fa-bars text-3xl"></i></button>
+            <button id="closeSetupBtn" onclick="closeSetup()" class="hidden absolute top-8 right-8 text-slate-400 hover:text-slate-600 transition-colors"><i class="fas fa-times text-3xl"></i></button>
             <div class="mb-8">
                 <i class="fas fa-running text-blue-600 text-6xl mb-4"></i>
                 <h1 class="text-5xl font-black italic tracking-tighter uppercase">TRI기록줄께<BR><span class="text-blue-600">차트다오</span></h1>
@@ -78,24 +97,46 @@
         </div>
     </div>
 
+    <!-- 검색 결과 모달 -->
+    <div id="searchResultModal" class="fixed inset-0 z-[110] bg-black/50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-slate-800 text-lg"><i class="fas fa-search mr-2 text-blue-600"></i>검색 결과 선택</h3>
+                <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-600 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="searchResultList" class="max-h-[60vh] overflow-y-auto p-2 space-y-2 bg-slate-50/50">
+                <!-- 검색 결과 리스트 주입 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 선수 정보 툴팁 -->
+    <div id="globalTooltip" class="fixed hidden bg-white/95 backdrop-blur border border-slate-200 shadow-xl rounded-xl p-3 text-xs z-[9999] transition-all min-w-[200px] pointer-events-none"></div>
+
     <div id="mainDashboard" class="hidden min-h-screen pb-24">
         <header class="bg-white/95 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200 px-6 py-4">
             <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center gap-6">
-                <div class="flex flex-col flex-shrink-0 leading-none select-none">
-                    <div class="text-3xl font-black italic tracking-tighter text-slate-900">
-                        <span class="text-blue-600">TRI-ing</span> My Best!
+                <div class="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-start">
+                    <button id="menuToggle" class="text-2xl text-slate-500 hover:text-blue-600 transition-colors"><i class="fas fa-bars"></i></button>
+                    <div class="flex flex-col flex-shrink-0 leading-none select-none">
+                        <div class="text-3xl font-black italic tracking-tighter text-slate-900">
+                            <span class="text-blue-600">TRI-ing</span> My Best!
+                        </div>
+                        <div class="text-[10px] font-black text-slate-400 tracking-[0.35em] pl-1 mt-1">기록 그 이상의 도전</div>
                     </div>
-                    <div class="text-[10px] font-black text-slate-400 tracking-[0.35em] pl-1 mt-1">기록 그 이상의 도전</div>
                 </div>
                 <div class="flex-1 flex gap-3 w-full">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="searchBox" placeholder="선수 이름 또는 배번을 입력하여 검색하세요" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white font-bold transition-all">
+                        <input type="text" id="searchBox" placeholder="이름 또는 배번 입력 후 Enter" onkeydown="if (event.key === 'Enter') performSearch(this.value);" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white font-bold transition-all">
                     </div>
-                    <button id="addMeBtn" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-black transition-all">분석기준선수로 등록</button>
-                    <button id="addCompareBtn" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-blue-700 transition-all">비교군 추가</button>
+                    <button id="addMeBtn" onclick="handleAddMeClick()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-black transition-all">분석기준선수로 등록</button>
+                    <button id="addCompareBtn" onclick="handleAddCompareClick()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-blue-700 transition-all">비교군 추가</button>
                 </div>
-                <button id="downloadHtmlBtn" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all">
+                <button id="changeRaceBtn" onclick="openSetup()" class="bg-slate-700 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                    <i class="fas fa-exchange-alt mr-2"></i>다른대회분석
+                </button>
+                <button id="downloadHtmlBtn" onclick="downloadReport()" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all">
                     <i class="fas fa-file-download mr-2"></i>리포트 다운로드
                 </button>
             </div>
@@ -108,7 +149,7 @@
                         <i class="fas fa-info-circle text-blue-500"></i> 트라이애슬론 기록 분석 가이드<span id="raceTitleDisplay" class="text-blue-600 ml-2"></span>
                     </h2>
                     <p class="text-slate-600 text-sm leading-relaxed font-medium max-w-5xl">
-                        현재 대시보드는 <span class="text-blue-600 font-bold underline decoration-2">전체 참가자의 평균 기록</span> 선수를 기준으로 설정되었습니다.
+                        초기화면 대시보드는 <span class="text-blue-600 font-bold underline decoration-2">전체 참가자의 평균 기록</span> 선수를 기준으로 설정되었습니다.
                         기준 선수 대비 ±10/20/30분 차이 선수들이 비교군으로 자동 설정됩니다. 본인 기록으로 분석하려면 검색창에 배번 입력 후 <span class="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300">분석기준선수로 등록</span> 버튼을 눌러주세요.
                     </p>
                 </div>
@@ -163,7 +204,7 @@
                 <div class="card lg:col-span-3">
                     <div class="guide-box border-l-purple-600">
                         <h5 class="font-black text-purple-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-list-ol mr-2"></i>전체 기록 기준 상위 10% 구간별 평속 분석</h5>
-                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 완주자를 기록순으로 10%씩 그룹핑하여 각 그룹의 종목별 평균 속도를 산출했습니다. 본인이 속한 그룹이 붉은색으로 표시됩니다.</p>
+                        <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">전체 완주자를 기록순으로 10%씩 그룹핑하여 각 그룹의 종목별 평균 속도를 산출했습니다. 본인이 속한 그룹이 붉은색으로 표시됩니다. (속도계산은 규정코스거리 기준 추정치입니다. 실제 경기거리로 계산한 속도가 아닙니다.)</p>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-center">
@@ -171,9 +212,9 @@
                                 <tr class="bg-slate-100 text-slate-600 uppercase text-xs font-black tracking-wider">
                                     <th class="py-3 px-4 text-left">Group (Decile)</th>
                                     <th class="py-3 px-4">Finish Time Range</th>
-                                    <th class="py-3 px-4">Swim Pace<br><span class="text-[10px] font-normal">(min/100m)</span></th>
-                                    <th class="py-3 px-4">Bike Speed<br><span class="text-[10px] font-normal">(km/h)</span></th>
-                                    <th class="py-3 px-4">Run Pace<br><span class="text-[10px] font-normal">(min/km)</span></th>
+                                    <th class="py-3 px-4">Swim Pace<br><span class="text-[10px] font-normal" id="swimDistLabel">(min/100m)</span></th>
+                                    <th class="py-3 px-4">Bike Speed<br><span class="text-[10px] font-normal" id="bikeDistLabel">(km/h)</span></th>
+                                    <th class="py-3 px-4">Run Pace<br><span class="text-[10px] font-normal" id="runDistLabel">(min/km)</span></th>
                                 </tr>
                             </thead>
                             <tbody id="decileTableBody" class="font-bold text-slate-700"></tbody>
@@ -265,6 +306,7 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 mb-4 px-6">
+                    <button onclick="applyBenchmarkFilter('t')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-stopwatch mr-1"></i>기록 빠른/느린 20명</button>
                     <button onclick="applyBenchmarkFilter('s')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-swimmer mr-1"></i>수영 빠른 20명</button>
                     <button onclick="applyBenchmarkFilter('bk')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-biking mr-1"></i>사이클 빠른 20명</button>
                     <button onclick="applyBenchmarkFilter('rn')" class="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fas fa-running mr-1"></i>런 빠른 20명</button>
@@ -308,7 +350,36 @@
         let currentSort = { col: 'ro', dir: 'asc' };
         let currentPage = 1; const pageSize = 50;
         const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
+        let raceDistances = { swim: 1500, bike: 40, run: 10 }; // Default Olympic
         let sliders = {}; // 슬라이더 인스턴스 저장
+
+        // 한글 발음 매핑 테이블 (자주 쓰이는 성씨/이름)
+        const KO_ROMAN = {
+            '김': '(kim|gim)', '이': '(lee|yi|ri|i)', '박': '(park|bak|pak)', '최': '(choi|choe)', '정': '(jung|jeong|chung)', 
+            '강': '(kang|gang)', '조': '(cho|jo)', '윤': '(yoon|yun)', '장': '(jang|chang)', '임': '(lim|im)', '한': '(han)', 
+            '오': '(oh|o)', '서': '(seo|suh)', '신': '(shin|sin)', '권': '(kwon|gwon)', '황': '(hwang)', '안': '(ahn|an)', 
+            '송': '(song)', '전': '(jeon|jun)', '홍': '(hong)', '유': '(yoo|yu|ryu)', '고': '(ko|go)', '문': '(moon|mun)', 
+            '양': '(yang)', '손': '(son)', '배': '(bae)', '백': '(baek|paik)', '허': '(hur|heo)', '남': '(nam)', '심': '(shim|sim)', 
+            '노': '(noh|roh)', '하': '(ha)', '곽': '(kwak)', '성': '(sung|seong)', '차': '(cha)', '주': '(joo|ju)', '우': '(woo|wu)', 
+            '구': '(koo|gu)', '나': '(na)', '민': '(min)', '진': '(jin)', '지': '(ji)', '엄': '(um|eom)', '채': '(chae)', 
+            '원': '(won)', '천': '(cheon)', '방': '(bang)', '공': '(gong|kong)', '현': '(hyun|hyeon)', '함': '(ham)', 
+            '변': '(byun|byeon)', '염': '(yeom)', '여': '(yeo)', '추': '(chu)', '도': '(do)', '소': '(so)', '석': '(seok|suk)', 
+            '선': '(sun|seon)', '설': '(seol|sul)', '마': '(ma)', '길': '(gil)', '연': '(yeon)', '위': '(wi)', '표': '(pyo)', 
+            '명': '(myung|myeong)', '기': '(ki|gi)', '반': '(ban)', '왕': '(wang)', '금': '(geum|keum)', '옥': '(ok)', '육': '(yuk)', 
+            '인': '(in)', '맹': '(maeng)', '제': '(je)', '모': '(mo)', '탁': '(tak)', '국': '(kook|guk)', '어': '(eo)', 
+            '은': '(eun)', '편': '(pyeon)', '용': '(yong)',
+            // 이름 글자
+            '영': '(young|yeong)', '환': '(hwan)', '수': '(soo|su)', '호': '(ho)', '재': '(jae)', '훈': '(hoon|hun)', 
+            '건': '(gun|geon)', '규': '(kyu|gyu)', '태': '(tae)', '광': '(kwang|gwang)', '동': '(dong)', '경': '(kyung|gyeong)', 
+            '승': '(seung)', '철': '(cheol|chul)', '상': '(sang)', '혜': '(hye)', '미': '(mi)', '아': '(a|ah)', '희': '(hee)', 
+            '숙': '(sook|suk)', '자': '(ja)', '웅': '(woong|ung)', '일': '(il)', '식': '(sik)', '만': '(man)', '종': '(jong)', 
+            '대': '(dae)', '병': '(byung|byeong)', '창': '(chang)', '세': '(se)', '혁': '(hyuk|hyeok)', '빈': '(bin)', 
+            '범': '(beom|bum)', '욱': '(wook|uk)', '찬': '(chan)', '익': '(ik)', '근': '(keun|geun)', '학': '(hak)', 
+            '덕': '(deok|duk)', '록': '(rok|lok)', '복': '(bok)', '봉': '(bong)', '삼': '(sam)', '섭': '(seop|sub)', 
+            '순': '(soon|sun)', '시': '(si)', '억': '(eok)', '완': '(wan)', '운': '(woon|un)', '율': '(yul)', '의': '(ui)', 
+            '중': '(jung|joong)', '춘': '(chun)', '충': '(chung)', '치': '(chi)', '택': '(taek)', '판': '(pan)', '해': '(hae)', 
+            '형': '(hyeong|hyung)', '화': '(hwa)', '회': '(hoe)', '효': '(hyo)', '휘': '(hwi)'
+        };
 
         const hmsToS = (s) => { 
             if(!s || !s.includes(':')) return 0; 
@@ -320,10 +391,18 @@
         const sToHms = (s) => { if(s<=0) return "--:--:--"; const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
 
         // Helper functions for Advanced Stats (Olympic Distance)
-        // Swim 1.5k, Bike 40k, Run 10k
-        const getSwimPace = (s) => (s > 0) ? sToHms((s / 1500) * 100).substring(3, 8) : "-"; // min/100m
-        const getBikeSpeed = (s) => (s > 0) ? (40 / (s / 3600)).toFixed(1) : "-"; // km/h
-        const getRunPace = (s) => (s > 0) ? sToHms(s / 10).substring(3, 8) : "-"; // min/km
+        const getSwimPace = (s) => (s > 0) ? sToHms((s / raceDistances.swim) * 100).substring(3, 8) : "-"; // min/100m
+        const getBikeSpeed = (s) => (s > 0) ? (raceDistances.bike / (s / 3600)).toFixed(1) : "-"; // km/h
+        const getRunPace = (s) => (s > 0) ? sToHms(s / raceDistances.run).substring(3, 8) : "-"; // min/km
+
+        function updateDistanceLabels() {
+            const sLabel = document.getElementById('swimDistLabel');
+            const bLabel = document.getElementById('bikeDistLabel');
+            const rLabel = document.getElementById('runDistLabel');
+            if(sLabel) sLabel.innerText = `(min/100m @${raceDistances.swim/1000}k)`;
+            if(bLabel) bLabel.innerText = `(km/h @${raceDistances.bike}k)`;
+            if(rLabel) rLabel.innerText = `(min/km @${raceDistances.run}k)`;
+        }
 
         function showToast(msg) {
             const el = document.createElement('div');
@@ -342,8 +421,10 @@
             if (window.embeddedData) {
                 raceData = window.embeddedData; me = window.embeddedMe;
                 if (window.embeddedCompetitors) competitors = window.embeddedCompetitors;
+                if (window.embeddedDistances) raceDistances = window.embeddedDistances;
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
+                updateDistanceLabels();
                 initDistFilterOptions();
                 initAdvancedFilters(); // 슬라이더 초기화
                 updateAthleteList(); updateDashboard();
@@ -375,6 +456,14 @@
 
             document.getElementById('raceTitleDisplay').innerText = sel.options[sel.selectedIndex].text;
 
+            // 거리 설정 (파일명에 half 또는 70.3이 포함되면 하프 코스)
+            if (filename.toLowerCase().includes('half') || filename.includes('70.3')) {
+                raceDistances = { swim: 1900, bike: 90, run: 21.1 };
+            } else {
+                raceDistances = { swim: 1500, bike: 40, run: 10 };
+            }
+            updateDistanceLabels();
+
             try {
                 const res = await fetch(`/data/triathlon/${filename}`);
                 if (!res.ok) throw new Error("파일을 찾을 수 없습니다.");
@@ -405,6 +494,7 @@
                 initSub10Analysis();
                 initAdvancedFilters(); // 슬라이더 초기화
                 document.getElementById('setupSection').classList.add('hidden');
+                document.body.style.overflow = '';
                 document.getElementById('mainDashboard').classList.remove('hidden');
             } catch (e) {
                 showToast("데이터 로드 중 오류가 발생했습니다: " + e.message);
@@ -509,13 +599,26 @@
             
             if (meIdx === -1) return;
             
-            // 나보다 빠른 20명 추출 (나 포함)
-            const start = Math.max(0, meIdx - 20);
-            const subset = sorted.slice(start, meIdx + 1);
+            let start, end;
+            if (type === 't') {
+                // 기록(Total): 내 앞뒤로 10명씩 (근접 20명)
+                start = Math.max(0, meIdx - 10);
+                end = Math.min(sorted.length, meIdx + 11);
+            } else {
+                // 종목별: 나보다 빠른 20명 (나 포함)
+                start = Math.max(0, meIdx - 20);
+                end = meIdx + 1;
+            }
+            
+            const subset = sorted.slice(start, end);
             
             filteredData = subset;
-            const typeName = type === 's' ? '수영' : (type === 'bk' ? '사이클' : '런');
-            filterReason = `${me.n}보다 ${typeName} 빠른 20명`;
+            let typeName = '기록';
+            if (type === 's') typeName = '수영';
+            else if (type === 'bk') typeName = '사이클';
+            else if (type === 'rn') typeName = '런';
+            
+            filterReason = type === 't' ? `${me.n} 기준 기록 근접 20명` : `${me.n}보다 ${typeName} 빠른 20명`;
             
             currentPage = 1;
             updateDashboard(); // 차트 및 테이블 업데이트
@@ -561,16 +664,39 @@
             });
         });
 
-        document.getElementById('downloadHtmlBtn').onclick = () => {
+        function openSetup() {
+            document.getElementById('setupSection').classList.remove('hidden');
+            document.getElementById('closeSetupBtn').classList.remove('hidden');
+            document.getElementById('setupMenuBtn').classList.add('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSetup() {
+            document.getElementById('setupSection').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function downloadReport() {
             if (!raceData) return;
-            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};window.embeddedCompetitors=${JSON.stringify(competitors)};<\/script>`;
-            const finalHtml = document.documentElement.outerHTML.replace('<\/body>', dataScript + '<\/body>');
+            const clone = document.documentElement.cloneNode(true);
+
+            // 불필요한 스크립트 제거
+            clone.querySelectorAll('script[src="menu_full_handler.js"], script[src="back_exit_handler.js"]').forEach(el => el.remove());
+
+            const btn = clone.querySelector('#changeRaceBtn');
+            if(btn) btn.remove();
+            const downloadBtn = clone.querySelector('#downloadHtmlBtn');
+            if(downloadBtn) downloadBtn.remove();
+            const menuBtn = clone.querySelector('#menuToggle');
+            if(menuBtn) menuBtn.remove();
+            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};window.embeddedCompetitors=${JSON.stringify(competitors)};window.embeddedDistances=${JSON.stringify(raceDistances)};<\/script>`;
+            const finalHtml = clone.outerHTML.replace('<\/body>', dataScript + '<\/body>');
             const blob = new Blob([finalHtml], { type: 'text/html' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `Tri_Report_${me ? me.n : 'Full'}.html`;
             link.click();
-        };
+        }
 
         function updateDashboard() {
             const activeAthletes = [];
@@ -886,11 +1012,40 @@
         function updateAthleteList() {
             const list = document.getElementById('athleteList');
             list.innerHTML = '';
-            if (me) list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" onclick="removeAthlete('${me.b}')"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
+            if (me) list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" onclick="removeAthlete('${me.b}')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
             competitors.forEach((c, i) => {
                 const color = colors[(i + 1) % colors.length];
-                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" onclick="removeAthlete('${c.b}')">${c.n} ✕</div>`;
+                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" onclick="removeAthlete('${c.b}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} ✕</div>`;
             });
+        }
+
+        function showAthleteTooltip(el, bib, color) {
+            const a = raceData.find(x => x.b === bib);
+            if (!a) return;
+            
+            const tooltip = document.getElementById('globalTooltip');
+            tooltip.innerHTML = `
+                <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-1">
+                    <span class="font-black text-sm" style="color:${color}">${a.n}</span>
+                    <span class="text-[10px] font-mono text-slate-400">#${a.b}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600 font-medium">
+                    <span>Total: <b class="text-slate-800">${sToHms(a.t)}</b></span>
+                    <span>Rank: <b class="text-slate-800">${a.ro}</b></span>
+                    <span>Swim: ${sToHms(a.s)}</span>
+                    <span>Bike: ${sToHms(a.bk)}</span>
+                    <span>Run: ${sToHms(a.rn)}</span>
+                </div>
+            `;
+            
+            const rect = el.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
+            tooltip.classList.remove('hidden');
+        }
+
+        function hideAthleteTooltip() {
+            document.getElementById('globalTooltip').classList.add('hidden');
         }
 
         function setAsMe(user) { 
@@ -898,8 +1053,80 @@
             me = user; updateAthleteList(); updateDashboard(); 
         }
         function setAsMeByBib(bib) { const user = raceData.find(x => x.b === bib); setAsMe(user); }
-        document.getElementById('addMeBtn').onclick = () => { const val = document.getElementById('searchBox').value; const user = raceData.find(x => x.b === val || x.n === val); setAsMe(user); };
-        document.getElementById('addCompareBtn').onclick = () => { const val = document.getElementById('searchBox').value; const user = raceData.find(x => x.b === val || x.n === val); addCompetitorByBib(user?.b); };
+        
+        function performSearch(keyword) {
+            if (!keyword || !raceData) return;
+            const term = keyword.trim().toLowerCase();
+            if (term.length < 1) return showToast("검색어를 입력하세요.");
+
+            const koRegex = getKoreanRegex(term);
+            const matches = raceData.filter(p => {
+                const b = String(p.b).toLowerCase();
+                const n = p.n.toLowerCase();
+                return b.includes(term) || n.includes(term) || (koRegex && koRegex.test(p.n));
+            });
+
+            if (matches.length === 0) {
+                showToast("검색 결과가 없습니다.");
+            } else if (matches.length > 20) {
+                showToast("검색결과가 너무많습니다. 다른검색어로 재검색해보세요.");
+            } else if (matches.length === 1) {
+                const p = matches[0];
+                document.getElementById('searchBox').value = `${p.b} ${p.n}`;
+                showToast("[분석기준선수로등록] 또는 [비교군추가] 버튼을 누르세요");
+            } else {
+                showSearchModal(matches);
+            }
+        }
+
+        function showSearchModal(list) {
+            const container = document.getElementById('searchResultList');
+            container.innerHTML = '';
+            list.forEach(p => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all";
+                div.innerHTML = `
+                    <div class="flex flex-col text-left">
+                        <span class="font-black text-slate-800 text-base">${p.n}</span>
+                        <span class="text-xs text-slate-500 font-mono font-bold">#${p.b} <span class="text-slate-300">|</span> ${p.d}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="selectMe('${p.b}')" class="bg-slate-800 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap">기준등록</button>
+                        <button onclick="selectCompare('${p.b}')" class="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors whitespace-nowrap">비교추가</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            document.getElementById('searchResultModal').classList.remove('hidden');
+        }
+
+        function closeSearchModal() { document.getElementById('searchResultModal').classList.add('hidden'); }
+        function selectMe(bib) { setAsMeByBib(bib); closeSearchModal(); }
+        function selectCompare(bib) { addCompetitorByBib(bib); closeSearchModal(); }
+
+        function getAthleteFromInput() {
+            const val = document.getElementById('searchBox').value.trim();
+            if (!val) return null;
+            let user = raceData.find(x => x.b === val || x.n === val);
+            if (user) return user;
+            const parts = val.split(' ');
+            if (parts.length > 1) user = raceData.find(x => x.b === parts[0]);
+            return user;
+        }
+
+                
+        function handleAddMeClick() {
+            const user = getAthleteFromInput();
+            if (user) setAsMe(user);
+            else performSearch(document.getElementById('searchBox').value);
+        }
+
+        function handleAddCompareClick() {
+            const user = getAthleteFromInput();
+            if (user) addCompetitorByBib(user.b);
+            else performSearch(document.getElementById('searchBox').value);
+        }
+        
         function addCompetitorByBib(bib) {
             if (!bib) return;
             const user = raceData.find(x => x.b === bib);
@@ -912,34 +1139,6 @@
         function removeAthlete(bib) { if (me && me.b === bib) me = null; else competitors = competitors.filter(c => c.b !== bib); updateAthleteList(); updateDashboard(); }
 
         // --- 고급 필터 및 한글 검색 로직 ---
-
-        // 한글 발음 매핑 테이블 (자주 쓰이는 성씨/이름)
-        const KO_ROMAN = {
-            '김': '(kim|gim)', '이': '(lee|yi|ri|i)', '박': '(park|bak|pak)', '최': '(choi|choe)', '정': '(jung|jeong|chung)', 
-            '강': '(kang|gang)', '조': '(cho|jo)', '윤': '(yoon|yun)', '장': '(jang|chang)', '임': '(lim|im)', '한': '(han)', 
-            '오': '(oh|o)', '서': '(seo|suh)', '신': '(shin|sin)', '권': '(kwon|gwon)', '황': '(hwang)', '안': '(ahn|an)', 
-            '송': '(song)', '전': '(jeon|jun)', '홍': '(hong)', '유': '(yoo|yu|ryu)', '고': '(ko|go)', '문': '(moon|mun)', 
-            '양': '(yang)', '손': '(son)', '배': '(bae)', '백': '(baek|paik)', '허': '(hur|heo)', '남': '(nam)', '심': '(shim|sim)', 
-            '노': '(noh|roh)', '하': '(ha)', '곽': '(kwak)', '성': '(sung|seong)', '차': '(cha)', '주': '(joo|ju)', '우': '(woo|wu)', 
-            '구': '(koo|gu)', '나': '(na)', '민': '(min)', '진': '(jin)', '지': '(ji)', '엄': '(um|eom)', '채': '(chae)', 
-            '원': '(won)', '천': '(cheon)', '방': '(bang)', '공': '(gong|kong)', '현': '(hyun|hyeon)', '함': '(ham)', 
-            '변': '(byun|byeon)', '염': '(yeom)', '여': '(yeo)', '추': '(chu)', '도': '(do)', '소': '(so)', '석': '(seok|suk)', 
-            '선': '(sun|seon)', '설': '(seol|sul)', '마': '(ma)', '길': '(gil)', '연': '(yeon)', '위': '(wi)', '표': '(pyo)', 
-            '명': '(myung|myeong)', '기': '(ki|gi)', '반': '(ban)', '왕': '(wang)', '금': '(geum|keum)', '옥': '(ok)', '육': '(yuk)', 
-            '인': '(in)', '맹': '(maeng)', '제': '(je)', '모': '(mo)', '탁': '(tak)', '국': '(kook|guk)', '어': '(eo)', 
-            '은': '(eun)', '편': '(pyeon)', '용': '(yong)',
-            // 이름 글자
-            '영': '(young|yeong)', '환': '(hwan)', '수': '(soo|su)', '호': '(ho)', '재': '(jae)', '훈': '(hoon|hun)', 
-            '건': '(gun|geon)', '규': '(kyu|gyu)', '태': '(tae)', '광': '(kwang|gwang)', '동': '(dong)', '경': '(kyung|gyeong)', 
-            '승': '(seung)', '철': '(cheol|chul)', '상': '(sang)', '혜': '(hye)', '미': '(mi)', '아': '(a|ah)', '희': '(hee)', 
-            '숙': '(sook|suk)', '자': '(ja)', '웅': '(woong|ung)', '일': '(il)', '식': '(sik)', '만': '(man)', '종': '(jong)', 
-            '대': '(dae)', '병': '(byung|byeong)', '창': '(chang)', '세': '(se)', '혁': '(hyuk|hyeok)', '빈': '(bin)', 
-            '범': '(beom|bum)', '욱': '(wook|uk)', '찬': '(chan)', '익': '(ik)', '근': '(keun|geun)', '학': '(hak)', 
-            '덕': '(deok|duk)', '록': '(rok|lok)', '복': '(bok)', '봉': '(bong)', '삼': '(sam)', '섭': '(seop|sub)', 
-            '순': '(soon|sun)', '시': '(si)', '억': '(eok)', '완': '(wan)', '운': '(woon|un)', '율': '(yul)', '의': '(ui)', 
-            '중': '(jung|joong)', '춘': '(chun)', '충': '(chung)', '치': '(chi)', '택': '(taek)', '판': '(pan)', '해': '(hae)', 
-            '형': '(hyeong|hyung)', '화': '(hwa)', '회': '(hoe)', '효': '(hyo)', '휘': '(hwi)'
-        };
 
         function getKoreanRegex(text) {
             // 한글이 아니면 그대로 반환
@@ -1014,6 +1213,7 @@
                 });
                 el.noUiSlider.set([min, max]);
             } else {
+                el.innerHTML = "";
                 noUiSlider.create(el, {
                     start: [min, max], connect: true,
                     range: { 'min': min, 'max': max },
