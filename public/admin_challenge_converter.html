@@ -30,22 +30,42 @@
 
         // --- 필드 정의 영역 ---
         
-        // 1. 2025/2023 Full(King) 코스 마스터 키 (33개)
+        // 1. 2025 코스 마스터 키 (33개)
         const MASTER_KEYS = [
             "Bib", "NameKR", "NameEN", "CourseInfo", "Category", "Gender", "RaceTime", 
-            "Swim", "T1", "Bike", "T2", "Run", "Start", "swimCheck", "swimEnd", 
-            "bikeStart", "bike1Check1", "bike3Check1", "bike4Check1", "bike1Check2", 
-            "bike3Check2", "bike4Check2", "bikeEnd", "runStart", "run2Check1", 
-            "run1Check1", "run2Check2", "run1Check2", "run2Check3", "run1Check3", 
-            "run2Check4", "run1Check4", "Finish"
+            "Swim", "T1", "Bike", "T2", "Run", 
+            "Start", 
+            "swimCheck", "swimEnd", 
+            "bikeStart", "bike1Check1", "bike3Check1", "bike4Check1", "bike1Check2", "bike3Check2", "bike4Check2", "bikeEnd", 
+            "runStart", "run2Check1", "run1Check1", "run2Check2", "run1Check2", "run2Check3", "run1Check3", 
+            "run2Check4", "run1Check4", 
+            "Finish"
         ];
 
-        // 2. 2023/2025 Half/Short 코스 키 (23개)
-        const KEYS_HALF_DETAILED = [
-            "Bib", "NameKR", "NameEN", "CourseInfo", "Category", "Gender", "RaceTime", 
+        const KEYS_2023 = [
+            "Bib", "FirstName", "FamilyName", "이름", "State", "PlaceCat", "RaceTime", 
             "Swim", "T1", "Bike", "T2", "Run", 
-            "Start", "swimCheck", "swimEnd", "bikeStart", 
-            "bike1Check1", "bike4Check1", "bikeEnd", "runStart", "run2Check1", "run2Check2", "Finish"
+            "Start", 
+            "swimCheck", "swimEnd", 
+            "bikeStart", "bike1Check1", "bike3Check1", "bike4Check1","bike1Check2", "bike3Check2", "bike4Check2", "bikeEnd", 
+            "runStart", "run2Check1", "run1Check1", "run2Check2", "run1Check2", "run2Check3", "run1Check3", "run2Check4", "run1Check4", 
+            "Finish"
+        ];
+        const KEYS_HALF_2023 = [
+            "Bib", "FirstName", "FamilyName", "이름", "State", "PlaceCat", "RaceTime", 
+            "Swim", "T1", "Bike", "T2", "Run", 
+            "Start", 
+            "swimCheck", "swimEnd", 
+            "bikeStart", "bike1Check1", "bike3Check1-null", "bike4Check1","bike1Check2-null", "bike3Check2-null", "bike4Check2-null", "bikeEnd", 
+            "runStart", "run2Check1", "run1Check1-null", "run2Check2", "run1Check2-null", "run2Check3-null", "run1Check3-null", "run2Check4-null", "run1Check4-null", 
+            "Finish"
+        ];
+        // 2. 2025 Half 코스 키 (23개)
+        const KEYS_HALF_DETAILED = [
+"배번호", "한글이름", "영문이름","단체명", "종목", "카테고리", "성별", "칩타임",
+"Start Swim", "Finish Swim", "Start Bike", "Bike CP0", "Bike CP1", "Bike CP2", "Bike CP3", "Bike CP4", "Bike CP5", "Bike CP6", "Bike CP7", "Bike CP8", "Finish Bike",
+"Run Start", "Run CP1", "Run CP2", "Run CP3", "Run CP4", "Run CP5", "Run CP6", "Run CP7", "Run CP8",
+"Finish", "foul", "remarks", "종목순위", "종목인원", "성별순위", "성별인원", "부문순위", "부문인원"
         ];
 
         // 3. 2022년 전용 키 (10개)
@@ -110,6 +130,7 @@
                 else {
                     const is2023 = file.name.includes("2023");
                     const is2025 = file.name.includes("2025");
+                    const isHalf = file.name.toLowerCase().includes("half");
                     
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
@@ -163,18 +184,101 @@
                                 } else {
                                     // 2023년 & 2025년 로직
                                     let currentTargetKeys = MASTER_KEYS;
-                                    // 컬럼 수가 적으면 Half용 키셋 적용
-                                    if (texts.length < 28) currentTargetKeys = KEYS_HALF_DETAILED;
+                                    let initKeys = MASTER_KEYS;
 
-                                    MASTER_KEYS.forEach(k => data[k] = ""); // 초기화
-                                    currentTargetKeys.forEach((key, idx) => {
-                                        if (texts[idx]) data[key] = texts[idx];
-                                    });
+                                    if (is2023) {
+                                        if (isHalf) {
+                                            currentTargetKeys = KEYS_HALF_2023;
+                                            initKeys = KEYS_HALF_2023;
+                                        } else {
+                                            currentTargetKeys = KEYS_2023;
+                                            initKeys = KEYS_2023;
+                                        }
+                                    } else {
+                                        // 2025년 등: 2025 Half는 상세 키셋 우선 적용 (컬럼 수 부족해도 매핑 시도)
+                                        if ((is2025 && isHalf && texts.length >= 20) || texts.length >= 35) {
+                                            currentTargetKeys = KEYS_HALF_DETAILED;
+                                            initKeys = KEYS_HALF_DETAILED;
+                                        }
+                                    }
+
+                                    initKeys.forEach(k => data[k] = ""); // 초기화
+
+                                    // [2025 Half 상세 로직]
+                                    if (currentTargetKeys === KEYS_HALF_DETAILED) {
+                                        let tIdx = 0;
+                                        // 0~2: 배번호, 한글이름, 영문이름
+                                        for(let k=0; k<3; k++) data[currentTargetKeys[k]] = texts[tIdx++] || "";
+                                        
+                                        // 3: 단체명 (누락 가능성 있음)
+                                        // 4: 종목 (Half Distance 등)
+                                        const nextStr = texts[tIdx] || "";
+                                        const isEventStr = /half|long|aqua|course/i.test(nextStr);
+                                        
+                                        if (isEventStr) {
+                                            data[currentTargetKeys[3]] = ""; // 단체명 없음
+                                        } else {
+                                            data[currentTargetKeys[3]] = texts[tIdx++] || ""; // 단체명 있음
+                                        }
+
+                                        // 나머지 매핑
+                                        for(let k=4; k<currentTargetKeys.length; k++) {
+                                            data[currentTargetKeys[k]] = texts[tIdx++] || "";
+                                        }
+
+                                        // [필터] 칩타임 없으면 제외 (부문인원 체크는 Pro 선수 누락 원인이 되므로 제거)
+                                        if (!data["칩타임"]) return;
+                                    }
+                                    // [2023 하프 특수 매핑] -null 컬럼 처리 및 State 누락 대응
+                                    else if (is2023 && isHalf) {
+                                        let tIdx = 0;
+                                        // 1차 매핑
+                                        currentTargetKeys.forEach(k => {
+                                            if (k.endsWith("-null")) { data[k] = ""; }
+                                            else { if (texts[tIdx]) data[k] = texts[tIdx]; tIdx++; }
+                                        });
+
+                                        // State 누락 감지 (State가 숫자이고 PlaceCat이 시간 형식이면 밀린 것)
+                                        if (/^\d+$/.test(data["State"]) && /:/.test(data["PlaceCat"])) {
+                                            tIdx = 0;
+                                            currentTargetKeys.forEach(k => {
+                                                if (k.endsWith("-null")) { data[k] = ""; }
+                                                else if (k === "State") { data[k] = ""; } // State 건너뜀 (texts 소모 안함)
+                                                else { if (texts[tIdx]) data[k] = texts[tIdx]; tIdx++; }
+                                            });
+                                        }
+                                    }
+                                    // [2023 풀코스 데이터 밀림 방지] State(인덱스4)가 비어있는 경우 감지
+                                    else if (is2023 && !isHalf && currentTargetKeys === KEYS_2023 && texts.length > 10) {
+                                        let skipMapping = false;
+                                        // texts[4]가 숫자(순위)이고 texts[5]가 시간형식(기록)이면 State 누락으로 판단
+                                        if (/^\d+$/.test(texts[4]) && /:/.test(texts[5])) {
+                                            data["State"] = ""; // State 비움
+                                            // 0~3까지는 정상 매핑
+                                            for(let k=0; k<4; k++) data[currentTargetKeys[k]] = texts[k];
+                                            // 5(PlaceCat)부터는 texts 인덱스 하나씩 당겨서 매핑
+                                            for(let k=5; k<currentTargetKeys.length; k++) data[currentTargetKeys[k]] = texts[k-1];
+                                            skipMapping = true;
+                                        }
+                                        
+                                        if (!skipMapping) {
+                                            currentTargetKeys.forEach((key, idx) => {
+                                                if (texts[idx]) data[key] = texts[idx];
+                                            });
+                                        }
+                                    } else {
+                                        // 그 외 일반 매핑
+                                        currentTargetKeys.forEach((key, idx) => {
+                                            if (texts[idx]) data[key] = texts[idx];
+                                        });
+                                    }
 
                                     // [필터 2] RaceTime 자리에 성별이 들어간 경우(데이터 밀림) 제외
                                     if (data["RaceTime"] === "남" || data["RaceTime"] === "여") return;
                                     // [필터 3] 잘못된 배번 제외
                                     if (data["Bib"] === "0" || data["Bib"] === "") return;
+                                    // [필터 4] PlaceCat 0 제외 (중도포기 등)
+                                    if (data["PlaceCat"] === "0") return;
                                 }
                                 results.push(data);
                             }
@@ -192,7 +296,16 @@
                 const blob = new Blob([JSON.stringify(results, null, 2)], {type: "application/json"});
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `${originalName}_converted.json`;
+                
+                // 파일명 생성 규칙 변경
+                const isHalf = file.name.toLowerCase().includes("half");
+                let yearVal = "2022";
+                if (file.name.includes("2025")) yearVal = "2025";
+                else if (file.name.includes("2024")) yearVal = "2024";
+                else if (file.name.includes("2023")) yearVal = "2023";
+
+                a.download = isHalf ? `challenge-gunsan_half_${yearVal}.json` : `challenge-gunsan_${yearVal}.json`;
+                
                 a.click();
                 
                 document.getElementById('status').innerText = `성공! ${results.length}건 다운로드됨.`;

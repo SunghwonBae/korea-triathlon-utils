@@ -57,8 +57,16 @@
                     </button>
                 </div>
                 <p class="text-slate-400 text-xs font-medium mt-6">
-                    * 관리자가 사전에 변환해둔 데이터만 조회 가능합니다.<br>
-                    데이터가 보이지 않으면 관리자에게 문의하세요.
+                    * https://www.coachcox.co.uk 에서 제공하는 <br>
+                    CSV파일을 다운받아서 보면 한글이 깨지면서 셀이 제자리를 못찾는 행이 생겨보입니다. <br>
+                    분석프로그램에서는 한글깨짐 없이 JSON파일로 파싱하고 문제없이 분석합니다. <br>
+                    그래도 오류가 있을 수 있으니, 공식 기록과 차이가 있을 경우 양해 부탁드립니다.<br>
+                    다만, 분석대상은 Rank가 기록되어 있는 Finisher 만 대상으로 합니다. <br>
+                    특히, IRONMAN 대회 등록할때 꼭 에이지 그룹으로 신청하세요!!! <br>
+                    오픈디비젼(ODIV)으로 신청하면 저 CSV에 기록이 포함되지 않습니다!!!<br>
+                    구례IRONMAN 기록 : https://www.coachcox.co.uk/imstats/series/61/<br>
+                    고성70.3 기록 : https://www.coachcox.co.uk/imstats/series/104/<br><br>
+                    ** 본 서비스는 IRONMAN Group 과 무관하며 비영리 목적으로 제작되었습니다.<br>
                 </p>
             </div>
         </div>
@@ -265,6 +273,18 @@
         const getBikeSpeed = (s) => (s > 0) ? (180.2 / (s / 3600)).toFixed(1) : "-"; // km/h (Gurye 180.2km)
         const getRunPace = (s) => (s > 0) ? sToHms(s / 42.195).substring(3, 8) : "-"; // min/km
 
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
         // 로컬 파일 로드 체크
         window.onload = async () => {
             if (window.embeddedData) {
@@ -297,7 +317,7 @@
         // JSON 데이터 로드 및 분석 시작
         document.getElementById('btnLoadRace').onclick = async () => {
             const filename = document.getElementById('raceSelector').value;
-            if (!filename) return alert("대회를 선택해주세요.");
+            if (!filename) return showToast("대회를 선택해주세요.");
 
             try {
                 // /public/data/ironman 경로에서 파일 로드 가정
@@ -311,7 +331,7 @@
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('mainDashboard').classList.remove('hidden');
             } catch (e) {
-                alert("데이터 로드 중 오류가 발생했습니다: " + e.message);
+                showToast("데이터 로드 중 오류가 발생했습니다: " + e.message);
             }
         };
 
@@ -401,7 +421,7 @@
         }
 
                 function applyBenchmarkFilter(type) {
-            if (!me) return alert("먼저 분석기준선수를 등록해주세요.");
+            if (!me) return showToast("먼저 분석기준선수를 등록해주세요.");
             
             // 해당 종목 기록순 정렬
             const sorted = [...raceData].sort((a, b) => a[type] - b[type]);
@@ -1050,7 +1070,7 @@
 
         // 버튼 이벤트들
         function setAsMe(user) {
-            if (!user) return;
+            if (!user) return showToast("검색한 선수는 없는 선수입니다.");
             me = user;
             updateAthleteList();
             updateDashboard();
@@ -1077,8 +1097,8 @@
             if (!bib) return;
             const user = raceData.find(x => x.b === bib);
             if (user) {
-                if (me && me.b === user.b) return alert('이미 "분석기준선수"로 등록된 선수입니다.');
-                if (competitors.find(c => c.b === user.b)) return alert('이미 비교군에 등록된 선수입니다.');
+                if (me && me.b === user.b) return showToast('이미 "분석기준선수"로 등록된 선수입니다.');
+                if (competitors.find(c => c.b === user.b)) return showToast('이미 비교군에 등록된 선수입니다.');
                 
                 competitors.push(user); 
                 updateAthleteList(); updateDashboard();
