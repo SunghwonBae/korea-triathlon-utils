@@ -5,9 +5,6 @@
     <link rel="apple-touch-icon" sizes="180x180" href="https://korea-triathlon-utils.vercel.app/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="https://korea-triathlon-utils.vercel.app/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://korea-triathlon-utils.vercel.app/favicon-16x16.png">
-    <link rel="manifest" href="https://korea-triathlon-utils.vercel.app/site.webmanifest">    <link rel="apple-touch-icon" sizes="180x180" href="https://korea-triathlon-utils.vercel.app/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://korea-triathlon-utils.vercel.app/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://korea-triathlon-utils.vercel.app/favicon-16x16.png">
     <link rel="manifest" href="https://korea-triathlon-utils.vercel.app/site.webmanifest">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TRI-ing My Best!</title>
@@ -22,6 +19,13 @@
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+
         .chart-container { position: relative; height: 320px; width: 100%; }
         .card { background: white; border-radius: 2.5rem; border: 1px solid #e2e8f0; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
         .athlete-chip { display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 800; margin: 4px; color: white; cursor: pointer; transition: transform 0.2s; }
@@ -55,7 +59,7 @@
         .menu-overlay.is-active { opacity: 1; visibility: visible; }
         .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
         .slide-menu.is-active { left: 0; }
-        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */ }
         .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
         .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
         .menu-list { list-style: none; padding: 0; margin: 0; }
@@ -65,21 +69,88 @@
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 모바일 세로모드 최적화 */
+        @media (max-width: 768px) {
+            .card { padding: 1.5rem !important; border-radius: 1.5rem !important; }
+            .chart-container { height: 250px !important; }
+            
+            /* Header Mobile Layout Optimization */
+            header { padding: 0.75rem !important; }
+            header > div { 
+                display: grid !important; 
+                grid-template-columns: 1fr 1fr !important; 
+                gap: 0.5rem !important; 
+            }
+            header > div > div:first-child { grid-column: 1 / -1 !important; margin-bottom: 0.25rem !important; }
+            header > div > div.flex-1 { 
+                grid-column: 1 / -1 !important; 
+                display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 0.5rem !important; 
+            }
+            header > div > div.flex-1 > div.relative { flex: 1 1 100% !important; width: 100% !important; }
+            header > div > div.flex-1 > button { flex: 1 1 calc(50% - 0.25rem) !important; width: auto !important; margin: 0 !important; }
+            header > div > button { width: 100% !important; margin: 0 !important; }
+            header button {
+                padding: 0.6rem 0.2rem !important; font-size: 0.75rem !important; border-radius: 0.6rem !important; line-height: 1.2 !important;
+            }
+            header input#searchBox {
+                padding: 0.6rem 1rem 0.6rem 2.5rem !important; font-size: 0.85rem !important; border-radius: 0.6rem !important;
+            }
+            header .fa-search { font-size: 0.8rem !important; left: 0.8rem !important; }
+
+            h1.text-5xl { font-size: 2.5rem !important; line-height: 1.2 !important; }
+            .text-3xl { font-size: 1.75rem !important; }
+            th, td { padding: 0.5rem 0.25rem !important; font-size: 0.7rem !important; }
+            
+            /* Pagination & Text Mobile Optimization */
+            .page-num { padding: 0.4rem 0.6rem !important; font-size: 11px !important; border-radius: 0.6rem !important; }
+            #paginationNumbers { gap: 0.25rem !important; flex-wrap: wrap !important; justify-content: center !important; }
+            .text-sm { font-size: 0.75rem !important; }
+            .text-xs { font-size: 0.65rem !important; }
+            
+            /* Setup Section Mobile Optimization */
+            #setupSection { align-items: flex-start !important; padding-top: 3rem !important; }
+            #setupSection .card { padding: 1.5rem 1rem !important; margin-top: 0 !important; border-radius: 1.5rem !important; }
+            #setupSection .mb-5 { margin-bottom: 1rem !important; }
+            #setupSection i.text-6xl { font-size: 3rem !important; margin-bottom: 0.5rem !important; }
+            #setupSection h1 { font-size: 2rem !important; line-height: 1.1 !important; }
+            #setupSection p.text-slate-400 { font-size: 0.75rem !important; margin-top: 0.25rem !important; }
+            #setupSection .bg-white { padding: 1.25rem !important; border-radius: 1.25rem !important; }
+            #setupSection h3 { font-size: 1.2rem !important; margin-bottom: 1rem !important; }
+            #raceSelector { padding: 0.8rem !important; font-size: 0.95rem !important; }
+            #btnLoadRace { padding: 0.8rem !important; font-size: 1rem !important; }
+            #setupSection .mt-8 { margin-top: 1rem !important; padding: 1rem !important; }
+            #setupSection .text-sm { font-size: 0.8rem !important; }
+            #setupSection .text-xs { font-size: 0.7rem !important; }
+            #setupMenuBtn { top: 1.5rem !important; left: 1.5rem !important; }
+            #closeSetupBtn { top: 1.5rem !important; right: 1.5rem !important; }
+
+            /* Bike/Run Ratio Mobile Optimization */
+            #brRatioContent .text-4xl { font-size: 2rem !important; line-height: 1 !important; margin-bottom: 0.25rem !important; }
+            #brRatioContent .mb-4 { margin-bottom: 0.5rem !important; }
+            #brRatioContent .p-4 { padding: 0.75rem 1rem !important; }
+            #brRatioContent .text-xl { font-size: 1.1rem !important; }
+            #brRatioContent .mt-4 { margin-top: 0.5rem !important; padding: 0.4rem !important; }
+
+            .slide-menu { width: 85% !important; left: -85% !important; }
+            .slide-menu.is-active { left: 0 !important; }
+            #menuToggle { position: absolute !important; top: 1.2rem !important; left: 1rem !important; z-index: 60 !important; }
+        }
     </style>
 </head>
 <body class="leading-tight">
 
     <div id="setupSection" class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm overflow-y-auto flex items-center justify-center p-6">
-        <div class="card max-w-xl w-full text-center py-20 border-none shadow-2xl relative">
+        <div class="card max-w-xl w-full text-center py-12 border-none shadow-2xl relative max-h-[90vh] overflow-visible">
             <button id="setupMenuBtn" class="absolute top-8 left-8 text-slate-400 hover:text-slate-600 transition-colors" onclick="document.getElementById('menuToggle').click()"><i class="fas fa-bars text-3xl"></i></button>
             <button id="closeSetupBtn" onclick="closeSetup()" class="hidden absolute top-8 right-8 text-slate-400 hover:text-slate-600 transition-colors"><i class="fas fa-times text-3xl"></i></button>
-            <div class="mb-8">
+            <div class="mb-5">
                 <i class="fas fa-running text-blue-600 text-6xl mb-4"></i>
                 <h1 class="text-5xl font-black italic tracking-tighter uppercase">TRI기록줄께<BR><span class="text-blue-600">차트다오</span></h1>
                 <p class="text-slate-400 font-bold mt-2 uppercase tracking-widest">대한철인3종협회 대회기록 분석차트생성기</p>
             </div>
             
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-200 w-full">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200 w-full">
                 <h3 class="text-2xl font-black text-slate-800 mb-6">분석할 대회를 선택하세요</h3>
                 <div class="flex flex-col gap-4">
                     <select id="raceSelector" class="w-full bg-slate-100 border-none rounded-xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/20 appearance-none text-center text-lg">
@@ -95,6 +166,7 @@
                     </h5>
                     <div class="text-sm text-slate-600 space-y-2 leading-relaxed">
                         <p>• <b>대한철인3종협회 홈페이지(기록실)</b>에서 제공하는 데이터를 기준으로 합니다.</p>
+                        <p>• <b>스프린트 거리</b>는 분석에 포함하지 않았습니다.</p>
                         <p>• 본 사이트의 크롤링 API를 통해 수집된 데이터로, 공식 기록과 차이가 있을 수 있습니다.</p>
                         <p>• 수집 과정에서 일부 데이터 누락이나 오류가 발생할 수 있습니다.</p>
                         <p class="pt-2 text-xs text-slate-400">** 본 서비스는 대한철인3종협회와 무관하며 비영리 목적으로 제작되었습니다.</p>
@@ -163,6 +235,9 @@
                 <i class="fas fa-bolt absolute -right-6 -bottom-6 text-9xl text-slate-50 -rotate-12 pointer-events-none"></i>
             </div>
 
+            <div class="text-center text-xs text-slate-500 mb-2" id="dragInfo">
+                <i class="fas fa-info-circle mr-1"></i>선수 칩을 드래그하여 화면 하단의 T-Memory 바구니에 저장할 수 있습니다.
+            </div>
             <div id="athleteList" class="flex flex-wrap min-h-[50px] gap-2 px-2"></div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -242,7 +317,7 @@
                         <h5 class="font-black text-orange-600 text-base mb-2 uppercase flex items-center"><i class="fas fa-balance-scale mr-2"></i>Bike/Run 페이스 효율 지수</h5>
                         <p class="text-sm text-slate-500 leading-relaxed font-semibold italic">내 바로 앞 순위 100명의 비율과 비교하여 오버바이크 여부를 진단합니다. 수치가 높을수록 런 퍼포먼스가 좋았다는 뜻이고, 낮을수록 바이크에서 힘을 너무 많이 썼을(오버바이크) 가능성이 높습니다.</p>
                     </div>
-                    <div id="brRatioContent" class="flex flex-col items-center justify-center h-full"></div>
+                    <div id="brRatioContent" class="flex flex-col items-center justify-center md:h-full"></div>
                 </div>
 
                 <div class="card">
@@ -322,6 +397,7 @@
                 <div class="px-6 mb-3 text-xs font-bold flex flex-col sm:flex-row gap-2">
                     <span class="text-red-600 flex items-center"><i class="fas fa-mouse-pointer mr-2"></i> [이름을 누르면 분석기준선수로 등록됩니다]</span>
                     <span class="text-blue-600 flex items-center"><i class="fas fa-mouse-pointer mr-2"></i> [배번을 누르면 비교군으로 추가됩니다]</span>
+                    <span class="text-slate-600 flex items-center" id="totalTMemoryGuide"><i class="fas fa-save mr-2"></i> [완주시간을 누르면 T-Memory로 저장됩니다]</span>
                 </div>
                 
                 <div class="overflow-x-auto border-y border-slate-100">
@@ -350,6 +426,21 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- T-Memory Drop Zone -->
+    <div id="memoryDropZone" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-14 h-14 bg-slate-800 text-white z-[9999] transition-all duration-300 flex items-center justify-center border-2 border-blue-500 rounded-full shadow-2xl overflow-hidden cursor-pointer"
+         ondragover="event.preventDefault(); this.classList.add('bg-slate-700');"
+         ondragleave="this.classList.remove('bg-slate-700');"
+         ondrop="handleDrop(event)"
+         onmouseenter="showMemoryTooltip(this)"
+         onmouseleave="hideMemoryTooltip()"
+         onclick="location.href='/triathlon_memory.html'">
+        <i class="fas fa-save text-2xl text-blue-400 transition-all duration-300"></i>
+        <div class="hidden text-center transition-opacity duration-300">
+            <p class="font-bold text-xl">여기에 드래그하여 T-메모리에 저장</p>
+            <p class="text-sm text-slate-400 mt-1">현재 분석 중인 선수 데이터를 로컬스토리지에 보관합니다</p>
+        </div>
     </div>
 
     <script>
@@ -435,6 +526,7 @@
                 initDistFilterOptions();
                 initAdvancedFilters(); // 슬라이더 초기화
                 updateAthleteList(); updateDashboard();
+                document.getElementById('memoryDropZone').classList.remove('hidden');
             } else {
                 // API를 통해 파일 목록 로드
                 try {
@@ -442,11 +534,26 @@
                     const files = await res.json();
                     const sel = document.getElementById('raceSelector');
                     sel.innerHTML = '<option value="">대회를 선택하세요</option>';
+                    
+                    const filesByYear = {};
                     files.forEach(f => {
-                        const opt = document.createElement('option');
-                        opt.value = f.filename;
-                        opt.textContent = f.displayName;
-                        sel.appendChild(opt);
+                        const name = f.displayName || f.filename;
+                        const yearMatch = name.match(/\d{4}/);
+                        const year = yearMatch ? yearMatch[0] : '기타';
+                        if (!filesByYear[year]) filesByYear[year] = [];
+                        filesByYear[year].push(f);
+                    });
+
+                    Object.keys(filesByYear).sort((a, b) => b.localeCompare(a)).forEach(year => {
+                        const group = document.createElement('optgroup');
+                        group.label = year === '기타' ? year : `${year}년`;
+                        filesByYear[year].forEach(f => {
+                            const opt = document.createElement('option');
+                            opt.value = f.filename;
+                            opt.textContent = f.displayName || f.filename.replace('.json', '');
+                            group.appendChild(opt);
+                        });
+                        sel.appendChild(group);
                     });
                 } catch (e) {
                     console.error("파일 목록 로드 실패:", e);
@@ -503,6 +610,7 @@
                 document.getElementById('setupSection').classList.add('hidden');
                 document.body.style.overflow = '';
                 document.getElementById('mainDashboard').classList.remove('hidden');
+                document.getElementById('memoryDropZone').classList.remove('hidden');
             } catch (e) {
                 showToast("데이터 로드 중 오류가 발생했습니다: " + e.message);
             }
@@ -561,6 +669,9 @@
             const start = (currentPage - 1) * pageSize;
             const paginated = sortedData.slice(start, start + pageSize);
             
+            const isDown = window.isDownloaded;
+            totalTMemoryGuide.style.display = isDown ? 'none': 'inline-flex' ;
+            
             document.getElementById('recordBody').innerHTML = paginated.map(row => `
                 <tr class="border-b border-slate-50 hover:bg-slate-50 transition-all ${me && row.b === me.b ? 'bg-red-50/60' : ''}">
                     <td class="py-2 px-3 font-black ${currentSort.col === 'ro' ? 'text-red-600' : ''}">${row.ro}</td>
@@ -572,7 +683,7 @@
                     <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.bk)}</td>
                     <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToHms(row.t2)}</td>
                     <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.rn)}</td>
-                    <td class="py-2 px-3 font-black text-slate-900">${sToHms(row.t)}</td>
+                    <td class="py-2 px-3 font-black text-slate-900 ${isDown ? '' : 'cursor-pointer hover:text-blue-600 transition-colors'}" ${isDown ? '' : `onclick="saveToMemory('${row.b}')" title="T-Memory에 저장"`}>${sToHms(row.t)}</td>
                 </tr>`).join('');
 
             const resetBtn = document.getElementById('resetFilterBtn');
@@ -696,7 +807,15 @@
             if(downloadBtn) downloadBtn.remove();
             const menuBtn = clone.querySelector('#menuToggle');
             if(menuBtn) menuBtn.remove();
-            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};window.embeddedCompetitors=${JSON.stringify(competitors)};window.embeddedDistances=${JSON.stringify(raceDistances)};<\/script>`;
+
+            // T-Memory Drop Zone 제거
+            const dropZone = clone.querySelector('#memoryDropZone');
+            if(dropZone) dropZone.remove();
+
+            if (clone.querySelector('#athleteList')) clone.querySelector('#athleteList').innerHTML = '';
+            if (clone.querySelector('#recordBody')) clone.querySelector('#recordBody').innerHTML = '';
+
+            const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};window.embeddedCompetitors=${JSON.stringify(competitors)};window.embeddedDistances=${JSON.stringify(raceDistances)};window.isDownloaded=true;<\/script>`;
             const finalHtml = clone.outerHTML.replace('<\/body>', dataScript + '<\/body>');
             const blob = new Blob([finalHtml], { type: 'text/html' });
             const link = document.createElement('a');
@@ -1019,14 +1138,21 @@
         function updateAthleteList() {
             const list = document.getElementById('athleteList');
             list.innerHTML = '';
-            if (me) list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" onclick="removeAthlete('${me.b}')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
+            const isDown = window.isDownloaded;
+            dragInfo.style.display = isDown ? 'none' : 'block';
+            if (me) {
+                const dragAttr = isDown ? '' : `draggable="true" ondragstart="handleDragStart(event, '${me.b}')" ondragend="handleDragEnd(event)" ontouchstart="handleTouchStart(event, '${me.b}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"`;
+                list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" ${dragAttr} onclick="removeAthlete('${me.b}')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
+            }
             competitors.forEach((c, i) => {
                 const color = colors[(i + 1) % colors.length];
-                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" onclick="removeAthlete('${c.b}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} ✕</div>`;
+                const dragAttr = isDown ? '' : `draggable="true" ondragstart="handleDragStart(event, '${c.b}')" ondragend="handleDragEnd(event)" ontouchstart="handleTouchStart(event, '${c.b}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"`;
+                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" ${dragAttr} onclick="removeAthlete('${c.b}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} ✕</div>`;
             });
         }
 
         function showAthleteTooltip(el, bib, color) {
+            if (!raceData) return;
             const a = raceData.find(x => x.b === bib);
             if (!a) return;
             
@@ -1057,7 +1183,9 @@
 
         function setAsMe(user) { 
             if (!user) return showToast("검색한 선수는 없는 선수입니다."); 
-            me = user; updateAthleteList(); updateDashboard(); 
+            me = user; 
+            competitors = competitors.filter(c => c.b !== user.b);
+            updateAthleteList(); updateDashboard(); 
         }
         function setAsMeByBib(bib) { const user = raceData.find(x => x.b === bib); setAsMe(user); }
         
@@ -1089,9 +1217,11 @@
         function showSearchModal(list) {
             const container = document.getElementById('searchResultList');
             container.innerHTML = '';
+            const isDown = window.isDownloaded;
             list.forEach(p => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all";
+                if(isDown){
                 div.innerHTML = `
                     <div class="flex flex-col text-left">
                         <span class="font-black text-slate-800 text-base">${p.n}</span>
@@ -1102,14 +1232,27 @@
                         <button onclick="selectCompare('${p.b}')" class="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors whitespace-nowrap">비교추가</button>
                     </div>
                 `;
+                } else {
+                div.innerHTML = `
+                    <div class="flex flex-col text-left">
+                        <span class="font-black text-slate-800 text-base">${p.n}</span>
+                        <span class="text-xs text-slate-500 font-mono font-bold">#${p.b} <span class="text-slate-300">|</span> ${p.d}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="selectMe('${p.b}')" class="bg-slate-800 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-black transition-colors whitespace-nowrap">기준등록</button>
+                        <button onclick="selectCompare('${p.b}')" class="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors whitespace-nowrap">비교추가</button>
+                        <button onclick="saveToMemory('${p.b}')" class="bg-slate-500 text-white text-xs px-3 py-2 rounded-lg font-bold hover:bg-slate-600 transition-colors whitespace-nowrap" title="T-Memory에 저장"><i class="fas fa-save"></i></button>
+                    </div>
+                `;
+                }
                 container.appendChild(div);
             });
             document.getElementById('searchResultModal').classList.remove('hidden');
         }
 
         function closeSearchModal() { document.getElementById('searchResultModal').classList.add('hidden'); }
-        function selectMe(bib) { setAsMeByBib(bib); closeSearchModal(); }
-        function selectCompare(bib) { addCompetitorByBib(bib); closeSearchModal(); }
+        function selectMe(bib) { setAsMeByBib(bib);   }
+        function selectCompare(bib) { addCompetitorByBib(bib);   }
 
         function getAthleteFromInput() {
             const val = document.getElementById('searchBox').value.trim();
@@ -1294,6 +1437,198 @@
             // updateDashboard(); // 차트 업데이트는 너무 무거울 수 있으니 테이블만? -> 사용자 경험상 차트도 바뀌는게 좋음
             // 하지만 필터링된 데이터로 차트를 그리면 분포도가 깨질 수 있음. renderDist는 filteredData를 반영하도록 되어있음.
         }
+
+        function saveToMemory(bib) {
+            const athlete = raceData.find(x => x.b === bib);
+            if (!athlete) return;
+
+            const fullTitle = document.getElementById('raceTitleDisplay').innerText || "Unknown Race";
+            const yearMatch = fullTitle.match(/\d{4}/);
+            const raceYear = yearMatch ? yearMatch[0] : new Date().getFullYear().toString();
+
+            let raceType = 'Olympic';
+            if (raceDistances.swim > 1800) raceType = 'Half';
+
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            
+            if (memory.some(m => m.b === athlete.b && m.raceName === fullTitle)) {
+                return showToast("이미 저장된 데이터입니다.");
+            }
+
+            const sameTypeItems = memory.filter(m => m.raceType === raceType);
+            const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+            const sortOrder = maxOrder + 1;
+
+            const memoryItem = { ...athlete, raceName: fullTitle, raceYear: raceYear, raceType: raceType, sortOrder: sortOrder, savedAt: new Date().toISOString() };
+            memory.push(memoryItem);
+            localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+            showToast("T-메모리에 저장되었습니다.");
+        }
+
+         // --- Touch Drag & Drop Logic for Mobile ---
+        let touchDragItem = null;
+        let touchBib = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isDragging = false;
+
+        function handleTouchStart(e, bib) {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchBib = bib;
+            isDragging = false;
+        }
+        
+        function handleTouchMove(e) {
+            const touch = e.touches[0];
+            const moveX = touch.clientX - touchStartX;
+            const moveY = touch.clientY - touchStartY;
+            
+            // 일정 거리 이상 움직여야 드래그로 간주 (실수로 살짝 움직인 경우 클릭 허용)
+            if (!isDragging && Math.sqrt(moveX*moveX + moveY*moveY) < 10) return;
+            
+            isDragging = true;
+            if (e.cancelable) e.preventDefault(); // 스크롤 및 클릭 방지
+
+            if (!touchDragItem) {
+                // 드래그 시작 시점: 클론 생성 및 드롭존 활성화
+                const target = e.currentTarget;
+                touchDragItem = target.cloneNode(true);
+                touchDragItem.style.position = 'fixed';
+                touchDragItem.style.zIndex = '10000';
+                touchDragItem.style.opacity = '0.8';
+                touchDragItem.style.pointerEvents = 'none';
+                touchDragItem.style.transform = 'scale(1.1)';
+                document.body.appendChild(touchDragItem);
+
+                // 드롭존 UI 활성화
+                const zone = document.getElementById('memoryDropZone');
+                zone.classList.remove('bottom-6', 'left-1/2', '-translate-x-1/2', 'w-14', 'h-14', 'rounded-full', 'border-2');
+                zone.classList.add('bottom-0', 'left-0', 'w-full', 'h-40', 'rounded-t-2xl', 'border-t-4', 'flex-col', 'bg-slate-800/95', 'backdrop-blur');
+                const icon = zone.querySelector('i');
+                icon.classList.replace('text-2xl', 'text-4xl');
+                icon.classList.add('mb-3');
+                zone.querySelector('div').classList.remove('hidden');
+            }
+
+            // 클론 이동
+            touchDragItem.style.left = (touch.clientX - touchDragItem.offsetWidth / 2) + 'px';
+            touchDragItem.style.top = (touch.clientY - touchDragItem.offsetHeight / 2) + 'px';
+
+            // 드롭존 하이라이트
+            const zone = document.getElementById('memoryDropZone');
+            const rect = zone.getBoundingClientRect();
+            if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                zone.classList.add('bg-slate-700');
+            } else {
+                zone.classList.remove('bg-slate-700');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!isDragging) return; // 드래그가 아니면 클릭으로 처리되도록 둠
+
+            e.preventDefault(); // 클릭 이벤트 발생 방지
+
+            if (touchDragItem) {
+                const touch = e.changedTouches[0];
+                const zone = document.getElementById('memoryDropZone');
+                const rect = zone.getBoundingClientRect();
+
+                if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                    touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    saveToMemory(touchBib);
+                }
+
+                touchDragItem.remove();
+                touchDragItem = null;
+
+                // 드롭존 UI 복구
+                zone.classList.add('bottom-6', 'left-1/2', '-translate-x-1/2', 'w-14', 'h-14', 'rounded-full', 'border-2', 'items-center');
+                zone.classList.remove('bottom-0', 'left-0', 'w-full', 'h-40', 'rounded-t-2xl', 'border-t-4', 'flex-col', 'bg-slate-800/95', 'backdrop-blur');
+                zone.classList.remove('bg-slate-700');
+                const icon = zone.querySelector('i');
+                icon.classList.replace('text-4xl', 'text-2xl');
+                icon.classList.remove('mb-3');
+                zone.querySelector('div').classList.add('hidden');
+            }
+            
+            isDragging = false;
+            touchBib = null;
+        }
+        // --- T-Memory Drag & Drop Logic ---
+        function handleDragStart(e, bib) {
+            e.dataTransfer.setData("text/plain", bib);
+            e.dataTransfer.effectAllowed = "copy";
+            
+            const zone = document.getElementById('memoryDropZone');
+            zone.classList.remove('bottom-6', 'left-1/2', '-translate-x-1/2', 'w-14', 'h-14', 'rounded-full', 'border-2');
+            zone.classList.add('bottom-0', 'left-0', 'w-full', 'h-40', 'rounded-t-2xl', 'border-t-4', 'flex-col', 'bg-slate-800/95', 'backdrop-blur');
+            
+            const icon = zone.querySelector('i');
+            icon.classList.replace('text-2xl', 'text-4xl');
+            icon.classList.add('mb-3');
+            
+            zone.querySelector('div').classList.remove('hidden');
+        }
+
+        function handleDragEnd(e) {
+            const zone = document.getElementById('memoryDropZone');
+            zone.classList.add('bottom-6', 'left-1/2', '-translate-x-1/2', 'w-14', 'h-14', 'rounded-full', 'border-2', 'items-center');
+            zone.classList.remove('bottom-0', 'left-0', 'w-full', 'h-40', 'rounded-t-2xl', 'border-t-4', 'flex-col', 'bg-slate-800/95', 'backdrop-blur');
+            
+            const icon = zone.querySelector('i');
+            icon.classList.replace('text-4xl', 'text-2xl');
+            icon.classList.remove('mb-3');
+            
+            zone.querySelector('div').classList.add('hidden');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('memoryDropZone').classList.remove('bg-slate-700');
+            handleDragEnd(e); // Reset UI
+            
+            const bib = e.dataTransfer.getData("text/plain");
+            const athlete = raceData.find(x => x.b === bib);
+            if (!athlete) return;
+
+            const fullTitle = document.getElementById('raceTitleDisplay').innerText || "Unknown Race";
+            const yearMatch = fullTitle.match(/\d{4}/);
+            const raceYear = yearMatch ? yearMatch[0] : new Date().getFullYear().toString();
+
+            let raceType = 'Olympic';
+            if (raceDistances.swim > 1800) raceType = 'Half';
+
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            
+            if (memory.some(m => m.b === athlete.b && m.raceName === fullTitle)) {
+                return showToast("이미 저장된 데이터입니다.");
+            }
+
+            // Calculate sortOrder
+            const sameTypeItems = memory.filter(m => m.raceType === raceType);
+            const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+            const sortOrder = maxOrder + 1;
+
+            const memoryItem = { ...athlete, raceName: fullTitle, raceYear: raceYear, raceType: raceType, sortOrder: sortOrder, savedAt: new Date().toISOString() };
+            memory.push(memoryItem);
+            localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+            showToast("T-메모리에 저장되었습니다.");
+        }
+
+        function showMemoryTooltip(el) {
+            if (!el.classList.contains('w-14')) return;
+            const tooltip = document.getElementById('globalTooltip');
+            tooltip.innerHTML = `<div class="text-center"><span class="font-bold text-slate-800">T-Memory 바구니</span><br><span class="text-slate-500">드래그하여 저장 / 클릭하여 관리</span></div>`;
+            const rect = el.getBoundingClientRect();
+            tooltip.style.left = (rect.left + rect.width / 2 - 100) + 'px';
+            tooltip.style.top = (rect.top - 50) + 'px';
+            tooltip.classList.remove('hidden');
+        }
+        function hideMemoryTooltip() { document.getElementById('globalTooltip').classList.add('hidden'); }
     </script>
 </body>
 </html>

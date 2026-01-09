@@ -49,12 +49,6 @@ export default function CyclingAnalyzer() {
     };
   }, [mounted]);
 
-  // 안전한 이동을 위한 보호막 함수
-  const safeNav = (e, url) => {
-    e.preventDefault();
-    window.location.href = url;
-  };
-
   const handleUpload = async () => {
     if (!file) return alert("엑셀 파일을 선택해주세요.");
     setLoading(true);
@@ -107,35 +101,37 @@ export default function CyclingAnalyzer() {
           <button id="menuClose" className="menu-close-btn">✕</button>
         </div>
         <ul className="menu-list">
-          <li><a href="/" onClick={(e) => safeNav(e, '/')} className="menu-link">🏠 홈으로</a></li>
-           {/* Reports 메뉴 임시 비공개 */}
-          {/* <li className="menu-folder">
+          <li><a href="/" className="menu-link">🏠 홈으로</a></li>
+         
+          <li className="menu-folder">
             <div className="menu-link folder-header" onClick={() => setIsReportsOpen(!isReportsOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <span>📊 Reports</span>
               <span className="arrow" style={{transform: isReportsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
             </div>
             <ul className="submenu-list" style={{display: isReportsOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
-              <li><a href="/report_ironman.html" onClick={(e) => safeNav(e, '/report_ironman.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🔴 IM CHART</a></li>
-              <li><a href="/report_challenge.html" onClick={(e) => safeNav(e, '/report_challenge.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🟠 Tri-Gram #CHALLENGE</a></li>
-              <li><a href="/report_triathlon.html" onClick={(e) => safeNav(e, '/report_triathlon.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🔵 TRI-ing My Best!</a></li>
-              <li><a href="/cyclinganalyzer" onClick={(e) => safeNav(e, '/cyclinganalyzer')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 구간평속 분석</a></li>
+              <li><a href="/report_ironman.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏆 IM CHART</a></li>
+              <li><a href="/report_challenge.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🥇 Tri-Gram #CHALLENGE</a></li>
+              <li><a href="/report_triathlon.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏁 TRI-ing My Best!</a></li>
+              <li><a href="/triathlon_memory.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>💾 T-Memory</a></li>
+              <li><a href="/memory_report.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🗂️ T-Memory Report</a></li>
+              <li><a href="/cyclinganalyzer" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 구간평속 분석</a></li>
             </ul>
-          </li>*/}
+          </li>
           <li className="menu-folder">
             <div className="menu-link folder-header" onClick={() => setIsUtilsOpen(!isUtilsOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <span>🧮 Utils</span>
               <span className="arrow" style={{transform: isUtilsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
             </div>
             <ul className="submenu-list" style={{display: isUtilsOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
-              <li><a href="/ironman_calculator.html" onClick={(e) => safeNav(e, '/ironman_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️ 킹코스 완주시간</a></li>
-              <li><a href="/gelwater_calculator.html" onClick={(e) => safeNav(e, '/gelwater_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌 보급 계산</a></li>
-              <li><a href="/bike_calculator.html" onClick={(e) => safeNav(e, '/bike_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 자전거 기어비</a></li>
-              <li><a href="/bike_uphill.html" onClick={(e) => safeNav(e, '/bike_uphill.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 싸이클 업힐 분석기</a></li>
-              <li><a href="/bike_gpx_zwo.html" onClick={(e) => safeNav(e, '/bike_gpx_zwo.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 .gpx to .zwo 워크아웃생성</a></li>
-              <li><a href="/cyclinganalyzer" onClick={(e) => safeNav(e, '/cyclinganalyzer')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 구간평속 분석</a></li>
-              <li><a href="/running_calculator.html" onClick={(e) => safeNav(e, '/running_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 보폭 회전수</a></li>
-              <li><a href="/runpace_calculator.html" onClick={(e) => safeNav(e, '/runpace_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 페이스</a></li>
-              <li><a href="/run_mileage_calculator.html" onClick={(e) => safeNav(e, '/run_mileage_calculator.html')} className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 마일리지</a></li>
+              <li><a href="/ironman_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️ 킹코스 완주시간</a></li>
+              <li><a href="/gelwater_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌 보급 계산</a></li>
+              <li><a href="/bike_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 자전거 기어비</a></li>
+              <li><a href="/bike_uphill.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 싸이클 업힐 분석기</a></li>
+              <li><a href="/bike_gpx_zwo.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 .gpx to .zwo 워크아웃생성</a></li>
+              <li><a href="/cyclinganalyzer" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 구간평속 분석</a></li>
+              <li><a href="/running_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 보폭 회전수</a></li>
+              <li><a href="/runpace_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 페이스</a></li>
+              <li><a href="/run_mileage_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 마일리지</a></li>
             </ul>
           </li>
           <li className="menu-folder">

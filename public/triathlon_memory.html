@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Memory Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+                /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */ }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #dc2626; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #ef4444; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 모바일 세로모드 최적화 */
+        @media (max-width: 768px) {
+            body { padding: 1rem !important; }
+            header { flex-direction: column; align-items: flex-start; gap: 1.5rem; margin-bottom: 1.5rem !important; }
+            header > div:first-child { width: 100%; padding-top: 2rem; } /* 메뉴 버튼 공간 확보 */
+            header > div:last-child { width: 100%; }
+            h1.text-3xl { font-size: 1.75rem !important; }
+            .text-sm { font-size: 0.8rem !important; }
+            table th, table td { padding: 0.75rem 0.25rem !important; font-size: 0.75rem !important; }
+            .slide-menu { width: 85% !important; left: -85% !important; }
+            .slide-menu.is-active { left: 0 !important; }
+            #menuToggle { top: 1.5rem !important; left: 1.5rem !important; }
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+    <div class="max-w-5xl mx-auto">
+        <input type="file" id="importInput" accept=".json" class="hidden" onchange="importData(event)">
+        <button id="menuToggle" class="text-2xl text-slate-500 hover:text-blue-600 transition-colors absolute left-6 top-6 z-50"><i class="fas fa-bars"></i></button>
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-black italic tracking-tighter text-slate-900 uppercase">
+                    <span class="text-blue-600">T-Memory</span> 바구니
+                </h1>
+                <p class="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">트라이애슬론 메모리에 저장된 데이터 관리</p>
+                <div class="mt-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-xs text-slate-500 leading-relaxed max-w-2xl">
+                    <p class="flex items-start gap-2 mb-2">
+                        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                        <span>이 데이터는 사용자 브라우저의 <b class="text-slate-700">로컬스토리지</b>에 저장됩니다. 브라우저 캐시 삭제 시 데이터가 삭제될 수 있습니다. <br>중요한 데이터는 <b class="text-slate-700">Export</b> 버튼으로 백업(JSON)하고, 필요 시 <b class="text-slate-700">Import</b>로 복구할 수 있습니다.</span>
+                    </p>
+                    <p class="flex items-start gap-2">
+                        <i class="fas fa-arrows-alt-v text-blue-500 mt-0.5"></i>
+                        <span>코스별 테이블 안에서 <b class="text-slate-700">드래그 앤 드롭</b>으로 순서를 변경할 수 있습니다.</span>
+                    </p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="clearAll()" class="bg-red-100 text-red-600 px-5 py-3 rounded-xl font-bold text-sm hover:bg-red-200 transition-colors">
+                    <i class="fas fa-trash-alt mr-2"></i>전체 삭제
+                </button>
+                <a href="/memory_report.html" class="bg-blue-100 text-blue-600 px-5 py-3 rounded-xl font-bold text-sm hover:bg-blue-200 transition-colors flex items-center justify-center" title="분석 리포트 열기">
+                    <i class="fas fa-chart-line mr-2"></i>분석 레포트
+                </a>
+                <button onclick="triggerImport()" class="bg-slate-100 text-slate-600 px-4 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                    <i class="fas fa-file-import mr-2"></i>Import
+                </button>
+                <button onclick="exportData()" class="bg-slate-100 text-slate-600 px-4 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                    <i class="fas fa-file-export mr-2"></i>Export
+                </button>
+            </div>
+        </header>
+
+        <div id="emptyState" class="hidden p-10 text-center text-slate-400 bg-white rounded-3xl shadow-lg border border-slate-200">
+            <i class="fas fa-box-open text-5xl mb-4 text-slate-200"></i>
+            <p>저장된 데이터가 없습니다.</p>
+        </div>
+
+        <div id="tablesContainer" class="space-y-12">
+            <!-- Tables will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        const sToHms = (s) => { 
+            if(s<=0) return "--:--:--"; 
+            const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60); 
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; 
+        };
+
+        function loadMemory() {
+            const memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            const emptyState = document.getElementById('emptyState');
+            const container = document.getElementById('tablesContainer');
+            container.innerHTML = '';
+
+            const types = ['Olympic', 'Half', 'Ironman'];
+            
+            if (memory.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            types.forEach(type => {
+                // Filter by type and sort by sortOrder
+                const items = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+                
+                const section = document.createElement('div');
+                section.innerHTML = `
+                    <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center">
+                        <i class="fas fa-layer-group mr-2 text-blue-600"></i>${type} 코스
+                        <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} Athletes</span>
+                    </h2>
+                    <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-black tracking-wider">
+                                        <th class="py-2 px-2">Year</th>
+                                        <th class="py-2 px-2">Race Name</th>
+                                        <th class="py-2 px-2">Bib</th>
+                                        <th class="py-2 px-2">Name</th>
+                                        <th class="py-2 px-2">Div</th>
+                                        <th class="py-2 px-2">Swim</th>
+                                        <th class="py-2 px-2">T1</th>
+                                        <th class="py-2 px-2">Bike</th>
+                                        <th class="py-2 px-2">T2</th>
+                                        <th class="py-2 px-2">Run</th>
+                                        <th class="py-2 px-2">Total</th>
+                                        <th class="py-2 px-2 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-${type}" class="divide-y divide-slate-100 font-bold text-slate-700">
+                                </tbody>
+                            </table>
+                        </div>
+                        ${items.length === 0 ? '<div class="p-8 text-center text-slate-400 text-sm">데이터가 없습니다.</div>' : ''}
+                    </div>
+                `;
+                container.appendChild(section);
+
+                const tbody = section.querySelector(`#tbody-${type}`);
+                items.forEach((item, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-colors cursor-move select-none";
+                    tr.draggable = true;
+                    tr.dataset.type = type;
+                    tr.dataset.index = idx;
+                    
+                    // Drag Events
+                    tr.ondragstart = handleDragStart;
+                    tr.ondragover = handleDragOver;
+                    tr.ondrop = handleDrop;
+
+                    // 대회명 정제: 연도(4자리 숫자)와 'half' 단어 제거
+                    const cleanRaceName = (item.raceName || '').replace(/[0-9]{4}/g, '').replace(/half/gi, '').trim();
+
+                    tr.innerHTML = `
+                        <td class="py-1 px-2 text-slate-500 font-mono text-xs">${item.raceYear || '-'}</td>
+                        <td class="py-1 px-2 text-slate-800 text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]" title="${item.raceName}">${cleanRaceName}</td>
+                        <td class="py-1 px-2 font-mono text-slate-500 text-xs">#${item.b}</td>
+                        <td class="py-1 px-2 text-sm text-slate-900 font-bold">${item.n}</td>
+                        <td class="py-1 px-2 text-[10px] uppercase text-slate-500 tracking-tight">${item.d}</td>
+                        <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.s)}</td>
+                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToHms(item.t1)}</td>
+                        <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.bk)}</td>
+                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToHms(item.t2)}</td>
+                        <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.rn)}</td>
+                        <td class="py-1 px-2 font-black text-blue-600 font-mono text-sm">${sToHms(item.t)}</td>
+                        <td class="py-1 px-2 text-center">
+                            <button onclick="deleteItem('${item.savedAt}')" class="text-slate-400 hover:text-red-600 transition-colors p-1">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        };
+
+        let dragSrcEl = null;
+
+        function handleDragStart(e) { dragSrcEl = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/html', this.innerHTML); this.classList.add('opacity-50'); }
+        function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            const targetRow = this;
+            if (dragSrcEl !== targetRow && dragSrcEl.dataset.type === targetRow.dataset.type) {
+                reorderItems(dragSrcEl.dataset.type, parseInt(dragSrcEl.dataset.index), parseInt(targetRow.dataset.index));
+            }
+            dragSrcEl.classList.remove('opacity-50');
+            return false;
+        }
+
+        function reorderItems(type, srcIdx, targetIdx) {
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            let typeItems = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            let otherItems = memory.filter(m => (m.raceType || 'Olympic') !== type);
+            
+            const [movedItem] = typeItems.splice(srcIdx, 1);
+            typeItems.splice(targetIdx, 0, movedItem);
+            typeItems.forEach((item, index) => { item.sortOrder = index + 1; });
+            
+            localStorage.setItem('triathlon_memory', JSON.stringify([...otherItems, ...typeItems]));
+            loadMemory();
+        }
+
+        function deleteItem(savedAt) {
+            if(!confirm('정말 삭제하시겠습니까?')) return;
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            memory = memory.filter(m => m.savedAt !== savedAt);
+            localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+            loadMemory();
+        }
+
+        function clearAll() {
+            if(!confirm('모든 데이터를 삭제하시겠습니까?')) return;
+            localStorage.removeItem('triathlon_memory');
+            loadMemory();
+        }
+
+        function exportData() {
+            const data = localStorage.getItem('triathlon_memory');
+            if (!data || data === '[]') {
+                alert('내보낼 데이터가 없습니다.');
+                return;
+            }
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `triathlon_memory_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function triggerImport() {
+            document.getElementById('importInput').click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) throw new Error('잘못된 파일 형식입니다.');
+                    
+                    // 기존 데이터와 병합 (중복 제거: savedAt 기준)
+                    const current = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+                    const currentIds = new Set(current.map(i => i.savedAt));
+                    
+                    let addedCount = 0;
+                    imported.forEach(item => {
+                        // savedAt이 없으면 생성 (구버전 데이터 호환)
+                        if (!item.savedAt) item.savedAt = new Date().toISOString() + Math.random();
+                        
+                        if (!currentIds.has(item.savedAt)) {
+                            current.push(item);
+                            currentIds.add(item.savedAt);
+                            addedCount++;
+                        }
+                    });
+                    
+                    localStorage.setItem('triathlon_memory', JSON.stringify(current));
+                    loadMemory();
+                    alert(`${addedCount}개의 데이터가 복구되었습니다.`);
+                } catch (err) {
+                    alert('오류: ' + err.message);
+                }
+                event.target.value = ''; // Reset input
+            };
+            reader.readAsText(file);
+        }
+
+        window.onload = loadMemory;
+    </script>
+</body>
+</html>

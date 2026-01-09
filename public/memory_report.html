@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Memory 분석레포트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="menu_full_handler.js" defer></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .tab-active { border-bottom: 4px solid #2563eb; color: #2563eb; }
+                /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;  color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */}
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #dc2626; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #ef4444; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 모바일 세로모드 최적화 */
+        @media (max-width: 768px) {
+            body { padding: 1rem !important; }
+            header { flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem !important; }
+            header > div:first-child { width: 100%; padding-top: 2rem; }
+            h1.text-3xl { font-size: 1.75rem !important; }
+            .chart-container { height: 250px !important; }
+            .tab-btn { padding: 1rem 1rem !important; font-size: 0.8rem !important; }
+            .slide-menu { width: 85% !important; left: -85% !important; }
+            .slide-menu.is-active { left: 0 !important; }
+            #menuToggle { top: 1.5rem !important; left: 1.5rem !important; }
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+    <div class="max-w-6xl mx-auto">
+        <button id="menuToggle" class="text-2xl text-slate-500 hover:text-blue-600 transition-colors absolute left-6 top-6 z-50"><i class="fas fa-bars"></i></button>
+        <div id="globalTooltip" class="fixed hidden bg-white/95 backdrop-blur border border-slate-200 shadow-xl rounded-xl p-3 text-xs z-[9999] transition-all min-w-[200px] pointer-events-none"></div>
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-black italic tracking-tighter text-slate-900 uppercase">
+                    <span class="text-blue-600">T-Memory</span> 분석
+                </h1>
+                <p class="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">데이터 시각화 및 퍼포먼스 분석</p>
+            </div>
+            <a href="triathlon_memory.html" class="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm">
+                <i class="fas fa-list mr-2"></i>바구니로 돌아가기
+            </a>
+        </header>
+
+        <nav class="flex border-b border-slate-200 mb-8 bg-white rounded-t-2xl px-4 overflow-x-auto">
+            <button onclick="switchTab('Olympic')" id="tab-Olympic" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Olympic</button>
+            <button onclick="switchTab('Half')" id="tab-Half" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Half</button>
+            <button onclick="switchTab('Ironman')" id="tab-Ironman" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Ironman</button>
+        </nav>
+
+        <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 id="title-1" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
+                    <i class="fas fa-chart-bar mr-2 text-blue-500"></i>종목별 기록 분포
+                </h3>
+                <div class="chart-container"><canvas id="chart1"></canvas></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 id="title-2" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
+                    <i class="fas fa-running mr-2 text-orange-500"></i>바꿈터(T1+T2) 효율
+                </h3>
+                <div class="chart-container"><canvas id="chart2"></canvas></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 id="title-3" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
+                    <i class="fas fa-project-diagram mr-2 text-green-500"></i>종목간 상관관계
+                </h3>
+                <div class="chart-container"><canvas id="chart3"></canvas></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 id="title-4" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
+                    <i class="fas fa-chart-pie mr-2 text-purple-500"></i>전체 시간 비중
+                </h3>
+                <div class="chart-container"><canvas id="chart4"></canvas></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 id="title-5" class="text-lg font-bold mb-1 text-slate-800 flex items-center">
+                    <i class="fas fa-bolt mr-2 text-yellow-500"></i>퍼포먼스 밸런스
+                </h3>
+                <p class="text-xs text-slate-400 mb-4 ml-7">범례를 클릭하여 선수별 데이터를 확인하세요.</p>
+                <div class="chart-container" style="height: 600px;"><canvas id="chart5"></canvas></div>
+            </div>
+        </div>
+
+        <div id="noData" class="hidden py-20 text-center bg-white rounded-3xl border border-dashed border-slate-300">
+            <i class="fas fa-folder-open text-4xl text-slate-200 mb-3"></i>
+            <p class="text-slate-400 font-medium">선택한 코스의 데이터가 없습니다.</p>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        const colors = {
+            swim: 'rgba(54, 162, 235, 0.8)',
+            bike: 'rgba(75, 192, 192, 0.8)',
+            run: 'rgba(255, 159, 64, 0.8)',
+            t1: 'rgba(201, 203, 207, 0.6)',
+            t2: 'rgba(153, 102, 255, 0.6)'
+        };
+
+        const sToHour = (s) => Number((s / 3600).toFixed(2));
+        const sToHms = (s) => {
+            const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60);
+            return (h>0 ? `${String(h).padStart(2,'0')}:` : '') + `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+        };
+
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById(`tab-${type}`).classList.add('tab-active');
+            renderCharts(type);
+        }
+
+        function showAthleteTooltipAt(a, color, clientX, clientY) {
+            if (!a) return;
+            const tooltip = document.getElementById('globalTooltip');
+            tooltip.innerHTML = `
+                <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-1">
+                    <div>
+                        <span class="font-black text-sm" style="color:${color}">${a.n}</span>
+                        <span class="block text-[10px] text-slate-400">${a.raceName || ''}</span>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-400">#${a.b}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600 font-medium">
+                    <span>Total: <b class="text-slate-800">${sToHms(a.t)}</b></span>
+                    <span>Rank: <b class="text-slate-800">${a.ro || '-'}</b></span>
+                    <span>Swim: ${sToHms(a.s)}</span>
+                    <span>Bike: ${sToHms(a.bk)}</span>
+                    <span>Run: ${sToHms(a.rn)}</span>
+                </div>
+            `;
+            const tooltipEl = tooltip;
+            tooltipEl.style.left = (clientX) + 'px';
+            tooltipEl.style.top = (clientY) + 'px';
+            tooltipEl.classList.remove('hidden');
+        }
+
+        function hideAthleteTooltip() {
+            const t = document.getElementById('globalTooltip');
+            if (t) t.classList.add('hidden');
+        }
+
+        function loadMemory() {
+            return JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+        }
+
+        function clearCharts() {
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+        }
+
+        function renderCharts(type) {
+            const memory = loadMemory();
+            const data = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            
+            const dashboard = document.getElementById('dashboard');
+            const noData = document.getElementById('noData');
+
+            if (data.length === 0) {
+                dashboard.classList.add('hidden');
+                noData.classList.remove('hidden');
+                return;
+            }
+            dashboard.classList.remove('hidden');
+            noData.classList.add('hidden');
+
+            clearCharts();
+
+            const labels = data.map(m => `${m.n} (${m.raceYear})`);
+
+            // --- Chart 1: Stacked Bar (시간 분포) ---
+            charts.c1 = new Chart(document.getElementById('chart1'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Swim', data: data.map(m => sToHour(m.s)), backgroundColor: colors.swim },
+                        { label: 'Bike', data: data.map(m => sToHour(m.bk)), backgroundColor: colors.bike },
+                        { label: 'Run', data: data.map(m => sToHour(m.rn)), backgroundColor: colors.run }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: '시간(hr)' } } },
+                    plugins: { legend: { position: 'bottom' } },
+                    onHover: (evt, elements, chart) => {
+                        if (elements && elements.length > 0) {
+                            const el = elements[0];
+                            const idx = el.index;
+                            const athlete = data[idx];
+                            if (athlete) {
+                                const rect = chart.canvas.getBoundingClientRect();
+                                const clientX = evt?.native?.clientX || (rect.left + (evt.x || 0));
+                                const clientY = evt?.native?.clientY || (rect.top + (evt.y || 0));
+                                showAthleteTooltipAt(athlete, '#2563eb', clientX + 8, clientY + 8);
+                                return;
+                            }
+                        }
+                        hideAthleteTooltip();
+                    }
+                }
+            });
+
+            // --- Chart 2: T1+T2 랭킹 ---
+            charts.c2 = new Chart(document.getElementById('chart2'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '전환 시간 합계',
+                        data: data.map(m => m.t1 + m.t2),
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        borderWidth: 1
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: '시간 (분)' },
+                            ticks: {
+                                callback: (value) => Math.round(value / 60)
+                            }
+                        }
+                    },
+                    plugins: { tooltip: { callbacks: { label: (ctx) => `시간: ${sToHms(ctx.raw)}` } } },
+                    onHover: (evt, elements, chart) => {
+                        if (elements && elements.length > 0) {
+                            const el = elements[0];
+                            const idx = el.index;
+                            const athlete = data[idx];
+                            if (athlete) {
+                                const rect = chart.canvas.getBoundingClientRect();
+                                const clientX = evt?.native?.clientX || (rect.left + (evt.x || 0));
+                                const clientY = evt?.native?.clientY || (rect.top + (evt.y || 0));
+                                showAthleteTooltipAt(athlete, '#ef4444', clientX + 8, clientY + 8);
+                                return;
+                            }
+                        }
+                        hideAthleteTooltip();
+                    }
+                }
+            });
+
+            // --- Chart 3: Scatter (수영 vs 런 / 바이크 vs 런) ---
+            const scatterTitle = type === 'Olympic' ? '수영 vs 런' : '바이크 vs 런';
+            document.getElementById('title-3').innerHTML = `<i class="fas fa-project-diagram mr-2 text-green-500"></i>${scatterTitle}`;
+            
+            charts.c3 = new Chart(document.getElementById('chart3'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '선수 데이터',
+                        data: data.map(m => ({ x: type === 'Olympic' ? m.s : m.bk, y: m.rn })),
+                        backgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            title: { display: true, text: type === 'Olympic' ? 'Swim' : 'Bike' },
+                            ticks: { callback: (v) => sToHms(v) }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Run' },
+                            ticks: { callback: (v) => sToHms(v) }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { callbacks: { label: (ctx) => `(${sToHms(ctx.parsed.x)}, ${sToHms(ctx.parsed.y)})` } }
+                    },
+                    onHover: (evt, elements, chart) => {
+                        if (elements && elements.length > 0) {
+                            const el = elements[0];
+                            const idx = el.index;
+                            const athlete = data[idx];
+                            if (athlete) {
+                                const rect = chart.canvas.getBoundingClientRect();
+                                const clientX = evt?.native?.clientX || (rect.left + (evt.x || 0));
+                                const clientY = evt?.native?.clientY || (rect.top + (evt.y || 0));
+                                showAthleteTooltipAt(athlete, '#2563eb', clientX + 8, clientY + 8);
+                                return;
+                            }
+                        }
+                        hideAthleteTooltip();
+                    }
+                }
+            });
+
+            // --- Chart 4: Doughnut (평균 비중) ---
+            const avgS = data.reduce((a,b) => a + b.s, 0) / data.length;
+            const avgBk = data.reduce((a,b) => a + b.bk, 0) / data.length;
+            const avgRn = data.reduce((a,b) => a + b.rn, 0) / data.length;
+
+            charts.c4 = new Chart(document.getElementById('chart4'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Swim', 'Bike', 'Run'],
+                    datasets: [{
+                        data: [avgS, avgBk, avgRn],
+                        backgroundColor: [colors.swim, colors.bike, colors.run]
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.label}: ${sToHms(ctx.raw)}`
+                            }
+                        }
+                    } 
+                }
+            });
+
+            // --- Chart 5: Radar (전체 선수 밸런스) ---
+            const getScore = (val, k) => {
+                const arr = data.map(x => x[k]).filter(v => v > 0).sort((a,b)=>a-b);
+                if (arr.length === 0) return 0;
+                let idx = arr.findIndex(v => v >= val);
+                if (idx === -1) idx = arr.length;
+                return 100 - (idx / arr.length * 100);
+            };
+
+            const radarDatasets = data.map((m, i) => {
+                const hue = (i * 137.5) % 360;
+                return {
+                    label: m.n,
+                    data: [getScore(m.s, 's'), getScore(m.bk, 'bk'), getScore(m.rn, 'rn')],
+                    fill: true,
+                    backgroundColor: `hsla(${hue}, 70%, 50%, 0.1)`,
+                    borderColor: `hsla(${hue}, 70%, 50%, 0.8)`,
+                    borderWidth: 4,
+                    pointRadius: 4,
+                    hidden: true
+                };
+            });
+
+            radarDatasets.push({
+                label: '그룹 평균',
+                data: [getScore(avgS, 's'), getScore(avgBk, 'bk'), getScore(avgRn, 'rn')],
+                fill: false,
+                borderColor: 'rgba(50, 50, 50, 0.8)',
+                borderWidth: 3,
+                borderDash: [5, 5],
+                pointRadius: 0
+            });
+
+            charts.c5 = new Chart(document.getElementById('chart5'), {
+                type: 'radar',
+                data: {
+                    labels: ['수영 점수', '사이클 점수', '런 점수'],
+                    datasets: radarDatasets
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { 
+                        r: { 
+                            min: 0, max: 100, 
+                            ticks: { display: true, stepSize: 20, backdropColor: 'transparent' }, 
+                            grid: { color: '#e2e8f0' }, 
+                            angleLines: { color: '#e2e8f0' } 
+                        } 
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => switchTab('Olympic');
+    </script>
+</body>
+</html>

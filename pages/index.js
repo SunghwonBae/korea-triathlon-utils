@@ -40,18 +40,13 @@ export default function MainIndex() {
     setShowInstallLayer(false);
   };
 
-  const safeNav = (e, url) => {
-    e.preventDefault();
-    window.location.href = url;
-  };
-
   const menuItems = [
-     /* Reports 메뉴 임시 비공개
-    { icon: "🔴", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
-    { icon: "🟠", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
-    { icon: "🔵", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
-     */
-    
+
+    { icon: "🏆", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
+    { icon: "🥇", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
+    { icon: "🏁", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
+    { icon: "💾", title: "T-Memory", desc: "기록 저장 및 분석", url: "/triathlon_memory.html" },
+    { icon: "🗂️", title: "T-Memory Report", desc: "기록 보고서 생성", url: "/memory_report.html" },
     { icon: "⚖️", title: "킹코스 완주시간", desc: "철인3종 예상 기록 계산", url: "/ironman_calculator.html" },
     { icon: "🍌", title: "보급 계산기", desc: "경기 중 필요한 에너지 보급량", url: "/gelwater_calculator.html" },
     { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/bike_calculator.html" },
@@ -97,7 +92,7 @@ export default function MainIndex() {
       <section className="content-section">
         <div className="menu-grid">
           {menuItems.map((item, index) => (
-            <a key={index} href={item.url} onClick={(e) => safeNav(e, item.url)} className="menu-card">
+            <a key={index} href={item.url} className="menu-card">
               <span className="card-icon">{item.icon}</span>
               <div className="card-text">
                 <span className="card-title">{item.title}</span>
