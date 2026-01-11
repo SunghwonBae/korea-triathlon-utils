@@ -77,7 +77,7 @@
                 padding-left: 0.5rem !important;
                 padding-right: 0.5rem !important;
             }
-            .chart-container { height: 250px !important; }
+            .chart-container { height: 400px !important; }
             header { padding: 1rem !important; }
 
             header .flex-1.flex.gap-3.w-full { flex-direction: column; }
@@ -649,7 +649,7 @@
                     map = {
                         b: findCol(['b', 'bib', 'no', 'number', '배번호']) || 'b',
                         n: findCol(['n', 'name', 'athlete', 'user', '한글이름', '이름']) || 'n',
-                        d: findCol(['category', 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
+                        d: findCol([ 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
                         ss: findCol(['startswim']),
                         fs: findCol(['finishswim']),
                         sb: findCol(['startbike']),
