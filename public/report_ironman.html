@@ -135,14 +135,12 @@
             .slide-menu { width: 85% !important; left: -85% !important; }
             .slide-menu.is-active { left: 0 !important; }
             #menuToggle { 
-                position: absolute !important; 
-                top: 1rem !important; 
-                left: 1rem !important; 
-                z-index: 60 !important;
+                position: static !important; 
                 width: 2.5rem !important;
                 height: 2.5rem !important;
                 padding: 0 !important;
                 border-radius: 0.5rem !important;
+                font-size: 1.25rem !important;
             }
         }
     </style>
@@ -558,10 +556,12 @@
                             const opt = document.createElement('option');
                             opt.value = f.filename;
                             let name = f.displayName || f.filename.replace('.json', '');
+                            const fullName = name;
                             if (year !== '기타') {
                                 name = name.replace(year, '').trim();
                             }
                             opt.textContent = name;
+                            opt.dataset.fullname = fullName;
                             group.appendChild(opt);
                         });
                         sel.appendChild(group);
@@ -579,7 +579,8 @@
             const filename = sel.value;
             if (!filename) return showToast("대회를 선택해주세요.");
 
-            document.getElementById('raceTitleDisplay').innerText = sel.options[sel.selectedIndex].text;
+            const selectedOption = sel.options[sel.selectedIndex];
+            document.getElementById('raceTitleDisplay').innerText = selectedOption.dataset.fullname || selectedOption.text;
       
             // 거리 설정 (파일명에 half 또는 70.3이 포함되면 하프 코스)
             if (filename.toLowerCase().includes('half') || filename.includes('70.3')) {
