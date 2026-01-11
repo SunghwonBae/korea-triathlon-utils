@@ -40,19 +40,19 @@
         @media (max-width: 768px) {
             body { padding: 1rem !important; }
             header { flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem !important; }
-            header > div:first-child { width: 100%; padding-top: 2rem; }
-            h1.text-3xl { font-size: 1.75rem !important; }
+            header > div:first-child { width: 100%; padding-top: 0; padding-left: 3.5rem; }
+            h1.text-3xl { font-size: 1.75rem !important; line-height: 1.2; }
             .chart-container { height: 250px !important; }
             .tab-btn { padding: 1rem 1rem !important; font-size: 0.8rem !important; }
             .slide-menu { width: 85% !important; left: -85% !important; }
             .slide-menu.is-active { left: 0 !important; }
-            #menuToggle { top: 1.5rem !important; left: 1.5rem !important; }
+            #menuToggle { top: 1rem !important; left: 1rem !important; }
         }
     </style>
 </head>
 <body class="p-6 md:p-10">
     <div class="max-w-6xl mx-auto">
-        <button id="menuToggle" class="text-2xl text-slate-500 hover:text-blue-600 transition-colors absolute left-6 top-6 z-50"><i class="fas fa-bars"></i></button>
+        <button id="menuToggle" class="absolute left-6 top-6 z-50 bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-blue-900 shadow-md hover:bg-slate-50 transition-all"><i class="fas fa-bars"></i></button>
         <div id="globalTooltip" class="fixed hidden bg-white/95 backdrop-blur border border-slate-200 shadow-xl rounded-xl p-3 text-xs z-[9999] transition-all min-w-[200px] pointer-events-none"></div>
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>

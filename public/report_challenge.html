@@ -75,7 +75,7 @@
             .card { padding: 1.5rem !important; border-radius: 1.5rem !important; }
             .chart-container { height: 250px !important; }
             header { padding: 1rem !important; }
-            header .flex-col { gap: 1rem !important; }
+
             header .flex-1.flex.gap-3.w-full { flex-direction: column; }
             header .flex-1.flex.gap-3.w-full button { width: 100%; }
             header > div > button { width: 100%; }
@@ -139,7 +139,16 @@
 
             .slide-menu { width: 85% !important; left: -85% !important; }
             .slide-menu.is-active { left: 0 !important; }
-            #menuToggle { position: absolute !important; top: 1.2rem !important; left: 1rem !important; z-index: 60 !important; }
+            #menuToggle { 
+                position: absolute !important; 
+                top: 1rem !important; 
+                left: 1rem !important; 
+                z-index: 60 !important;
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+                padding: 0 !important;
+                border-radius: 0.5rem !important;
+            }
         }
     </style>
 </head>
@@ -199,7 +208,7 @@
         <header class="bg-white/95 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-200 px-6 py-4">
             <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row items-center gap-6">
                 <div class="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-start">
-                    <button id="menuToggle" class="text-2xl text-slate-500 hover:text-orange-600 transition-colors"><i class="fas fa-bars"></i></button>
+                    <button id="menuToggle" class="bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-slate-700 shadow-md hover:bg-slate-50 hover:text-orange-600 transition-all"><i class="fas fa-bars"></i></button>
                     <div class="flex flex-col flex-shrink-0 leading-none select-none">
                         <div class="text-3xl font-black italic tracking-tighter text-slate-900">
                             <span class="text-orange-600">Tri-Gram</span> #CHALLENGE
@@ -228,7 +237,7 @@
             <div class="bg-white rounded-3xl p-6 shadow-lg border border-slate-200 relative overflow-hidden">
                 <div class="relative z-10">
                     <h2 class="text-2xl font-black italic mb-2 tracking-tight uppercase text-slate-800 flex items-center gap-2">
-                        <i class="fas fa-info-circle text-orange-500"></i> 챌린지 기록 분석 가이드<span id="raceTitleDisplay" class="text-orange-600 ml-2"></span>
+                        <i class="fas fa-info-circle text-orange-500"></i><span class="hidden md:inline"> 챌린지 기록 분석 가이드</span><span id="raceTitleDisplay" class="text-orange-600 ml-2"></span>
                     </h2>
                     <p class="text-slate-600 text-sm leading-relaxed font-medium max-w-5xl">
                         초기화면 대시보드는 <span class="text-orange-600 font-bold underline decoration-2">전체 참가자의 평균 기록</span> 선수를 기준으로 설정되었습니다.
@@ -558,11 +567,15 @@
 
                     Object.keys(filesByYear).sort((a, b) => b.localeCompare(a)).forEach(year => {
                         const group = document.createElement('optgroup');
-                        group.label = year === '기타' ? year : `${year}년`;
+                        group.label = year === '기타' ? year : `${year}년 --------------------`;
                         filesByYear[year].forEach(f => {
                             const opt = document.createElement('option');
                             opt.value = f.filename;
-                            opt.textContent = f.displayName || f.filename.replace('.json', '');
+                            let name = f.displayName || f.filename.replace('.json', '');
+                            if (year !== '기타') {
+                                name = name.replace(year, '').trim();
+                            }
+                            opt.textContent = name;
                             group.appendChild(opt);
                         });
                         sel.appendChild(group);
