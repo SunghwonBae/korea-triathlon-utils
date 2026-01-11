@@ -72,7 +72,11 @@
 
         /* 모바일 세로모드 최적화 */
         @media (max-width: 768px) {
-            .card { padding: 1.5rem !important; border-radius: 1.5rem !important; }
+            .card { padding: 0.5rem !important; border-radius: 1.5rem !important; }
+            .px-6 {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
             .chart-container { height: 250px !important; }
             
             /* Header Mobile Layout Optimization */
@@ -82,7 +86,7 @@
                 grid-template-columns: 1fr 1fr !important; 
                 gap: 0.5rem !important; 
             }
-            header > div > div:first-child { grid-column: 1 / -1 !important; margin-bottom: 0.25rem !important; }
+            header > div > div:first-child { grid-column: 1 / -1 !important; margin-bottom: 0.25rem !important; justify-content: flex-start !important; }
             header > div > div.flex-1 { 
                 grid-column: 1 / -1 !important; 
                 display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 0.5rem !important; 
@@ -338,7 +342,7 @@
             <div class="card overflow-hidden" id="recordTableSection">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-8 px-2 gap-4">
                     <div>
-                        <h3 class="font-black italic text-2xl uppercase tracking-tighter">Full Race Database</h3>
+                        <h3 id="dbTitleDisplay" class="font-black italic text-2xl uppercase tracking-tighter">Full Race Database</h3>
                         <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Click headers to sort / Page size: 50</p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -581,7 +585,9 @@
             if (!filename) return showToast("대회를 선택해주세요.");
 
             const selectedOption = sel.options[sel.selectedIndex];
-            document.getElementById('raceTitleDisplay').innerText = selectedOption.dataset.fullname || selectedOption.text;
+            const raceName = selectedOption.dataset.fullname || selectedOption.text;
+            document.getElementById('raceTitleDisplay').innerText = raceName;
+            document.getElementById('dbTitleDisplay').innerText = raceName;
 
             // 거리 설정 (파일명에 half 또는 70.3이 포함되면 하프 코스)
             if (filename.toLowerCase().includes('half') || filename.includes('70.3')) {
