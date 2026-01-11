@@ -415,15 +415,15 @@
                         <thead>
                             <tr class="bg-slate-50/80">
                                 <th class="sortable py-2 px-3 font-black uppercase text-[11px] active-sort sort-asc" data-col="ro">Rank</th>
-                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="b">Bib No.</th>
-                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="n">Athlete Name</th>
-                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="d">Division</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="b">Bib.</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="n">Name</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="d">Div</th>
                                 <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="s">Swim</th>
                                 <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t1">T1</th>
                                 <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="bk">Bike</th>
                                 <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t2">T2</th>
                                 <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="rn">Run</th>
-                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t">Total Time</th>
+                                <th class="sortable py-2 px-3 font-black uppercase text-[11px]" data-col="t">Total</th>
                             </tr>
                         </thead>
                         <tbody id="recordBody" class="font-bold text-slate-700"></tbody>
@@ -497,11 +497,19 @@
             return 0; 
         };
         const sToHms = (s) => { if(s<=0) return "--:--:--"; const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
+        const sToMs = (s) => { if(s<=0) return "00:00"; const m=Math.floor(s/60), sec=Math.floor(s%60); return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
 
         // Helper functions for Advanced Stats
-        const getSwimPace = (s) => (s > 0) ? sToHms((s / raceDistances.swim) * 100).substring(3, 8) : "-"; // min/100m
+        // Helper functions for Advanced Stats
+        const formatPace = (s) => {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${String(sec).padStart(2, '0')}`;
+        };
+        const getSwimPace = (s) => (s > 0) ? formatPace((s / raceDistances.swim) * 100) : "-"; // min/100m
         const getBikeSpeed = (s) => (s > 0) ? (raceDistances.bike / (s / 3600)).toFixed(1) : "-"; // km/h
-        const getRunPace = (s) => (s > 0) ? sToHms(s / raceDistances.run).substring(3, 8) : "-"; // min/km
+        //const getRunPace = (s) => (s > 0) ? sToHms(s / raceDistances.run).substring(3, 8) : "-"; // min/km
+        const getRunPace = (s) => (s > 0) ? formatPace(s / raceDistances.run) : "-"; // min/km
 
         function updateDistanceLabels() {
             const sLabel = document.getElementById('swimDistLabel');
@@ -680,9 +688,9 @@
                     <td class="py-2 px-3 font-black text-slate-900 text-base cursor-pointer hover:text-red-600 transition-colors" onclick="setAsMeByBib('${row.b}')" title="분석기준선수로 등록">${row.n}</td>
                     <td class="py-2 px-3 text-xs font-bold text-slate-500 uppercase tracking-tighter">${row.d}</td>
                     <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.s)}</td>
-                    <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToHms(row.t1)}</td>
+                    <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToMs(row.t1)}</td>
                     <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.bk)}</td>
-                    <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToHms(row.t2)}</td>
+                    <td class="py-2 px-3 text-slate-400 font-medium text-xs">${sToMs(row.t2)}</td>
                     <td class="py-2 px-3 text-slate-500 font-medium">${sToHms(row.rn)}</td>
                     <td class="py-2 px-3 font-black text-slate-900 ${isDown ? '' : 'cursor-pointer hover:text-blue-600 transition-colors'}" ${isDown ? '' : `onclick="saveToMemory('${row.b}')" title="T-Memory에 저장"`}>${sToHms(row.t)}</td>
                 </tr>`).join('');

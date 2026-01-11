@@ -103,6 +103,7 @@
             const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.floor(s%60); 
             return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; 
         };
+        const sToMs = (s) => { if(s<=0) return "00:00"; const m=Math.floor(s/60), sec=Math.floor(s%60); return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
 
         function loadMemory() {
             const memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
@@ -178,9 +179,9 @@
                         <td class="py-1 px-2 text-sm text-slate-900 font-bold">${item.n}</td>
                         <td class="py-1 px-2 text-[10px] uppercase text-slate-500 tracking-tight">${item.d}</td>
                         <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.s)}</td>
-                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToHms(item.t1)}</td>
+                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToMs(item.t1)}</td>
                         <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.bk)}</td>
-                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToHms(item.t2)}</td>
+                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToMs(item.t2)}</td>
                         <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.rn)}</td>
                         <td class="py-1 px-2 font-black text-blue-600 font-mono text-sm">${sToHms(item.t)}</td>
                         <td class="py-1 px-2 text-center">
