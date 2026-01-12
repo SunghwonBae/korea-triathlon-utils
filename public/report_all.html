@@ -150,7 +150,7 @@
             }
 
             area.innerHTML = list.map(item => {
-                const isSaved = memory.some(m => m.savedAt && m.raceName === item.raceName && m.bib === item.bib); // 간단한 중복 체크
+                const isSaved = memory.some(m => m.savedAt && m.raceName === item.raceName && m.b === item.b); // 간단한 중복 체크
                 
                 // 뱃지 색상
                 let badgeClass = 'bg-gray-500';
@@ -230,14 +230,13 @@
                 return;
             }
 
-            // Ironman 리포트 호환성을 위한 데이터 매핑
+            const sameTypeItems = memory.filter(m => m.raceType === item.raceType);
+            const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+            const sortOrder = maxOrder + 1;
+
             const memoryItem = {
-                n: item.na, // Ironman 리포트 호환
-                raceName: item.raceName,
-                raceYear: item.raceYear,
-                raceType: item.raceType, // ironman, challenge, etc.
-                t: item.t, // Total Time
-                b: item.b,
+                ...item,
+                sortOrder: sortOrder,
                 savedAt: new Date().toISOString()
             };
 
