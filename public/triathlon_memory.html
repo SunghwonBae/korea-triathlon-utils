@@ -48,6 +48,9 @@
             .slide-menu { width: 85% !important; left: -85% !important; }
             .slide-menu.is-active { left: 0 !important; }
             #menuToggle { top: 1rem !important; left: 1rem !important; }
+            /* 탭바 모바일 최적화 */
+            nav { padding-left: 0.25rem !important; padding-right: 0.25rem !important; justify-content: space-between; overflow-x: hidden !important; }
+            .tab-btn { padding: 1rem 0.1rem !important; font-size: 0.75rem !important; letter-spacing: -0.5px !important; flex: 1; }
         }
     </style>
 </head>
@@ -96,7 +99,7 @@
         </div>
 
         <nav class="flex border-b border-slate-200 mb-8 bg-white rounded-t-2xl px-4 overflow-x-auto">
-            <button onclick="switchTab('Search')" id="tab-Search" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Search Result</button>
+            <button onclick="switchTab('Search')" id="tab-Search" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Search<span class="hidden md:inline"> Result</span></button>
             <button onclick="switchTab('Olympic')" id="tab-Olympic" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Olympic</button>
             <button onclick="switchTab('Half')" id="tab-Half" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Half</button>
             <button onclick="switchTab('Ironman')" id="tab-Ironman" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Ironman</button>
