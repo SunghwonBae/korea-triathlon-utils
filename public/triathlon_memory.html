@@ -91,11 +91,22 @@
             </div>
         </header>
 
-        <div class="relative max-w-lg mx-auto mb-8">
-            <input type="text" id="searchInput" 
-                class="w-full p-4 pl-12 rounded-full border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-                placeholder="이름 (홍길동, Hong) 또는 배번호 또는 클럽명 검색...">
-            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl"></i>
+        <div class="max-w-lg mx-auto mb-8">
+            <div class="relative flex items-center gap-2">
+                <button id="multiSearchToggle" onclick="toggleMultiSearch()" class="flex-shrink-0 w-12 h-12 rounded-xl border border-slate-300 bg-white text-slate-400 hover:text-blue-600 hover:border-blue-500 transition-all shadow-sm flex items-center justify-center text-xl" title="다중 검색 모드 (결과 누적)">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="relative flex-grow">
+                    <input type="text" id="searchInput" 
+                        class="w-full p-4 pl-12 rounded-full border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                        placeholder="이름 (홍길동, Hong) 또는 배번호 또는 클럽명 검색...">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl"></i>
+                </div>
+            </div>
+            <div id="searchTagsArea" class="flex flex-wrap gap-2 mt-3 empty:hidden"></div>
+            <p class="text-xs text-slate-400 mt-2 ml-1">
+                <i class="fas fa-info-circle mr-1"></i> + 버튼을 켜면 검색 결과가 누적됩니다. (검색어 입력 후 Enter, 최대 10개)
+            </p>
         </div>
 
         <nav class="flex border-b border-slate-200 mb-8 bg-white rounded-t-2xl px-4 overflow-x-auto">
@@ -125,6 +136,9 @@
 
         let currentTab = 'Search';
         let allData = [];
+        let currentSearchResults = [];
+        let isMultiSearchMode = false;
+        let searchTags = [];
         const CHO_HANGUL = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
 
         async function loadAllData() {
@@ -169,7 +183,100 @@
             }
         }
 
+        function performSearch(val) {
+            if (!val || val.length < 2) return [];
+            const searchVal = val.toLowerCase().replace(/\s/g, '');
+            const regex = getKoreanRegex(val);
+
+            return allData.filter(item => {
+                if (item.searchKey && item.searchKey.includes(searchVal)) return true;
+                if (regex.test(item.n)) return true;
+                if (item.n && item.n.toLowerCase().includes(val.toLowerCase())) return true;
+                if (item.c && item.c.toLowerCase().includes(val.toLowerCase())) return true;
+                return false;
+            });
+        }
+
+        function toggleMultiSearch() {
+            isMultiSearchMode = !isMultiSearchMode;
+            const btn = document.getElementById('multiSearchToggle');
+            const input = document.getElementById('searchInput');
+            
+            if (isMultiSearchMode) {
+                btn.classList.add('bg-blue-50', 'border-blue-500', 'text-blue-600');
+                btn.classList.remove('bg-white', 'text-slate-400');
+                if (input.value.trim().length >= 2) {
+                    addSearchTag(input.value.trim());
+                    input.value = '';
+                }
+            } else {
+                btn.classList.remove('bg-blue-50', 'border-blue-500', 'text-blue-600');
+                btn.classList.add('bg-white', 'text-slate-400');
+                searchTags = [];
+                updateSearchTagsUI();
+                renderSearchResults(); 
+            }
+        }
+
+        function addSearchTag(keyword) {
+            if (searchTags.length >= 10) {
+                alert('최대 10개까지만 추가할 수 있습니다.');
+                return;
+            }
+            if (searchTags.some(t => t.keyword === keyword)) {
+                alert('이미 추가된 검색어입니다.');
+                return;
+            }
+
+            const results = performSearch(keyword);
+            
+            if (results.length === 0) {
+                alert('검색 결과가 없습니다.');
+                return;
+            }
+
+            searchTags.push({ keyword, count: results.length, results });
+            updateSearchTagsUI();
+            renderMultiSearchResults();
+        }
+
+        function removeSearchTag(idx) {
+            searchTags.splice(idx, 1);
+            updateSearchTagsUI();
+            renderMultiSearchResults();
+        }
+
+        function updateSearchTagsUI() {
+            const area = document.getElementById('searchTagsArea');
+            area.innerHTML = searchTags.map((tag, idx) => `
+                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 animate-pulse-once">
+                    ${tag.keyword} <span class="bg-white text-blue-600 px-1.5 rounded-md text-[10px]">${tag.count}</span>
+                    <button onclick="removeSearchTag(${idx})" class="hover:text-blue-900"><i class="fas fa-times"></i></button>
+                </span>
+            `).join('');
+        }
+
+        function renderMultiSearchResults() {
+            let combined = [];
+            const seen = new Set();
+            
+            searchTags.forEach(tag => {
+                tag.results.forEach(item => {
+                    const key = (item.raceName || '') + '_' + item.b;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        combined.push(item);
+                    }
+                });
+            });
+            
+            currentSearchResults = combined;
+            renderTable(combined, 'Search');
+        }
+
         function renderSearchResults() {
+            if (isMultiSearchMode) return;
+
             const val = document.getElementById('searchInput').value.trim();
             const container = document.getElementById('tablesContainer');
             const emptyState = document.getElementById('emptyState');
@@ -185,21 +292,9 @@
                 return;
             }
 
-            // 검색어 전처리: 소문자 변환 및 공백 제거 (searchKey 매칭용)
-            const searchVal = val.toLowerCase().replace(/\s/g, '');
-            const regex = getKoreanRegex(val);
+            const filtered = performSearch(val);
 
-            const filtered = allData.filter(item => {
-                // 1. searchKey를 이용한 검색 (영문이름, 배번호, 로마자, 클럽명 포함)
-                if (item.searchKey && item.searchKey.includes(searchVal)) return true;
-
-                // 2. 한글 이름 검색 및 기존 필드 직접 검색 (searchKey에 한글이름 원본이 없을 수 있음)
-                if (regex.test(item.n)) return true;
-                if (item.n && item.n.toLowerCase().includes(val.toLowerCase())) return true;
-                if (item.c && item.c.toLowerCase().includes(val.toLowerCase())) return true; // 클럽명 직접 검색 추가
-                return false;
-            });
-
+            currentSearchResults = filtered;
             renderTable(filtered, 'Search');
         }
 
@@ -234,12 +329,17 @@
             }
 
             const memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            
+            let actionHeader = 'Action';
+            if (type === 'Search') {
+                actionHeader = `<button onclick="saveAllSearchResults()" class="bg-blue-600 text-white px-2 py-1 rounded text-[11px] hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap">전체저장</button>`;
+            }
 
             const section = document.createElement('div');
             section.innerHTML = `
                 <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center">
                     <i class="fas fa-layer-group mr-2 text-blue-600"></i>${type === 'Search' ? '검색 결과' : type + ' 코스'}
-                    <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} Athletes</span>
+                    <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} 건</span>
                 </h2>
                 <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
@@ -257,7 +357,7 @@
                                     <th class="py-3 px-4">T2</th>
                                     <th class="py-3 px-4">Run</th>
                                     <th class="py-3 px-4">Total</th>
-                                    <th class="py-3 px-4 text-center">Action</th>
+                                    <th class="py-3 px-4 text-center">${actionHeader}</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-${type}" class="divide-y divide-slate-100 font-bold text-slate-700">
@@ -344,6 +444,35 @@
             
             // 현재 검색 결과 탭 갱신 (버튼 상태 업데이트를 위해)
             renderSearchResults();
+        }
+
+        function saveAllSearchResults() {
+            if (!currentSearchResults || currentSearchResults.length === 0) {
+                alert("저장할 검색 결과가 없습니다.");
+                return;
+            }
+
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            let addedCount = 0;
+
+            currentSearchResults.forEach(item => {
+                if (!memory.some(m => m.raceName === item.raceName && m.b === item.b)) {
+                    const sameTypeItems = memory.filter(m => m.raceType === item.raceType);
+                    const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+                    
+                    const memoryItem = { ...item, sortOrder: maxOrder + 1, savedAt: new Date().toISOString() + '-' + Math.random().toString(36).substr(2, 9) };
+                    memory.push(memoryItem);
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+                alert(`${addedCount}건의 데이터가 T-Memory에 저장되었습니다.`);
+                renderSearchResults();
+            } else {
+                alert("모든 데이터가 이미 저장되어 있습니다.");
+            }
         }
 
         let dragSrcEl = null;
@@ -442,6 +571,19 @@
             };
             reader.readAsText(file);
         }
+        
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && isMultiSearchMode) {
+                e.preventDefault();
+                const val = e.target.value.trim();
+                if (val.length >= 2) {
+                    addSearchTag(val);
+                    e.target.value = '';
+                } else {
+                    alert('검색어를 2글자 이상 입력하세요.');
+                }
+            }
+        });
 
         document.getElementById('searchInput').addEventListener('input', (e) => {
             if (currentTab !== 'Search') {

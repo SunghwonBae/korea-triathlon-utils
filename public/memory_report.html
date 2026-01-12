@@ -77,6 +77,10 @@
                 <h3 id="title-1" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
                     <i class="fas fa-chart-bar mr-2 text-blue-500"></i>종목별 기록 분포
                 </h3>
+                <div id="sort-container" class="flex flex-wrap gap-2 mb-2"></div>
+                <p class="text-xs text-slate-400 mb-6 ml-1 leading-relaxed">
+                    <i class="fas fa-info-circle mr-1"></i><b>정렬 설정:</b> 항목을 드래그하여 정렬 우선순위를 변경하고, 화살표를 클릭하여 오름차순/내림차순을 전환하세요. (예: [년도]를 맨 앞으로 옮기면 연도별로 먼저 정렬됩니다.)
+                </p>
                 <div class="chart-container"><canvas id="chart1"></canvas></div>
             </div>
 
@@ -84,21 +88,24 @@
                 <h3 id="title-2" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
                     <i class="fas fa-running mr-2 text-orange-500"></i>바꿈터(T1+T2) 효율
                 </h3>
-                <div class="chart-container"><canvas id="chart2"></canvas></div>
+                <div class="chart-container" style="height: 400px;"><canvas id="chart2"></canvas></div>
             </div>
 
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                 <h3 id="title-3" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
                     <i class="fas fa-project-diagram mr-2 text-green-500"></i>종목간 상관관계
                 </h3>
-                <div class="chart-container"><canvas id="chart3"></canvas></div>
+                <div class="chart-container" style="height: 400px;"><canvas id="chart3"></canvas></div>
             </div>
 
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                 <h3 id="title-4" class="text-lg font-bold mb-4 text-slate-800 flex items-center">
-                    <i class="fas fa-chart-pie mr-2 text-purple-500"></i>전체 시간 비중
+                    <i class="fas fa-trophy mr-2 text-purple-500"></i>부문별 최고 기록 
                 </h3>
-                <div class="chart-container"><canvas id="chart4"></canvas></div>
+                <p class="text-xs text-slate-400 mb-4 -mt-2 ml-7">
+                    <i class="fas fa-info-circle mr-1"></i>카드를 클릭하면 해당 선수의 기록이 다른 차트에서 하이라이트됩니다.
+                </p>
+                <div id="bestRecordsContainer" class="grid grid-cols-1 gap-4"></div>
             </div>
 
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
@@ -106,7 +113,7 @@
                     <i class="fas fa-bolt mr-2 text-yellow-500"></i>퍼포먼스 밸런스
                 </h3>
                 <p class="text-xs text-slate-400 mb-4 ml-7">범례를 클릭하여 선수별 데이터를 확인하세요.</p>
-                <div class="chart-container" style="height: 600px;"><canvas id="chart5"></canvas></div>
+                <div class="chart-container" style="height: 800px;"><canvas id="chart5"></canvas></div>
             </div>
         </div>
 
@@ -132,15 +139,92 @@
             return (h>0 ? `${String(h).padStart(2,'0')}:` : '') + `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
         };
 
+        let currentSortConfig = [
+            { key: 't', label: '전체기록', dir: 'asc' },
+            { key: 's', label: '수영', dir: 'asc' },
+            { key: 'bk', label: '싸이클', dir: 'asc' },
+            { key: 'rn', label: '런', dir: 'asc' },
+            { key: 'raceYear', label: '년도', dir: 'desc' },
+            { key: 'raceName', label: '대회명', dir: 'asc' },
+            { key: 'n', label: '선수명', dir: 'asc' }
+        ];
+
+        function renderSortChips() {
+            const container = document.getElementById('sort-container');
+            if (!container) return;
+            container.innerHTML = '';
+            currentSortConfig.forEach((item, index) => {
+                const chip = document.createElement('div');
+                chip.className = "flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 cursor-move hover:bg-slate-100 hover:border-blue-300 transition-all select-none";
+                chip.draggable = true;
+                chip.innerHTML = `
+                    <span>${item.label}</span>
+                    <button onclick="toggleSortDir(${index})" class="text-blue-500 hover:text-blue-700 focus:outline-none" title="정렬 방향 변경">
+                        <i class="fas fa-arrow-${item.dir === 'asc' ? 'up' : 'down'}"></i>
+                    </button>
+                `;
+                
+                chip.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', index);
+                    e.dataTransfer.effectAllowed = 'move';
+                    chip.classList.add('opacity-50');
+                };
+                chip.ondragend = () => {
+                    chip.classList.remove('opacity-50');
+                };
+                chip.ondragover = (e) => { e.preventDefault(); };
+                chip.ondrop = (e) => {
+                    e.preventDefault();
+                    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                    const toIndex = index;
+                    if (fromIndex !== toIndex && !isNaN(fromIndex)) {
+                        const movedItem = currentSortConfig.splice(fromIndex, 1)[0];
+                        currentSortConfig.splice(toIndex, 0, movedItem);
+                        renderSortChips();
+                        const activeTab = document.querySelector('.tab-active');
+                        if(activeTab) renderCharts(activeTab.id.replace('tab-', ''));
+                    }
+                };
+                container.appendChild(chip);
+            });
+        }
+
+        function toggleSortDir(index) {
+            currentSortConfig[index].dir = currentSortConfig[index].dir === 'asc' ? 'desc' : 'asc';
+            renderSortChips();
+            const activeTab = document.querySelector('.tab-active');
+            if(activeTab) renderCharts(activeTab.id.replace('tab-', ''));
+        }
+
         function switchTab(type) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
             document.getElementById(`tab-${type}`).classList.add('tab-active');
             renderCharts(type);
         }
-
-        function showAthleteTooltipAt(a, color, clientX, clientY) {
+        function showAthleteTooltipAt(a, color, clientX, clientY, scores) {
             if (!a) return;
             const tooltip = document.getElementById('globalTooltip');
+
+            let scoreHtml = '';
+            if (scores) {
+                scoreHtml = `
+                <div class="mt-2 pt-2 border-t border-slate-100 grid grid-cols-3 text-center text-xs">
+                    <div>
+                        <div class="text-slate-400">S.Score</div>
+                        <div class="font-bold text-blue-500">${scores.swim.toFixed(0)}</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400">B.Score</div>
+                        <div class="font-bold text-green-500">${scores.bike.toFixed(0)}</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400">R.Score</div>
+                        <div class="font-bold text-orange-500">${scores.run.toFixed(0)}</div>
+                    </div>
+                </div>
+                `;
+            }
+
             tooltip.innerHTML = `
                 <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-1">
                     <div>
@@ -149,13 +233,13 @@
                     </div>
                     <span class="text-[10px] font-mono text-slate-400">#${a.b}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600 font-medium">
-                    <span>Total: <b class="text-slate-800">${sToHms(a.t)}</b></span>
-                    <span>Rank: <b class="text-slate-800">${a.ro || '-'}</b></span>
-                    <span>Swim: ${sToHms(a.s)}</span>
-                    <span>Bike: ${sToHms(a.bk)}</span>
-                    <span>Run: ${sToHms(a.rn)}</span>
+                <div class="space-y-1 text-slate-600 font-medium text-sm">
+                    <div class="flex justify-between"><span>Total:</span> <b class="text-slate-800">${sToHms(a.t)}</b></div>
+                    <div class="flex justify-between"><span>Swim:</span> <span>${sToHms(a.s)}</span></div>
+                    <div class="flex justify-between"><span>Bike:</span> <span>${sToHms(a.bk)}</span></div>
+                    <div class="flex justify-between"><span>Run:</span> <span>${sToHms(a.rn)}</span></div>
                 </div>
+                ${scoreHtml}
             `;
             const tooltipEl = tooltip;
             tooltipEl.style.left = (clientX) + 'px';
@@ -179,8 +263,66 @@
 
         function renderCharts(type) {
             const memory = loadMemory();
-            const data = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            let data = memory.filter(m => (m.raceType || 'Olympic') === type);
             
+            // Apply Sort
+            data.sort((a, b) => {
+                for (const config of currentSortConfig) {
+                    const key = config.key;
+                    const dir = config.dir === 'asc' ? 1 : -1;
+                    let valA = a[key];
+                    let valB = b[key];
+                    
+                    if (valA === undefined || valA === null) valA = '';
+                    if (valB === undefined || valB === null) valB = '';
+
+                    if (typeof valA === 'string' || typeof valB === 'string') {
+                        const cmp = String(valA).localeCompare(String(valB));
+                        if (cmp !== 0) return cmp * dir;
+                    } else {
+                        if (valA !== valB) return (valA - valB) * dir;
+                    }
+                }
+                return 0;
+            });
+            
+            const highlightAthlete = (targetAthlete) => {
+                const idx = data.findIndex(d => d === targetAthlete);
+                if (idx === -1) return;
+                const hlColor = '#ef4444';
+
+                if (charts.c1) {
+                    charts.c1.data.datasets.forEach(ds => {
+                        let baseColor = colors.run;
+                        if (ds.label === 'Swim') baseColor = colors.swim;
+                        else if (ds.label === 'Bike') baseColor = colors.bike;
+                        ds.backgroundColor = data.map((_, i) => i === idx ? hlColor : baseColor);
+                    });
+                    charts.c1.update();
+                }
+
+                if (charts.c2) {
+                    const baseColor = 'rgba(255, 99, 132, 0.5)';
+                    charts.c2.data.datasets[0].backgroundColor = data.map((_, i) => i === idx ? hlColor : baseColor);
+                    charts.c2.update();
+                }
+
+                if (charts.c3) {
+                    const baseColor = '#2563eb';
+                    charts.c3.data.datasets[0].backgroundColor = data.map((_, i) => i === idx ? hlColor : baseColor);
+                    charts.c3.data.datasets[0].pointRadius = data.map((_, i) => i === idx ? 8 : 3);
+                    charts.c3.update();
+                }
+
+                if (charts.c5) {
+                    charts.c5.data.datasets.forEach((ds, i) => {
+                        if (i < data.length) ds.hidden = (i !== idx);
+                    });
+                    charts.c5.update();
+                    document.getElementById('chart5').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            };
+
             const dashboard = document.getElementById('dashboard');
             const noData = document.getElementById('noData');
 
@@ -195,6 +337,74 @@
             clearCharts();
 
             const labels = data.map(m => `${m.n} (${m.raceYear})`);
+            
+            // Helper for scores (Moved up for reuse)
+            const getScore = (val, k) => {
+                const arr = data.map(x => x[k]).filter(v => v > 0).sort((a,b)=>a-b);
+                if (arr.length === 0) return 0;
+                let idx = arr.findIndex(v => v >= val);
+                if (idx === -1) idx = arr.length;
+                return 100 - (idx / arr.length * 100);
+            };
+
+            // Render Best Records Dashboard
+            const bestContainer = document.getElementById('bestRecordsContainer');
+            if (bestContainer) {
+                bestContainer.innerHTML = '';
+                const categories = [
+                    { label: '최고기록', key: 't', getValue: d => d.t, color: 'text-slate-800' },
+                    { label: '수영', key: 's', getValue: d => d.s, color: 'text-blue-600' },
+                    { label: '싸이클', key: 'bk', getValue: d => d.bk, color: 'text-green-600' },
+                    { label: '런', key: 'rn', getValue: d => d.rn, color: 'text-orange-600' },
+                    { label: '바꿈터', key: 'trans', getValue: d => d.t1 + d.t2, color: 'text-purple-600' }
+                ];
+
+                categories.forEach(cat => {
+                    let best = null;
+                    let minVal = Infinity;
+                    data.forEach(d => {
+                        const val = cat.getValue(d);
+                        if (val > 0 && val < minVal) { minVal = val; best = d; }
+                    });
+
+                    if (best) {
+                        const scores = {
+                            swim: getScore(best.s, 's'),
+                            bike: getScore(best.bk, 'bk'),
+                            run: getScore(best.rn, 'rn')
+                        };
+                        const card = document.createElement('div');
+                        card.className = "bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group";
+                        card.onclick = () => highlightAthlete(best);
+                        card.title = "클릭하여 차트에서 하이라이트";
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start mb-2 pb-1 border-b border-slate-200">
+                                <div>
+                                <span class="text-xs font-bold ${cat.color} uppercase tracking-tighter group-hover:text-red-500 transition-colors">${cat.label}</span>
+                                    <div class="mt-1 flex items-baseline gap-1">
+                                        <span class="font-black text-sm text-slate-800">${best.n}</span>
+                                        <span class="text-[10px] text-slate-400 truncate max-w-[80px] group-hover:text-slate-500">(${best.raceName||''})</span>
+                                    </div>
+                                </div>
+                                <div class="text-right flex-shrink-0 pl-2">
+                                    <span class="font-black text-lg text-slate-800">${sToHms(minVal)}</span>
+                                    <span class="block text-[10px] font-mono text-slate-400">#${best.b}</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 text-center text-xs mt-2 gap-1">
+                                <div>
+                                    <div class="text-slate-400 font-bold">Swim</div>
+                                    <div class="font-bold text-slate-700 text-sm mt-0.5">${sToHms(best.s)}</div>
+                                    <div class="font-bold text-blue-500 mt-1">${scores.swim.toFixed(0)} <span class="text-slate-400 font-normal text-[10px]">pts</span></div>
+                                </div>
+                                <div><div class="text-slate-400 font-bold">Bike</div><div class="font-bold text-slate-700 text-sm mt-0.5">${sToHms(best.bk)}</div><div class="font-bold text-green-500 mt-1">${scores.bike.toFixed(0)} <span class="text-slate-400 font-normal text-[10px]">pts</span></div></div>
+                                <div><div class="text-slate-400 font-bold">Run</div><div class="font-bold text-slate-700 text-sm mt-0.5">${sToHms(best.rn)}</div><div class="font-bold text-orange-500 mt-1">${scores.run.toFixed(0)} <span class="text-slate-400 font-normal text-[10px]">pts</span></div></div>
+                            </div>
+                        `;
+                        bestContainer.appendChild(card);
+                    }
+                });
+            }
 
             // --- Chart 1: Stacked Bar (시간 분포) ---
             charts.c1 = new Chart(document.getElementById('chart1'), {
@@ -318,41 +528,10 @@
                 }
             });
 
-            // --- Chart 4: Doughnut (평균 비중) ---
+            // --- Chart 5: Radar (전체 선수 밸런스) ---
             const avgS = data.reduce((a,b) => a + b.s, 0) / data.length;
             const avgBk = data.reduce((a,b) => a + b.bk, 0) / data.length;
             const avgRn = data.reduce((a,b) => a + b.rn, 0) / data.length;
-
-            charts.c4 = new Chart(document.getElementById('chart4'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Swim', 'Bike', 'Run'],
-                    datasets: [{
-                        data: [avgS, avgBk, avgRn],
-                        backgroundColor: [colors.swim, colors.bike, colors.run]
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => `${ctx.label}: ${sToHms(ctx.raw)}`
-                            }
-                        }
-                    } 
-                }
-            });
-
-            // --- Chart 5: Radar (전체 선수 밸런스) ---
-            const getScore = (val, k) => {
-                const arr = data.map(x => x[k]).filter(v => v > 0).sort((a,b)=>a-b);
-                if (arr.length === 0) return 0;
-                let idx = arr.findIndex(v => v >= val);
-                if (idx === -1) idx = arr.length;
-                return 100 - (idx / arr.length * 100);
-            };
 
             const radarDatasets = data.map((m, i) => {
                 const hue = (i * 137.5) % 360;
@@ -395,13 +574,41 @@
                         } 
                     },
                     plugins: {
+                        tooltip: { enabled: false },
                         legend: { position: 'bottom', labels: { font: { weight: 'bold', size: 11 } } }
+                    },
+                    onHover: (evt, elements, chart) => {
+                        if (elements && elements.length > 0) {
+                            const el = elements[0];
+                            const datasetIndex = el.datasetIndex;
+                            // '그룹 평균'은 데이터가 없으므로 제외
+                            if (datasetIndex >= data.length) {
+                                hideAthleteTooltip();
+                                return;
+                            }
+                            const athlete = data[datasetIndex];
+                            const scores = {
+                                swim: getScore(athlete.s, 's'),
+                                bike: getScore(athlete.bk, 'bk'),
+                                run: getScore(athlete.rn, 'rn')
+                            };
+                            const color = chart.data.datasets[datasetIndex].borderColor;
+                            const rect = chart.canvas.getBoundingClientRect();
+                            const clientX = evt?.native?.clientX || (rect.left + (evt.x || 0));
+                            const clientY = evt?.native?.clientY || (rect.top + (evt.y || 0));
+                            showAthleteTooltipAt(athlete, color, clientX + 8, clientY + 8, scores);
+                            return;
+                        }
+                        hideAthleteTooltip();
                     }
                 }
             });
         }
 
-        window.onload = () => switchTab('Olympic');
+        window.onload = () => {
+            renderSortChips();
+            switchTab('Olympic');
+        };
     </script>
 </body>
 </html>
