@@ -16,6 +16,7 @@
             --text-dark: #333;
             --white: #ffffff;
         }
+        .tab-active { border-bottom: 4px solid #2563eb; color: #2563eb; }
                 /* 슬라이드 메뉴 스타일 */
         .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
         .menu-overlay.is-active { opacity: 1; visibility: visible; }
@@ -87,6 +88,20 @@
             </div>
         </header>
 
+        <div class="relative max-w-lg mx-auto mb-8">
+            <input type="text" id="searchInput" 
+                class="w-full p-4 pl-12 rounded-full border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                placeholder="이름 (홍길동, Hong) 또는 배번호 또는 클럽명 검색...">
+            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl"></i>
+        </div>
+
+        <nav class="flex border-b border-slate-200 mb-8 bg-white rounded-t-2xl px-4 overflow-x-auto">
+            <button onclick="switchTab('Search')" id="tab-Search" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Search Result</button>
+            <button onclick="switchTab('Olympic')" id="tab-Olympic" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Olympic</button>
+            <button onclick="switchTab('Half')" id="tab-Half" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Half</button>
+            <button onclick="switchTab('Ironman')" id="tab-Ironman" class="tab-btn py-4 px-6 font-black text-sm uppercase tracking-wider transition-all">Ironman</button>
+        </nav>
+
         <div id="emptyState" class="hidden p-10 text-center text-slate-400 bg-white rounded-3xl shadow-lg border border-slate-200">
             <i class="fas fa-box-open text-5xl mb-4 text-slate-200"></i>
             <p>저장된 데이터가 없습니다.</p>
@@ -105,95 +120,228 @@
         };
         const sToMs = (s) => { if(s<=0) return "00:00"; const m=Math.floor(s/60), sec=Math.floor(s%60); return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
 
+        let currentTab = 'Search';
+        let allData = [];
+        const CHO_HANGUL = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+
+        async function loadAllData() {
+            try {
+                const res = await fetch('/data/all_records.json');
+                allData = await res.json();
+            } catch (e) {
+                console.error("데이터 로드 실패:", e);
+            }
+        }
+
+        function getKoreanRegex(searchStr) {
+            let regexStr = "";
+            for (let char of searchStr) {
+                if (/[가-힣]/.test(char)) {
+                    regexStr += char;
+                } else if (/[ㄱ-ㅎ]/.test(char)) {
+                    const choIndex = CHO_HANGUL.indexOf(char);
+                    if (choIndex > -1) {
+                        const begin = 0xAC00 + (choIndex * 588);
+                        const end = begin + 587;
+                        regexStr += `[${char}\\u${begin.toString(16)}-\\u${end.toString(16)}]`;
+                    } else {
+                        regexStr += char;
+                    }
+                } else {
+                    regexStr += char;
+                }
+            }
+            return new RegExp(regexStr, 'i');
+        }
+
+        function switchTab(type) {
+            currentTab = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById(`tab-${type}`).classList.add('tab-active');
+            
+            if (type === 'Search') {
+                renderSearchResults();
+            } else {
+                loadMemory();
+            }
+        }
+
+        function renderSearchResults() {
+            const val = document.getElementById('searchInput').value.trim();
+            const container = document.getElementById('tablesContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            emptyState.classList.add('hidden');
+            container.innerHTML = '';
+
+            if (val.length < 2) {
+                container.innerHTML = `<div class="p-20 text-center text-slate-400 bg-white rounded-3xl shadow-lg border border-slate-200">
+                    <i class="fas fa-search text-5xl mb-4 text-slate-200"></i>
+                    <p class="font-medium">검색어를 2글자 이상 입력하세요.</p>
+                </div>`;
+                return;
+            }
+
+            // 검색어 전처리: 소문자 변환 및 공백 제거 (searchKey 매칭용)
+            const searchVal = val.toLowerCase().replace(/\s/g, '');
+            const regex = getKoreanRegex(val);
+
+            const filtered = allData.filter(item => {
+                // 1. searchKey를 이용한 검색 (영문이름, 배번호, 로마자, 클럽명 포함)
+                if (item.searchKey && item.searchKey.includes(searchVal)) return true;
+
+                // 2. 한글 이름 검색 및 기존 필드 직접 검색 (searchKey에 한글이름 원본이 없을 수 있음)
+                if (regex.test(item.n)) return true;
+                if (item.n && item.n.toLowerCase().includes(val.toLowerCase())) return true;
+                if (item.c && item.c.toLowerCase().includes(val.toLowerCase())) return true; // 클럽명 직접 검색 추가
+                return false;
+            });
+
+            renderTable(filtered, 'Search');
+        }
+
         function loadMemory() {
             const memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             const emptyState = document.getElementById('emptyState');
             const container = document.getElementById('tablesContainer');
-            container.innerHTML = '';
 
-            const types = ['Olympic', 'Half', 'Ironman'];
-            
             if (memory.length === 0) {
+                container.innerHTML = '';
                 emptyState.classList.remove('hidden');
                 return;
             }
             emptyState.classList.add('hidden');
-            types.forEach(type => {
-                // Filter by type and sort by sortOrder
-                const items = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-                
-                const section = document.createElement('div');
-                section.innerHTML = `
-                    <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center">
-                        <i class="fas fa-layer-group mr-2 text-blue-600"></i>${type} 코스
-                        <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} Athletes</span>
-                    </h2>
-                    <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-black tracking-wider">
-                                        <th class="py-2 px-2">Year</th>
-                                        <th class="py-2 px-2">Race Name</th>
-                                        <th class="py-2 px-2">Bib</th>
-                                        <th class="py-2 px-2">Name</th>
-                                        <th class="py-2 px-2">Div</th>
-                                        <th class="py-2 px-2">Swim</th>
-                                        <th class="py-2 px-2">T1</th>
-                                        <th class="py-2 px-2">Bike</th>
-                                        <th class="py-2 px-2">T2</th>
-                                        <th class="py-2 px-2">Run</th>
-                                        <th class="py-2 px-2">Total</th>
-                                        <th class="py-2 px-2 text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-${type}" class="divide-y divide-slate-100 font-bold text-slate-700">
-                                </tbody>
-                            </table>
-                        </div>
-                        ${items.length === 0 ? '<div class="p-8 text-center text-slate-400 text-sm">데이터가 없습니다.</div>' : ''}
-                    </div>
-                `;
-                container.appendChild(section);
 
-                const tbody = section.querySelector(`#tbody-${type}`);
-                items.forEach((item, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors cursor-move select-none";
+            const type = currentTab;
+            const items = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+            renderTable(items, type);
+        }
+
+        function renderTable(items, type) {
+            const container = document.getElementById('tablesContainer');
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="p-20 text-center text-slate-400 bg-white rounded-3xl shadow-lg border border-slate-200">
+                    <i class="fas fa-${type === 'Search' ? 'search' : 'folder-open'} text-5xl mb-4 text-slate-200"></i>
+                    <p class="font-medium">${type === 'Search' ? '검색 결과가 없습니다.' : type + ' 코스에 저장된 데이터가 없습니다.'}</p>
+                </div>`;
+                return;
+            }
+
+            const memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+
+            const section = document.createElement('div');
+            section.innerHTML = `
+                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center">
+                    <i class="fas fa-layer-group mr-2 text-blue-600"></i>${type === 'Search' ? '검색 결과' : type + ' 코스'}
+                    <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} Athletes</span>
+                </h2>
+                <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-black tracking-wider">
+                                    <th class="py-3 px-4">Year</th>
+                                    <th class="py-3 px-4">Race Name</th>
+                                    <th class="py-3 px-4">Bib</th>
+                                    <th class="py-3 px-4">Name</th>
+                                    <th class="py-3 px-4">Div</th>
+                                    <th class="py-3 px-4">Swim</th>
+                                    <th class="py-3 px-4">T1</th>
+                                    <th class="py-3 px-4">Bike</th>
+                                    <th class="py-3 px-4">T2</th>
+                                    <th class="py-3 px-4">Run</th>
+                                    <th class="py-3 px-4">Total</th>
+                                    <th class="py-3 px-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-${type}" class="divide-y divide-slate-100 font-bold text-slate-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.appendChild(section);
+
+            const tbody = section.querySelector(`#tbody-${type}`);
+            items.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors select-none group " + (type !== 'Search' ? "cursor-move" : "");
+                if (type !== 'Search') {
                     tr.draggable = true;
-                    tr.dataset.type = type;
-                    tr.dataset.index = idx;
-                    
                     // Drag Events
                     tr.ondragstart = handleDragStart;
                     tr.ondragover = handleDragOver;
                     tr.ondrop = handleDrop;
+                }
+                tr.dataset.type = type;
+                tr.dataset.index = idx;
+                
 
-                    // 대회명 정제: 연도(4자리 숫자)와 'half' 단어 제거
-                    const cleanRaceName = (item.raceName || '').replace(/[0-9]{4}/g, '').replace(/half/gi, '').trim();
+                // 대회명 정제: 연도(4자리 숫자)와 'half' 단어 제거
+                const cleanRaceName = (item.raceName || '').replace(/[0-9]{4}/g, '').replace(/half/gi, '').trim();
 
-                    tr.innerHTML = `
-                        <td class="py-1 px-2 text-slate-500 font-mono text-xs">${item.raceYear || '-'}</td>
-                        <td class="py-1 px-2 text-slate-800 text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]" title="${item.raceName}">${cleanRaceName}</td>
-                        <td class="py-1 px-2 font-mono text-slate-500 text-xs">#${item.b}</td>
-                        <td class="py-1 px-2 text-sm text-slate-900 font-bold">${item.n}</td>
-                        <td class="py-1 px-2 text-[10px] uppercase text-slate-500 tracking-tight">${item.d}</td>
-                        <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.s)}</td>
-                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToMs(item.t1)}</td>
-                        <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.bk)}</td>
-                        <td class="py-1 px-2 text-[10px] text-slate-400 font-mono">${sToMs(item.t2)}</td>
-                        <td class="py-1 px-2 text-xs text-slate-600 font-mono">${sToHms(item.rn)}</td>
-                        <td class="py-1 px-2 font-black text-blue-600 font-mono text-sm">${sToHms(item.t)}</td>
-                        <td class="py-1 px-2 text-center">
-                            <button onclick="deleteItem('${item.savedAt}')" class="text-slate-400 hover:text-red-600 transition-colors p-1">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                // Action Button Logic
+                let actionBtn = '';
+                if (type === 'Search') {
+                    const isSaved = memory.some(m => m.raceName === item.raceName && m.b === item.b);
+                    if (isSaved) {
+                        actionBtn = `<button class="text-slate-300 cursor-not-allowed p-1" title="이미 저장됨"><i class="fas fa-check"></i></button>`;
+                    } else {
+                        // item 객체를 문자열로 변환할 때 따옴표 처리 주의
+                        const itemStr = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                        actionBtn = `<button onclick='addToMemory(${itemStr})' class="text-blue-500 hover:text-blue-700 transition-colors p-1" title="추가"><i class="fas fa-plus-circle"></i></button>`;
+                    }
+                } else {
+                    actionBtn = `<button onclick="deleteItem('${item.savedAt}')" class="text-slate-300 hover:text-red-600 transition-colors p-1 opacity-0 group-hover:opacity-100"><i class="fas fa-trash-alt"></i></button>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-slate-500 font-mono text-xs">${item.raceYear || '-'}</td>
+                    <td class="py-3 px-4 text-slate-800 text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]" title="${item.raceName}">${cleanRaceName}</td>
+                    <td class="py-3 px-4 font-mono text-slate-500 text-xs">#${item.b}</td>
+                    <td class="py-3 px-4 text-sm text-slate-900 font-bold">${item.n}</td>
+                    <td class="py-3 px-4 text-[10px] uppercase text-slate-500 tracking-tight">${item.d}</td>
+                    <td class="py-3 px-4 text-xs text-slate-600 font-mono">${sToHms(item.s)}</td>
+                    <td class="py-3 px-4 text-[10px] text-slate-400 font-mono">${sToMs(item.t1)}</td>
+                    <td class="py-3 px-4 text-xs text-slate-600 font-mono">${sToHms(item.bk)}</td>
+                    <td class="py-3 px-4 text-[10px] text-slate-400 font-mono">${sToMs(item.t2)}</td>
+                    <td class="py-3 px-4 text-xs text-slate-600 font-mono">${sToHms(item.rn)}</td>
+                    <td class="py-3 px-4 font-black text-blue-600 font-mono text-sm">${sToHms(item.t)}</td>
+                    <td class="py-3 px-4 text-center">
+                        ${actionBtn}
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
-        };
+        }
+
+        function addToMemory(item) {
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            
+            // 중복 체크
+            if (memory.some(m => m.raceName === item.raceName && m.b === item.b)) {
+                alert("이미 저장된 데이터입니다.");
+                return;
+            }
+
+            const sameTypeItems = memory.filter(m => m.raceType === item.raceType);
+            const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+            
+            const memoryItem = {
+                ...item,
+                sortOrder: maxOrder + 1,
+                savedAt: new Date().toISOString()
+            };
+
+            memory.push(memoryItem);
+            localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+            
+            // 현재 검색 결과 탭 갱신 (버튼 상태 업데이트를 위해)
+            renderSearchResults();
+        }
 
         let dragSrcEl = null;
 
@@ -292,7 +440,15 @@
             reader.readAsText(file);
         }
 
-        window.onload = loadMemory;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            if (currentTab !== 'Search') {
+                switchTab('Search');
+            } else {
+                renderSearchResults();
+            }
+        });
+
+        window.onload = () => { loadAllData(); switchTab('Search'); };
     </script>
 </body>
 </html>

@@ -195,6 +195,7 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
                     b: findCol(['b', 'bib', 'no', 'number', '배번호']) || 'b',
                     n: findCol(['n', 'name', 'athlete', 'user', '한글이름', '이름']) || 'n',
                     d: findCol(['category', 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
+                    c: findCol(['state', 'club', 'team', '소속', '클럽']) || 'State',
                     ss: findCol(['startswim']),
                     fs: findCol(['finishswim']),
                     sb: findCol(['startbike']),
@@ -209,6 +210,7 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
                     b: findCol(['b', 'bib', 'no', 'number', '배번호']) || 'b',
                     n: findCol(['n', 'name', 'athlete', 'user', '한글이름', '이름']) || 'n',
                     d: findCol(['category', 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
+                    c: findCol(['state', 'club', 'team', '소속', '클럽']) || 'State',
                     s: findCol(['swim', 's', 'finishswim', '수영']) || 's',
                     t1: findCol(['t1', 'trans1', 'startbike']) || 't1',
                     bk: findCol(['bike', 'cycle', 'b1', 'bk', 'finishbike', '사이클']) || 'bk',
@@ -249,6 +251,7 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
                     b: item[map.b],
                     n: item[map.n],
                     d: item[map.d],
+                    c: item[map.c],
                     s: s,
                     t1: t1,
                     bk: bk,
@@ -276,15 +279,16 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
 const optimizedRecords = allRecords.map(record => {
     // 검색 정규화: 소문자 + 공백제거
     const n = (record.n || "").toLowerCase().replace(/[^a-z0-9]/g, '');
-    const bib = (record.bib || "");
+    const bib = (record.bib || record.b || "");
     
     // 로마자 변환된 한글 이름도 검색 키에 포함 (예: "HongGilDong")
-    const romanizedKr = romanize(n);
+    const romanizedKr = romanize(record.n);
+    const club = (record.c || "").toLowerCase().replace(/\s/g, '');
 
     return {
         ...record,
-        // 검색 키: [영어이름] | [한글이름] | [배번호] | [한글발음로마자]
-        searchKey: `${n}|${bib}|${romanizedKr}`
+        // 검색 키: [영어이름] | [한글이름] | [배번호] | [한글발음로마자] | [클럽명]
+        searchKey: `${n}|${bib}|${romanizedKr}|${club}`
     };
 }); 
 
