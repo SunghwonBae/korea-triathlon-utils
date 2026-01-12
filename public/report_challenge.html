@@ -1563,7 +1563,10 @@
 
             let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             
-            if (memory.some(m => m.b === athlete.b && m.raceName === fullTitle)) {
+            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '');
+
+
+            if (memory.some(m => m.b === athlete.b && normalize(m.raceName) === normalize(fullTitle))) {
                 return showToast("이미 저장된 데이터입니다.");
             }
 
