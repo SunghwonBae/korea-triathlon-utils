@@ -1476,7 +1476,7 @@
 
             let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             
-            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '');
+            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
 
 
             if (memory.some(m => m.b === athlete.b && normalize(m.raceName) === normalize(fullTitle))) {

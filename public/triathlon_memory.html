@@ -105,7 +105,7 @@
             </div>
             <div id="searchTagsArea" class="flex flex-wrap gap-2 mt-3 empty:hidden"></div>
             <p class="text-xs text-slate-400 mt-2 ml-1">
-                <i class="fas fa-info-circle mr-1"></i> + 버튼을 켜면 검색 결과가 누적됩니다. (검색어 입력 후 Enter, 최대 10개) <span class="ml-2 text-red-400 font-bold">* 검색결과는 최대 500건으로 제한됩니다.</span>
+                <i class="fas fa-info-circle mr-1"></i> + 버튼을 켜면 검색 결과가 누적됩니다. (검색어 입력 후 Enter, 최대 10개) <br><span class="ml-2 text-red-400 font-bold">* 검색결과는 최대 500건으로 제한됩니다.</span>
             </p>
         </div>
 
@@ -133,6 +133,18 @@
             return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; 
         };
         const sToMs = (s) => { if(s<=0) return "00:00"; const m=Math.floor(s/60), sec=Math.floor(s%60); return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
+
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
 
         let currentTab = 'Search';
         let allData = [];
@@ -225,18 +237,18 @@
 
         function addSearchTag(keyword) {
             if (searchTags.length >= 10) {
-                alert('최대 10개까지만 추가할 수 있습니다.');
+                showToast('최대 10개까지만 추가할 수 있습니다.');
                 return;
             }
             if (searchTags.some(t => t.keyword === keyword)) {
-                alert('이미 추가된 검색어입니다.');
+                showToast('이미 추가된 검색어입니다.');
                 return;
             }
 
             const results = performSearch(keyword);
             
             if (results.length === 0) {
-                alert('검색 결과가 없습니다.');
+                showToast('검색 결과가 없습니다.');
                 return;
             }
 
@@ -429,11 +441,11 @@
         function addToMemory(item) {
             let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             
-            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '');
+            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
 
             // 중복 체크
             if (memory.some(m => normalize(m.raceName) === normalize(item.raceName) && m.b === item.b)) {
-                alert("이미 저장된 데이터입니다.");
+                showToast("이미 저장된 데이터입니다.");
                 return;
             }
 
@@ -455,14 +467,14 @@
 
         function saveAllSearchResults() {
             if (!currentSearchResults || currentSearchResults.length === 0) {
-                alert("저장할 검색 결과가 없습니다.");
+                showToast("저장할 검색 결과가 없습니다.");
                 return;
             }
 
             let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             let addedCount = 0;
 
-            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '');
+            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
 
             currentSearchResults.forEach(item => {
                 if (!memory.some(m => normalize(m.raceName) === normalize(item.raceName) && m.b === item.b)) {
@@ -477,10 +489,10 @@
 
             if (addedCount > 0) {
                 localStorage.setItem('triathlon_memory', JSON.stringify(memory));
-                alert(`${addedCount}건의 데이터가 T-Memory에 저장되었습니다.`);
+                showToast(`${addedCount}건의 데이터가 T-Memory에 저장되었습니다.`);
                 renderSearchResults();
             } else {
-                alert("모든 데이터가 이미 저장되어 있습니다.");
+                showToast("모든 데이터가 이미 저장되어 있습니다.");
             }
         }
 
@@ -528,7 +540,7 @@
         function exportData() {
             const data = localStorage.getItem('triathlon_memory');
             if (!data || data === '[]') {
-                alert('내보낼 데이터가 없습니다.');
+                showToast('내보낼 데이터가 없습니다.');
                 return;
             }
             const blob = new Blob([data], { type: 'application/json' });
@@ -572,9 +584,9 @@
                     
                     localStorage.setItem('triathlon_memory', JSON.stringify(current));
                     loadMemory();
-                    alert(`${addedCount}개의 데이터가 복구되었습니다.`);
+                    showToast(`${addedCount}개의 데이터가 복구되었습니다.`);
                 } catch (err) {
-                    alert('오류: ' + err.message);
+                    showToast('오류: ' + err.message);
                 }
                 event.target.value = ''; // Reset input
             };
@@ -589,7 +601,7 @@
                     addSearchTag(val);
                     e.target.value = '';
                 } else {
-                    alert('검색어를 2글자 이상 입력하세요.');
+                    showToast('검색어를 2글자 이상 입력하세요.');
                 }
             }
         });
