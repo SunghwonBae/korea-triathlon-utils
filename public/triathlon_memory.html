@@ -367,11 +367,11 @@
                                     <th class="py-3 px-4">Race Name</th>
                                     <th class="py-3 px-4">Bib</th>
                                     <th class="py-3 px-4">Name</th>
-                                    <th class="py-3 px-4">Div</th>
+                                    <th class="py-3 px-4 hidden md:table-cell">Div</th>
                                     <th class="py-3 px-4">Swim</th>
-                                    <th class="py-3 px-4">T1</th>
+                                    <th class="py-3 px-4 hidden md:table-cell">T1</th>
                                     <th class="py-3 px-4">Bike</th>
-                                    <th class="py-3 px-4">T2</th>
+                                    <th class="py-3 px-4 hidden md:table-cell">T2</th>
                                     <th class="py-3 px-4">Run</th>
                                     <th class="py-3 px-4">Total</th>
                                     <th class="py-3 px-4 text-center">${actionHeader}</th>
@@ -415,7 +415,7 @@
                         actionBtn = `<button onclick='addToMemory(${itemStr})' class="text-blue-500 hover:text-blue-700 transition-colors p-1" title="추가"><i class="fas fa-plus-circle"></i></button>`;
                     }
                 } else {
-                    actionBtn = `<button onclick="deleteItem('${item.savedAt}')" class="text-slate-300 hover:text-red-600 transition-colors p-1 opacity-0 group-hover:opacity-100"><i class="fas fa-trash-alt"></i></button>`;
+                    actionBtn = `<button onclick="deleteItem('${item.savedAt}')" class="text-slate-400 hover:text-red-600 transition-colors p-1"><i class="fas fa-trash-alt"></i></button>`;
                 }
 
                 tr.innerHTML = `
@@ -423,11 +423,11 @@
                     <td class="py-3 px-4 text-slate-800 text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]" title="${item.raceName}">${cleanRaceName}</td>
                     <td class="py-3 px-4 font-mono text-slate-500 text-xs">#${item.b}</td>
                     <td class="py-3 px-4 text-sm text-slate-900 font-bold">${item.n}</td>
-                    <td class="py-3 px-4 text-[10px] uppercase text-slate-500 tracking-tight">${item.d}</td>
+                    <td class="py-3 px-4 text-[10px] uppercase text-slate-500 tracking-tight hidden md:table-cell">${item.d}</td>
                     <td class="py-3 px-4 text-xs text-slate-600 font-mono">${sToHms(item.s)}</td>
-                    <td class="py-3 px-4 text-[10px] text-slate-400 font-mono">${sToMs(item.t1)}</td>
+                    <td class="py-3 px-4 text-[10px] text-slate-400 font-mono hidden md:table-cell">${sToMs(item.t1)}</td>
                     <td class="py-3 px-4 text-xs text-slate-600 font-mono">${sToHms(item.bk)}</td>
-                    <td class="py-3 px-4 text-[10px] text-slate-400 font-mono">${sToMs(item.t2)}</td>
+                    <td class="py-3 px-4 text-[10px] text-slate-400 font-mono hidden md:table-cell">${sToMs(item.t2)}</td>
                     <td class="py-3 px-4 text-xs text-slate-600 font-mono">${sToHms(item.rn)}</td>
                     <td class="py-3 px-4 font-black text-blue-600 font-mono text-sm">${sToHms(item.t)}</td>
                     <td class="py-3 px-4 text-center">

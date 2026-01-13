@@ -42,7 +42,6 @@
             header { flex-direction: column; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem !important; }
             header > div:first-child { width: 100%; padding-top: 0; padding-left: 3.5rem; }
             h1.text-3xl { font-size: 1.75rem !important; line-height: 1.2; }
-            .chart-container { height: 250px !important; }
             .tab-btn { padding: 1rem 1rem !important; font-size: 0.8rem !important; }
             .slide-menu { width: 85% !important; left: -85% !important; }
             .slide-menu.is-active { left: 0 !important; }
@@ -149,14 +148,63 @@
             { key: 'n', label: '선수명', dir: 'asc' }
         ];
 
+        let touchDragSrcEl = null;
+
+        function handleTouchStart(e) {
+            // prevent long press from showing context menu and scrolling
+            e.preventDefault();
+            touchDragSrcEl = e.currentTarget;
+            touchDragSrcEl.classList.add('opacity-50', 'ring-2', 'ring-blue-500', 'z-10', 'scale-105');
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!touchDragSrcEl) return;
+
+            const touch = e.touches[0];
+            const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            const dropTarget = targetEl ? targetEl.closest('.sort-chip') : null;
+
+            if (dropTarget && dropTarget !== touchDragSrcEl) {
+                const container = document.getElementById('sort-container');
+                const rect = dropTarget.getBoundingClientRect();
+                const isAfter = (touch.clientX > rect.left + rect.width / 2);
+                
+                if (isAfter) {
+                    container.insertBefore(touchDragSrcEl, dropTarget.nextSibling);
+                } else {
+                    container.insertBefore(touchDragSrcEl, dropTarget);
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchDragSrcEl) return;
+            touchDragSrcEl.classList.remove('opacity-50', 'ring-2', 'ring-blue-500', 'z-10', 'scale-105');
+            
+            const container = document.getElementById('sort-container');
+            const chips = Array.from(container.querySelectorAll('.sort-chip'));
+            const newOrderKeys = chips.map(chip => chip.dataset.key);
+            const configMap = new Map(currentSortConfig.map(item => [item.key, item]));
+            currentSortConfig = newOrderKeys.map(key => configMap.get(key));
+            
+            renderSortChips();
+            const activeTab = document.querySelector('.tab-active');
+            if(activeTab) renderCharts(activeTab.id.replace('tab-', ''));
+
+            touchDragSrcEl = null;
+        }
+
         function renderSortChips() {
             const container = document.getElementById('sort-container');
             if (!container) return;
             container.innerHTML = '';
             currentSortConfig.forEach((item, index) => {
                 const chip = document.createElement('div');
-                chip.className = "flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 cursor-move hover:bg-slate-100 hover:border-blue-300 transition-all select-none";
+                chip.className = "sort-chip flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 cursor-move hover:bg-slate-100 hover:border-blue-300 transition-all select-none";
                 chip.draggable = true;
+                chip.dataset.key = item.key;
                 chip.innerHTML = `
                     <span>${item.label}</span>
                     <button onclick="toggleSortDir(${index})" class="text-blue-500 hover:text-blue-700 focus:outline-none" title="정렬 방향 변경">
@@ -186,6 +234,11 @@
                     }
                 };
                 container.appendChild(chip);
+
+                // Touch events for mobile
+                chip.addEventListener('touchstart', handleTouchStart, { passive: false });
+                chip.addEventListener('touchmove', handleTouchMove, { passive: false });
+                chip.addEventListener('touchend', handleTouchEnd);
             });
         }
 
