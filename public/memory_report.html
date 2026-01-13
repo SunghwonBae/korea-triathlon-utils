@@ -157,15 +157,18 @@
         let touchDragSrcEl = null;
 
         function handleTouchStart(e) {
+            // 화살표 버튼 터치 시 드래그 방지 및 클릭 허용
+            if (e.target.closest('button')) return;
+
             // prevent long press from showing context menu and scrolling
-            e.preventDefault();
+            if (e.cancelable) e.preventDefault();
             touchDragSrcEl = e.currentTarget;
             touchDragSrcEl.classList.add('opacity-50', 'ring-2', 'ring-blue-500', 'z-10', 'scale-105');
         }
 
         function handleTouchMove(e) {
-            e.preventDefault();
             if (!touchDragSrcEl) return;
+            if (e.cancelable) e.preventDefault();
 
             const touch = e.touches[0];
             const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);

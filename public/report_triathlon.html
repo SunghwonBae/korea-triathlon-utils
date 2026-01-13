@@ -193,6 +193,10 @@
                 <h3 class="font-black text-slate-800 text-lg"><i class="fas fa-search mr-2 text-blue-600"></i>검색 결과 선택</h3>
                 <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-600 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
+            <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex gap-2 justify-end">
+                <button onclick="addAllToCompare()" class="bg-blue-100 text-blue-600 text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-200 transition-colors">전체비교추가</button>
+                <button onclick="saveAllToMemory()" class="bg-slate-200 text-slate-600 text-xs px-3 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors">전체저장</button>
+            </div>
             <div id="searchResultList" class="max-h-[60vh] overflow-y-auto p-2 space-y-2 bg-slate-50/50">
                 <!-- 검색 결과 리스트 주입 -->
             </div>
@@ -217,7 +221,7 @@
                 <div class="flex-1 flex gap-3 w-full">
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="searchBox" placeholder="이름 또는 배번 입력 후 Enter" onkeydown="if (event.key === 'Enter') performSearch(this.value);" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white font-bold transition-all">
+                        <input type="text" id="searchBox" placeholder="이름 또는 배번 또는 클럽명 입력 후 Enter" onkeydown="if (event.key === 'Enter') performSearch(this.value);" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white font-bold transition-all">
                     </div>
                     <button id="addMeBtn" onclick="handleAddMeClick()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-black transition-all">분석기준선수로 등록</button>
                     <button id="addCompareBtn" onclick="handleAddCompareClick()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-blue-700 transition-all">비교군 추가</button>
@@ -359,7 +363,7 @@
                         <!-- 검색창 -->
                         <div class="relative mb-4">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="tableSearch" placeholder="이름(한글/영문) 또는 배번 검색 (예: 홍길동, 123)" 
+                            <input type="text" id="tableSearch" placeholder="이름(한글/영문) 또는 배번 또는 클럽명 검색 (예: 홍길동, 123, 부천트라이)" 
                                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-bold text-slate-700">
                         </div>
                         
@@ -454,7 +458,7 @@
     </div>
 
     <script>
-        let raceData = null; let filteredData = null; let filterReason = ""; let me = null; let competitors = []; let charts = {};
+        let raceData = null; let filteredData = null; let filterReason = ""; let me = null; let competitors = []; let charts = {}; let currentSearchResults = [];
         let currentSort = { col: 'ro', dir: 'asc' };
         let currentPage = 1; const pageSize = 50;
         const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
@@ -1223,12 +1227,13 @@
             const matches = raceData.filter(p => {
                 const b = String(p.b).toLowerCase();
                 const n = p.n.toLowerCase();
-                return b.includes(term) || n.includes(term) || (koRegex && koRegex.test(p.n));
+                const c = p.c ? p.c.toLowerCase() : '';
+                return b.includes(term) || n.includes(term)  || c.includes(term) || (koRegex && koRegex.test(p.n));
             });
 
             if (matches.length === 0) {
                 showToast("검색 결과가 없습니다.");
-            } else if (matches.length > 20) {
+            } else if (matches.length > 40) {
                 showToast("검색결과가 너무많습니다. 다른검색어로 재검색해보세요.");
             } else if (matches.length === 1) {
                 const p = matches[0];
@@ -1242,6 +1247,7 @@
         function showSearchModal(list) {
             const container = document.getElementById('searchResultList');
             container.innerHTML = '';
+            currentSearchResults = list;
             const isDown = window.isDownloaded;
             list.forEach(p => {
                 const div = document.createElement('div');
@@ -1273,6 +1279,55 @@
                 container.appendChild(div);
             });
             document.getElementById('searchResultModal').classList.remove('hidden');
+        }
+
+        function addAllToCompare() {
+            if (!currentSearchResults || currentSearchResults.length === 0) return;
+            let count = 0;
+            currentSearchResults.forEach(p => {
+                if (me && me.b === p.b) return;
+                if (competitors.find(c => c.b === p.b)) return;
+                competitors.push(p);
+                count++;
+            });
+            if (count > 0) {
+                updateAthleteList();
+                updateDashboard();
+                showToast(`${count}명 비교군 추가 완료`);
+                closeSearchModal();
+            } else {
+                showToast("추가할 선수가 없습니다.");
+            }
+        }
+
+        function saveAllToMemory() {
+            if (!currentSearchResults || currentSearchResults.length === 0) return;
+            let count = 0;
+            const fullTitle = document.getElementById('raceTitleDisplay').innerText || "Unknown Race";
+            const yearMatch = fullTitle.match(/\d{4}/);
+            const raceYear = yearMatch ? yearMatch[0] : new Date().getFullYear().toString();
+            let raceType = 'Olympic';
+            if (raceDistances.swim > 1800) raceType = 'Half';
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
+
+            currentSearchResults.forEach(athlete => {
+                if (memory.some(m => m.b === athlete.b && normalize(m.raceName) === normalize(fullTitle))) return;
+                const sameTypeItems = memory.filter(m => m.raceType === raceType);
+                const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+                const sortOrder = maxOrder + 1 + count;
+                const memoryItem = { ...athlete, raceName: fullTitle, raceYear: raceYear, raceType: raceType, sortOrder: sortOrder, savedAt: new Date().toISOString() };
+                memory.push(memoryItem);
+                count++;
+            });
+
+            if (count > 0) {
+                localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+                showToast(`${count}명 T-Memory 저장 완료`);
+                closeSearchModal();
+            } else {
+                showToast("이미 저장된 선수들입니다.");
+            }
         }
 
         function closeSearchModal() { document.getElementById('searchResultModal').classList.add('hidden'); }
@@ -1436,6 +1491,8 @@
                 if (searchVal) {
                     // 배번 검색
                     if (p.b.toLowerCase().includes(searchVal)) return true;
+                    // 단체명 검색
+                    if (p.c.toLowerCase().includes(searchVal)) return true;
                     // 영문 이름 검색
                     if (p.n.toLowerCase().includes(searchVal)) return true;
                     // 한글 발음 검색

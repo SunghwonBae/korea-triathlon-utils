@@ -193,6 +193,10 @@
                 <h3 class="font-black text-slate-800 text-lg"><i class="fas fa-search mr-2 text-red-600"></i>검색 결과 선택</h3>
                 <button onclick="closeSearchModal()" class="text-slate-400 hover:text-slate-600 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
+            <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex gap-2 justify-end">
+                <button onclick="addAllToCompare()" class="bg-blue-100 text-blue-600 text-xs px-3 py-2 rounded-lg font-bold hover:bg-blue-200 transition-colors">전체비교추가</button>
+                <button onclick="saveAllToMemory()" class="bg-slate-200 text-slate-600 text-xs px-3 py-2 rounded-lg font-bold hover:bg-slate-300 transition-colors">전체저장</button>
+            </div>
             <div id="searchResultList" class="max-h-[60vh] overflow-y-auto p-2 space-y-2 bg-slate-50/50">
                 <!-- 검색 결과 리스트 주입 -->
             </div>
@@ -454,7 +458,7 @@
     </div>
 
     <script>
-        let raceData = null; let filteredData = null; let filterReason = ""; let me = null; let competitors = []; let charts = {};
+        let raceData = null; let filteredData = null; let filterReason = ""; let me = null; let competitors = []; let charts = {}; let currentSearchResults = [];
         let currentSort = { col: 'ro', dir: 'asc' };
         let currentPage = 1; const pageSize = 50;
         const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899'];
@@ -1485,6 +1489,7 @@
         function showSearchModal(list) {
             const container = document.getElementById('searchResultList');
             container.innerHTML = '';
+            currentSearchResults = list;
             
             const isDown = window.isDownloaded;
 
@@ -1518,6 +1523,55 @@
                 container.appendChild(div);
             });
             document.getElementById('searchResultModal').classList.remove('hidden');
+        }
+
+        function addAllToCompare() {
+            if (!currentSearchResults || currentSearchResults.length === 0) return;
+            let count = 0;
+            currentSearchResults.forEach(p => {
+                if (me && me.b === p.b) return;
+                if (competitors.find(c => c.b === p.b)) return;
+                competitors.push(p);
+                count++;
+            });
+            if (count > 0) {
+                updateAthleteList();
+                updateDashboard();
+                showToast(`${count}명 비교군 추가 완료`);
+                closeSearchModal();
+            } else {
+                showToast("추가할 선수가 없습니다.");
+            }
+        }
+
+        function saveAllToMemory() {
+            if (!currentSearchResults || currentSearchResults.length === 0) return;
+            let count = 0;
+            const fullTitle = document.getElementById('raceTitleDisplay').innerText || "Unknown Race";
+            const yearMatch = fullTitle.match(/\d{4}/);
+            const raceYear = yearMatch ? yearMatch[0] : new Date().getFullYear().toString();
+            let raceType = 'Ironman';
+            if (raceDistances.swim < 3000) raceType = 'Half';
+            let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
+
+            currentSearchResults.forEach(athlete => {
+                if (memory.some(m => m.b === athlete.b && normalize(m.raceName) === normalize(fullTitle))) return;
+                const sameTypeItems = memory.filter(m => m.raceType === raceType);
+                const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+                const sortOrder = maxOrder + 1 + count;
+                const memoryItem = { ...athlete, raceName: fullTitle, raceYear: raceYear, raceType: raceType, sortOrder: sortOrder, savedAt: new Date().toISOString() };
+                memory.push(memoryItem);
+                count++;
+            });
+
+            if (count > 0) {
+                localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+                showToast(`${count}명 T-Memory 저장 완료`);
+                closeSearchModal();
+            } else {
+                showToast("이미 저장된 선수들입니다.");
+            }
         }
 
         function closeSearchModal() { document.getElementById('searchResultModal').classList.add('hidden'); }

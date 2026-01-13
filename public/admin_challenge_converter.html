@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Challenge Gunsan Unified Parser (2022-2025)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -28,9 +29,9 @@
         </div>
         
         <label class="block w-full cursor-pointer bg-slate-50 border-4 border-dashed border-slate-200 rounded-3xl p-12 hover:border-blue-500 hover:bg-blue-50/30 transition-all group">
-            <input type="file" id="pdfInput" accept=".pdf,.csv" class="hidden" />
+            <input type="file" id="pdfInput" accept=".pdf,.csv,.xls,.xlsx" class="hidden" />
             <i class="fas fa-cloud-upload-alt text-5xl text-slate-300 group-hover:text-blue-500 mb-4 transition-colors"></i>
-            <span class="block font-bold text-slate-700 text-lg mb-1">PDF/CSV 파일 선택</span>
+            <span class="block font-bold text-slate-700 text-lg mb-1">PDF/CSV/Excel 파일 선택</span>
             <p id="fileLabel" class="text-sm text-slate-400">클릭하거나 파일을 여기로 드래그하세요</p>
         </label>
 
@@ -44,6 +45,23 @@
     <script>
         // PDF.js 워커 설정
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        function downloadJSON(data, originalFilename) {
+            if (!data || data.length === 0) {
+                throw new Error("추출된 데이터가 없습니다. 파일 내용을 확인해주세요.");
+            }
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            
+            const isHalf = originalFilename.toLowerCase().includes("half");
+            const yearMatch = originalFilename.match(/202\d/);
+            const yearVal = yearMatch ? yearMatch[0] : "data";
+
+            a.download = isHalf ? `challenge-gunsan_half_${yearVal}.json` : `challenge-gunsan_${yearVal}.json`;
+            a.click();
+            document.getElementById('status').innerText = `성공! ${data.length}건 다운로드됨.`;
+        }
 
         // --- 필드 정의 영역 ---
         
@@ -88,6 +106,8 @@
         // 3. 2022년 전용 키 (10개)
         const KEYS_2022 = ["Bib", "FirstName", "FamilyName", "PlaceCat", "RaceTime", "Swim", "T1", "Bike", "T2", "Run"];
 
+        const KEYS_2024 = ["순위", "배번호", "이름", "단체", "종목", "부문", "nationality", "성별", "칩타임", "Stage1", "T1", "Stage2", "T2", "Stage3", "status"];
+
         document.getElementById('pdfInput').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -102,49 +122,63 @@
             let results = [];
 
             try {
-                // --- [CASE 1] CSV 파일 처리 (2024년 등) ---
-                if (ext === 'csv') {
+                if (ext === 'xls' || ext === 'xlsx') {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = XLSX.read(new Uint8Array(arrayBuffer), {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: "" });
+
+                    const yearMatch = file.name.match(/202\d/);
+                    const year = yearMatch ? yearMatch[0] : null;
+
+                    if (!year) {
+                        throw new Error("파일명에서 연도를 찾을 수 없습니다 (예: challenge_2023.xlsx).");
+                    }
+
+                    const isHalf = file.name.toLowerCase().includes("half");
+                    let keys;
+                    if (year === '2022') keys = KEYS_2022;
+                    else if (year === '2023') keys = isHalf ? KEYS_HALF_2023 : KEYS_2023;
+                    else if (year === '2024') keys = KEYS_2024;
+                    else if (year === '2025') keys = KEYS_HALF_DETAILED ;
+                    else throw new Error(year + "년에 해당하는 키 정의가 없습니다.");
+                    
+                    const dataRows = sheetData.slice(1); // 헤더 제외
+
+                    results = dataRows.map(row => {
+                        if (row.length < 5 || row.some(cell => typeof cell === 'string' && (cell.includes("DNS") || cell.includes("DNF")))) {
+                            return null;
+                        }
+                        let record = { year: year };
+                        let textIndex = 0;
+                        keys.forEach((key) => {
+                            if (key.endsWith('-null')) {
+                                record[key] = "";
+                            } else {
+                                record[key] = row[textIndex] || "";
+                                textIndex++;
+                            }
+                        });
+                        return record;
+                    }).filter(Boolean);
+
+                } else if (ext === 'csv') {
                     const text = await file.text();
                     const lines = text.trim().split(/\r?\n/);
-                    
-                    const parseCSVLine = (line) => {
-                        const res = [];
-                        let current = '';
-                        let inQuote = false;
-                        for(let i=0; i<line.length; i++) {
-                            const char = line[i];
-                            if(char === '"') inQuote = !inQuote;
-                            else if(char === ',' && !inQuote) { res.push(current.trim()); current = ''; }
-                            else current += char;
-                        }
-                        res.push(current.trim());
-                        return res.map(f => f.replace(/^"|"$/g, '').trim());
-                    };
+                    const yearMatch = file.name.match(/202\d/);
+                    const year = yearMatch ? yearMatch[0] : "2024";
+                    const keys = KEYS_2024;
 
-                    for (let i = 1; i < lines.length; i++) {
-                        const cols = parseCSVLine(lines[i]);
-                        if (cols.length < 5) continue; 
-                        // DNS/DNF 제외
-                        if (cols.some(c => c.includes("DNS") || c.includes("DNF"))) continue;
+                    results = lines.slice(1).map(line => {
+                        const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                        if (cols.length < 5 || cols.some(c => c.includes("DNS") || c.includes("DNF"))) return null;
+                        let record = { year: year };
+                        keys.forEach((key, index) => { record[key] = cols[index] || ""; });
+                        return record;
+                    }).filter(Boolean);
 
-                        results.push({
-                            year: "2024",
-                            Rank: cols[0],
-                            Bib: cols[1],
-                            Name: cols[2],
-                            Category: cols[3],
-                            Gender: cols[4],
-                            RaceTime: cols[5],
-                            Swim: cols[6],
-                            T1: cols[7],
-                            Bike: cols[8],
-                            T2: cols[9],
-                            Run: cols[10]
-                        });
-                    }
-                } 
-                // --- [CASE 2] PDF 파일 처리 (2022, 2023, 2025) ---
-                else {
+                } else { // PDF
                     const is2023 = file.name.includes("2023");
                     const is2025 = file.name.includes("2025");
                     const isHalf = file.name.toLowerCase().includes("half");
@@ -303,29 +337,7 @@
                     }
                 }
 
-                if (results.length === 0) {
-                    alert("추출된 데이터가 없습니다. 파일 내용을 확인해주세요.");
-                    document.getElementById('status').innerText = "추출 실패";
-                    return;
-                }
-
-                // 결과 다운로드
-                const blob = new Blob([JSON.stringify(results, null, 2)], {type: "application/json"});
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                
-                // 파일명 생성 규칙 변경
-                const isHalf = file.name.toLowerCase().includes("half");
-                let yearVal = "2022";
-                if (file.name.includes("2025")) yearVal = "2025";
-                else if (file.name.includes("2024")) yearVal = "2024";
-                else if (file.name.includes("2023")) yearVal = "2023";
-
-                a.download = isHalf ? `challenge-gunsan_half_${yearVal}.json` : `challenge-gunsan_${yearVal}.json`;
-                
-                a.click();
-                
-                document.getElementById('status').innerText = `성공! ${results.length}건 다운로드됨.`;
+                downloadJSON(results, file.name);
                 
             } catch (err) {
                 console.error(err);
