@@ -1124,12 +1124,40 @@
             };
             const datasets = athletes.map(a => ({
                 label: a.label, data: [getScore(a.data.s,'s'), getScore(a.data.bk,'bk'), getScore(a.data.rn,'rn')],
-                borderColor: a.color, backgroundColor: a.color + '1A', fill: true, borderWidth: 4, pointRadius: 4
+                borderColor: a.color, backgroundColor: a.color + '1A', fill: true, borderWidth: 4, pointRadius: 4,
+                rawAthlete: a.data
             }));
             if(charts.radar) charts.radar.destroy();
             charts.radar = new Chart(document.getElementById('radarChart'), { 
                 type:'radar', data:{ labels:['수영 점수','사이클 점수','런 점수'], datasets }, 
-                options:{ maintainAspectRatio:false, scales:{r:{min:0, max:100, ticks:{display:true, stepSize:20, backdropColor:'transparent'}, grid:{color:'#e2e8f0'}, angleLines:{color:'#e2e8f0'}}}, plugins:{legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}}} } 
+                options:{ 
+                    maintainAspectRatio:false, 
+                    scales:{r:{min:0, max:100, ticks:{display:true, stepSize:20, backdropColor:'transparent'}, grid:{color:'#e2e8f0'}, angleLines:{color:'#e2e8f0'}}}, 
+                    plugins:{
+                        legend:{position:'bottom', labels:{font:{weight:'bold', size:11}}},
+                        tooltip: { enabled: false }
+                    },
+                    onHover: (evt, elements, chart) => {
+                        if (elements && elements.length > 0) {
+                            const el = elements[0];
+                            const datasetIndex = el.datasetIndex;
+                            const dataset = chart.data.datasets[datasetIndex];
+                            const athlete = dataset.rawAthlete;
+                            const color = dataset.borderColor;
+                            const scores = {
+                                swim: getScore(athlete.s, 's'),
+                                bike: getScore(athlete.bk, 'bk'),
+                                run: getScore(athlete.rn, 'rn')
+                            };
+                            const rect = chart.canvas.getBoundingClientRect();
+                            const clientX = evt?.native?.clientX || (rect.left + (evt.x || 0));
+                            const clientY = evt?.native?.clientY || (rect.top + (evt.y || 0));
+                            showAthleteTooltipAt(athlete, color, clientX + 10, clientY + 10, scores);
+                        } else {
+                            hideAthleteTooltip();
+                        }
+                    }
+                } 
             });
         }
 
@@ -1275,8 +1303,22 @@
             if (!raceData) return;
             const a = raceData.find(x => x.b === bib);
             if (!a) return;
-            
+            const rect = el.getBoundingClientRect();
+            showAthleteTooltipAt(a, color, rect.left, rect.bottom + 8);
+        }
+
+        function showAthleteTooltipAt(a, color, clientX, clientY, scores) {
+            if (!a) return;
             const tooltip = document.getElementById('globalTooltip');
+            let scoreHtml = '';
+            if (scores) {
+                scoreHtml = `
+                <div class="mt-2 pt-2 border-t border-slate-100 grid grid-cols-3 text-center text-xs">
+                    <div><div class="text-slate-400">S.Score</div><div class="font-bold text-blue-500">${scores.swim.toFixed(0)}</div></div>
+                    <div><div class="text-slate-400">B.Score</div><div class="font-bold text-green-500">${scores.bike.toFixed(0)}</div></div>
+                    <div><div class="text-slate-400">R.Score</div><div class="font-bold text-orange-500">${scores.run.toFixed(0)}</div></div>
+                </div>`;
+            }
             tooltip.innerHTML = `
                 <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-1">
                     <span class="font-black text-sm" style="color:${color}">${a.n}</span>
@@ -1289,12 +1331,26 @@
                     <span>Bike: ${sToHms(a.bk)}</span>
                     <span>Run: ${sToHms(a.rn)}</span>
                 </div>
+                ${scoreHtml}
             `;
-            
-            const rect = el.getBoundingClientRect();
-            tooltip.style.left = rect.left + 'px';
-            tooltip.style.top = (rect.bottom + 8) + 'px';
             tooltip.classList.remove('hidden');
+
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            let left = clientX + 10;
+            let top = clientY + 10;
+
+            if (left + tooltipWidth > windowWidth - 10) left = clientX - tooltipWidth - 10;
+            if (top + tooltipHeight > windowHeight - 10) top = clientY - tooltipHeight - 10;
+            
+            if (left < 10) left = 10;
+            if (top < 10) top = 10;
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
         }
 
         function hideAthleteTooltip() {

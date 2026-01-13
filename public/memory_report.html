@@ -306,10 +306,24 @@
                 </div>
                 ${scoreHtml}
             `;
-            const tooltipEl = tooltip;
-            tooltipEl.style.left = (clientX) + 'px';
-            tooltipEl.style.top = (clientY) + 'px';
-            tooltipEl.classList.remove('hidden');
+            tooltip.classList.remove('hidden');
+
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            let left = clientX + 8;
+            let top = clientY + 8;
+
+            if (left + tooltipWidth > windowWidth - 10) left = clientX - tooltipWidth - 8;
+            if (top + tooltipHeight > windowHeight - 10) top = clientY - tooltipHeight - 8;
+            
+            if (left < 10) left = 10;
+            if (top < 10) top = 10;
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
         }
 
         function hideAthleteTooltip() {
