@@ -354,17 +354,20 @@
 
             const section = document.createElement('div');
             section.innerHTML = `
-                <h2 class="text-2xl font-black text-slate-800 mb-4 flex items-center">
-                    <i class="fas fa-layer-group mr-2 text-blue-600"></i>${type === 'Search' ? '검색 결과' : type + ' 코스'}
-                    <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} 건</span>
-                </h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fas fa-layer-group mr-2 text-blue-600"></i>${type === 'Search' ? '검색 결과' : type + ' 코스'}
+                        <span class="ml-3 text-sm font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${items.length} 건</span>
+                    </h2>
+                    <button onclick="exportToCSV('${type}')" title="CSV 다운로드" class="hover:opacity-80 transition-opacity"><img src="xlsdown.png" alt="Download CSV" style="width: 30px; height: 30px; display: block;"></button>
+                </div>
                 <div class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-black tracking-wider">
                                     <th class="py-3 px-4">Year</th>
-                                    <th class="py-3 px-4">Race Name</th>
+                                    <th class="py-3 px-4">Race</th>
                                     <th class="py-3 px-4">Bib</th>
                                     <th class="py-3 px-4">Name</th>
                                     <th class="py-3 px-4 hidden md:table-cell">Div</th>
@@ -401,7 +404,7 @@
                 
 
                 // 대회명 정제: 연도(4자리 숫자)와 'half' 단어 제거
-                const cleanRaceName = (item.raceName || '').replace(/[0-9]{4}/g, '').replace(/half/gi, '').trim();
+                let cleanRaceName = (item.raceName || '').replace(/[0-9]{4}/g, '').trim();
 
                 // Action Button Logic
                 let actionBtn = '';
@@ -415,12 +418,13 @@
                         actionBtn = `<button onclick='addToMemory(${itemStr})' class="text-blue-500 hover:text-blue-700 transition-colors p-1" title="추가"><i class="fas fa-plus-circle"></i></button>`;
                     }
                 } else {
+                    cleanRaceName = cleanRaceName.replace(/half/gi, '').trim();
                     actionBtn = `<button onclick="deleteItem('${item.savedAt}')" class="text-slate-400 hover:text-red-600 transition-colors p-1"><i class="fas fa-trash-alt"></i></button>`;
                 }
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 text-slate-500 font-mono text-xs">${item.raceYear || '-'}</td>
-                    <td class="py-3 px-4 text-slate-800 text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]" title="${item.raceName}">${cleanRaceName}</td>
+                    <td class="py-3 px-4 text-slate-800 text-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px] md:max-w-[150px]" title="${item.raceName}">${cleanRaceName}</td>
                     <td class="py-3 px-4 font-mono text-slate-500 text-xs">#${item.b}</td>
                     <td class="py-3 px-4 text-sm text-slate-900 font-bold">${item.n}</td>
                     <td class="py-3 px-4 text-[10px] uppercase text-slate-500 tracking-tight hidden md:table-cell">${item.d}</td>
@@ -463,6 +467,50 @@
             
             // 현재 검색 결과 탭 갱신 (버튼 상태 업데이트를 위해)
             renderSearchResults();
+        }
+
+        function exportToCSV(type) {
+            let items = [];
+            if (type === 'Search') {
+                items = currentSearchResults;
+            } else {
+                const memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+                items = memory.filter(m => (m.raceType || 'Olympic') === type).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+            }
+
+            if (items.length === 0) {
+                showToast('내보낼 데이터가 없습니다.');
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // BOM for Excel
+            csvContent += "Year,Race Name,Bib,Name,Div,Swim,T1,Bike,T2,Run,Total\n";
+
+            items.forEach(item => {
+                const row = [
+                    item.raceYear || '',
+                    (item.raceName || '').replace(/,/g, ' '),
+                    item.b,
+                    item.n,
+                    item.d,
+                    sToHms(item.s),
+                    sToMs(item.t1),
+                    sToHms(item.bk),
+                    sToMs(item.t2),
+                    sToHms(item.rn),
+                    sToHms(item.t)
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `triathlon_memory_${type}_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function saveAllSearchResults() {

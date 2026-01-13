@@ -138,7 +138,7 @@
             return (h>0 ? `${String(h).padStart(2,'0')}:` : '') + `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
         };
 
-        let currentSortConfig = [
+        const defaultSortConfig = [
             { key: 't', label: '전체기록', dir: 'asc' },
             { key: 's', label: '수영', dir: 'asc' },
             { key: 'bk', label: '싸이클', dir: 'asc' },
@@ -147,6 +147,12 @@
             { key: 'raceName', label: '대회명', dir: 'asc' },
             { key: 'n', label: '선수명', dir: 'asc' }
         ];
+
+        let currentSortConfig = JSON.parse(localStorage.getItem('memory_report_sort_config')) || defaultSortConfig;
+
+        function saveSortConfig() {
+            localStorage.setItem('memory_report_sort_config', JSON.stringify(currentSortConfig));
+        }
 
         let touchDragSrcEl = null;
 
@@ -189,6 +195,7 @@
             const configMap = new Map(currentSortConfig.map(item => [item.key, item]));
             currentSortConfig = newOrderKeys.map(key => configMap.get(key));
             
+            saveSortConfig();
             renderSortChips();
             const activeTab = document.querySelector('.tab-active');
             if(activeTab) renderCharts(activeTab.id.replace('tab-', ''));
@@ -228,6 +235,7 @@
                     if (fromIndex !== toIndex && !isNaN(fromIndex)) {
                         const movedItem = currentSortConfig.splice(fromIndex, 1)[0];
                         currentSortConfig.splice(toIndex, 0, movedItem);
+                        saveSortConfig();
                         renderSortChips();
                         const activeTab = document.querySelector('.tab-active');
                         if(activeTab) renderCharts(activeTab.id.replace('tab-', ''));
@@ -244,6 +252,7 @@
 
         function toggleSortDir(index) {
             currentSortConfig[index].dir = currentSortConfig[index].dir === 'asc' ? 'desc' : 'asc';
+            saveSortConfig();
             renderSortChips();
             const activeTab = document.querySelector('.tab-active');
             if(activeTab) renderCharts(activeTab.id.replace('tab-', ''));
