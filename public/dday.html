@@ -4,28 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>철인3종 통합 캘린더</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #0070f3; --private: #ff9800; }
+        :root { 
+            --primary: #0070f3; /* public */
+            --private: #ff9800; /* private */
+            --copied: #e74c3c;  /* copied public */
+        }
         body { font-family: sans-serif; margin: 0; padding: 15px; background: #f8f9fa; }
         .section { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
+        /* 모달 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; }
+
+        /* 다가오는 대회 카드 */
+        .upcoming-events-container { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
+        .event-card { flex: 0 0 150px; border: 1px solid #eee; border-radius: 8px; padding: 10px; background: #fff; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+        .event-card .d-day { font-size: 20px; font-weight: bold; color: var(--primary); }
+        .event-card .title { font-size: 12px; font-weight: bold; margin: 5px 0; height: 30px; overflow: hidden; }
+        .event-card .date { font-size: 10px; color: #888; }
+        .action-btn { font-size: 12px; cursor: pointer; border: none; background: #f1f1f1; margin-top: 8px; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
+        .action-btn .fas { font-size: 14px; }
+        .action-btn.copy { color: var(--primary); }
+        .action-btn.remove { color: var(--copied); }
+
         /* 달력 헤더 */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .cal-header button { padding: 5px 15px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 5px; }
         
         /* 달력 그리드 */
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #eee; border-left: 1px solid #eee; }
-        .day { min-height: 80px; padding: 5px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 12px; }
+        .day { min-height: 80px; padding: 5px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 12px; position: relative; }
         .day.header { font-weight: bold; background: #fdfdfd; min-height: auto; text-align: center; }
         .day.today { background: #eef6ff; }
-        .ev-item { font-size: 10px; margin-top: 2px; padding: 2px; border-radius: 3px; color: white; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .ev-item { font-size: 10px; margin-top: 2px; padding: 2px 4px; border-radius: 3px; color: white; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .ev-item.public { background: var(--primary); }
         .ev-item.private { background: var(--private); }
+        .ev-item.copied { background: var(--copied); } /* 복사된 일정 스타일 */
+        .ev-item.private, .ev-item.copied { cursor: pointer; }
 
         /* 입력 폼 */
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
         .add-btn { padding: 10px; background: var(--private); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .open-modal-btn { width: 100%; padding: 12px; background: var(--private); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
 
         /* 리스트 보기 */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
@@ -33,14 +56,26 @@
     </style>
 </head>
 <body>
+    <!-- 개인 일정 추가 모달 -->
+    <div id="addEventModal" class="modal-overlay">
+        <div class="modal-content">
+            <h4 style="margin:0 0 15px 0">🧡 내 일정 추가</h4>
+            <div class="input-group">
+                <input type="text" id="title" placeholder="일정 제목">
+                <input type="date" id="date">
+                <button class="add-btn" onclick="addPrivate()">저장</button>
+            </div>
+            <button onclick="closeModal()" style="margin-top:10px; background: #eee; border:none; padding:8px; border-radius:6px; cursor:pointer;">닫기</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <button class="open-modal-btn" onclick="openModal()">개인 일정 등록</button>
+    </div>
 
     <div class="section">
-        <h4 style="margin:0 0 10px 0">🧡 내 일정 추가 (로컬 저장)</h4>
-        <div class="input-group">
-            <input type="text" id="title" placeholder="일정 제목">
-            <input type="date" id="date">
-            <button class="add-btn" onclick="addPrivate()">저장</button>
-        </div>
+        <h4>🗓️ 다가오는 대회</h4>
+        <div id="upcomingEvents" class="upcoming-events-container"></div>
     </div>
 
     <div class="section">
@@ -52,38 +87,78 @@
         <div id="calendarGrid" class="calendar"></div>
     </div>
 
-    <div class="section">
-        <h4>📋 전체 일정 리스트</h4>
-        <div id="listView"></div>
-    </div>
-
     <script>
         let currentViewDate = new Date();
         const STORAGE_KEY = 'my_private_ddays';
+        const addEventModal = document.getElementById('addEventModal');
 
-        // 1. 개인 일정 저장 (로컬스토리지)
+        // 1. 모달 제어
+        function openModal() { addEventModal.style.display = 'flex'; }
+        function closeModal() { addEventModal.style.display = 'none'; }
+
+        // 2. 개인 일정 저장 (로컬스토리지)
         function addPrivate() {
             const title = document.getElementById('title').value;
             const startDate = document.getElementById('date').value;
             if(!title || !startDate) return alert("입력 필수!");
             const prev = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            // 개인 일정은 type: 'private'
             localStorage.setItem(STORAGE_KEY, JSON.stringify([...prev, { id: 'local-'+Date.now(), title, startDate, type:'private' }]));
+            closeModal();
             init();
         }
 
-        // 2. 통합 로드 및 초기화
+        // 3. 통합 로드 및 초기화
         async function init() {
             const res = await fetch('/api/ddays');
             const publicData = await res.json();
             const privateData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            const allData = [...publicData, ...privateData];
             
-            renderCalendar(allData);
-            renderList(allData);
+            // 복사된 public 이벤트 ID 목록 생성
+            const copiedPublicIds = new Set(privateData.filter(e => e.copiedFrom).map(e => e.copiedFrom));
+
+            renderUpcomingEvents(publicData, copiedPublicIds);
+            renderCalendar(publicData, privateData, copiedPublicIds);
         }
 
-        // 3. 달력 렌더링
-        function renderCalendar(events) {
+        // 4. 다가오는 대회 카드 렌더링
+        function renderUpcomingEvents(publicEvents, copiedPublicIds) {
+            const container = document.getElementById('upcomingEvents');
+            container.innerHTML = '';
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            const upcoming = publicEvents
+                .filter(e => new Date(e.startDate) >= today)
+                .sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+            upcoming.forEach(e => {
+                const eventDate = new Date(e.startDate);
+                const diffTime = eventDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isCopied = copiedPublicIds.has(e.id);
+
+                const actionIcon = isCopied 
+                    ? '<i class="fas fa-minus-circle"></i> 내일정에서 제외' 
+                    : '<i class="fas fa-plus-circle"></i> 내일정으로';
+                const actionClass = isCopied ? 'remove' : 'copy';
+                const action = isCopied ? 'remove' : 'copy';
+
+                container.innerHTML += `
+                    <div class="event-card">
+                        <div>
+                            <div class="d-day">D-${diffDays}</div>
+                            <div class="title">${e.title}</div>
+                            <div class="date">${e.startDate}</div>
+                        </div>
+                        <button class="action-btn ${actionClass}" onclick="handleAction('${e.id}', '${action}')">${actionIcon}</button>
+                    </div>
+                `;
+            });
+        }
+
+        // 5. 달력 렌더링
+        function renderCalendar(publicEvents, privateEvents, copiedPublicIds) {
             const grid = document.getElementById('calendarGrid');
             const monthStr = document.getElementById('currentMonthStr');
             grid.innerHTML = '';
@@ -96,47 +171,68 @@
 
             const firstDay = new Date(year, month, 1).getDay();
             const lastDate = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().slice(0, 10);
 
             for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="day"></div>`;
 
             for(let d=1; d<=lastDate; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const dayEvents = events.filter(e => e.startDate.startsWith(dateStr));
-                let evHtml = dayEvents.map(e => `<div class="ev-item ${e.type}">${e.title}</div>`).join('');
-                grid.innerHTML += `<div class="day">${d}${evHtml}</div>`;
+                
+                let evHtml = '';
+                // Public 이벤트 (복사되지 않은 것만)
+                publicEvents.filter(e => e.startDate.startsWith(dateStr) && !copiedPublicIds.has(e.id)).forEach(e => {
+                    evHtml += `<div class="ev-item public">${e.title}</div>`;
+                });
+
+                // Private 이벤트 (직접 생성 또는 복사된 것)
+                privateEvents.filter(e => e.startDate.startsWith(dateStr)).forEach(e => {
+                    let eventClass = e.copiedFrom ? 'copied' : 'private';
+                    let action = e.copiedFrom ? `handleAction('${e.copiedFrom}', 'remove')` : `handleAction('${e.id}', 'delete_private')`;
+                    evHtml += `<div class="ev-item ${eventClass}" onclick="${action}" title="클릭하여 삭제">${e.title}</div>`;
+                });
+                
+                const isToday = dateStr === todayStr;
+                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}"><div>${d}</div>${evHtml}</div>`;
             }
         }
 
-        // 4. 리스트 렌더링 및 삭제
-        function renderList(events) {
-            const listView = document.getElementById('listView');
-            listView.innerHTML = '';
-            events.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
-            events.forEach(e => {
-                listView.innerHTML += `
-                    <div class="list-item">
-                        <span>[${e.startDate}] ${e.title}</span>
-                        <button class="del-btn" onclick="handleDelete('${e.id}', '${e.type}')">삭제</button>
-                    </div>`;
-            });
-        }
-
-        async function handleDelete(id, type) {
-            if(!confirm('삭제할까요?')) return;
-            if(type === 'private') {
-                const filtered = JSON.parse(localStorage.getItem(STORAGE_KEY)).filter(e => e.id !== id);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-            } else {
-                await fetch(`/api/ddays?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        // 6. 액션 핸들러 (복사/제거/삭제)
+        async function handleAction(id, action) {
+            const privateEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            
+            if (action === 'copy') {
+                const res = await fetch('/api/ddays');
+                const publicEvents = await res.json();
+                const eventToCopy = publicEvents.find(e => e.id === id);
+                if (eventToCopy) {
+                    const newPrivateEvent = {
+                        ...eventToCopy,
+                        id: 'copied-' + eventToCopy.id, // 새로운 ID 부여
+                        type: 'private', // private으로 취급
+                        copiedFrom: eventToCopy.id // 원본 ID 저장
+                    };
+                    privateEvents.push(newPrivateEvent);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(privateEvents));
+                }
+            } else if (action === 'remove') {
+                const updatedPrivateEvents = privateEvents.filter(e => e.copiedFrom !== id);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPrivateEvents));
+            } else if (action === 'delete_private') {
+                if(!confirm('이 개인 일정을 삭제할까요?')) return;
+                const updatedPrivateEvents = privateEvents.filter(e => e.id !== id);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPrivateEvents));
             }
+            
             init();
         }
 
+        // 7. 월 변경
         function changeMonth(val) {
             currentViewDate.setMonth(currentViewDate.getMonth() + val);
             init();
         }
 
+        // 초기 실행
         init();
     </script>
 </body>
