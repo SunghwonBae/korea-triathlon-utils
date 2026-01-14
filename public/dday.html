@@ -117,7 +117,7 @@
         list.innerHTML = '';
         events.sort((a,b) => new Date(a.startDate) - new Date(b.startDate))
               .forEach(e => {
-            const dday = Math.ceil((new Date(e.startDate) - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
+            const dday = Math.ceil((new Date(e.startDate).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
             const dText = dday === 0 ? "D-Day" : (dday > 0 ? `D-${dday}` : `D+${Math.abs(dday)}`);
             list.innerHTML += `
                 <div class="card ${e.type}">
