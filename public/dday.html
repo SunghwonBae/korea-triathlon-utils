@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>트라이애슬론 D-Day 대시보드</title>
+    <style>
+        :root { --primary: #0070f3; --private-color: #28a745; --bg: #f4f4f5; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        /* 입력 폼 */
+        .form-box { background: white; padding: 20px; border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .full { grid-column: 1 / -1; }
+        label { font-size: 12px; font-weight: bold; color: #666; display: block; margin-bottom: 5px; }
+        input, select, button { padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
+        button.view-btn { background: #666; width: auto; margin-left: 5px; }
+
+        /* 달력 스타일 */
+        .calendar-view { background: white; padding: 20px; border-radius: 10px; display: none; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: #eee; gap: 1px; border: 1px solid #eee; }
+        .cal-day { background: white; min-height: 80px; padding: 5px; position: relative; }
+        .cal-header { background: #f8f9fa; text-align: center; padding: 10px; font-weight: bold; }
+        .event-tag { font-size: 11px; padding: 2px 4px; border-radius: 3px; color: white; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .event-tag.public { background: var(--primary); }
+        .event-tag.private { background: var(--private-color); }
+        
+        /* 리스트 스타일 */
+        .list-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: white; padding: 15px; border-radius: 10px; border-left: 5px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card.public { border-left-color: var(--primary); }
+        .card.private { border-left-color: var(--private-color); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>🏊‍♂️ 일정 대시보드</h1>
+        <div>
+            <button class="view-btn" onclick="toggleView('list')">목록형</button>
+            <button class="view-btn" onclick="toggleView('cal')">달력형</button>
+        </div>
+    </div>
+
+    <div class="form-box">
+        <div class="full"><label>일정 제목</label><input type="text" id="title" placeholder="대회명 또는 훈련 내용"></div>
+        <div><label>시작일</label><input type="date" id="sDate"></div>
+        <div><label>종료일(선택)</label><input type="date" id="eDate"></div>
+        <div><label>시작시간</label><input type="time" id="sTime"></div>
+        <div><label>종료시간</label><input type="time" id="eTime"></div>
+        <div><label>구분</label><select id="type"><option value="public">공유 일정</option><option value="private">개인 일정</option></select></div>
+        <div class="full"><button onclick="saveEvent()">일정 등록하기</button></div>
+    </div>
+
+    <div id="listView" class="list-view"></div>
+    <div id="calView" class="calendar-view">
+        <div id="monthTitle" style="text-align:center; font-weight:bold; margin-bottom:10px;"></div>
+        <div class="calendar-grid" id="calGrid"></div>
+    </div>
+</div>
+
+<script>
+    let events = [];
+    let viewDate = new Date();
+
+    async function loadData() {
+        // 1. Redis에서 공유 데이터 가져오기
+        let publicData = [];
+        try {
+            const res = await fetch('/api/ddays');
+            publicData = await res.json();
+        } catch(e) { console.error("Redis Load Fail", e); }
+
+        // 2. LocalStorage에서 개인 데이터 가져오기
+        const privateData = JSON.parse(localStorage.getItem('my_events') || '[]');
+        
+        events = [...publicData, ...privateData];
+        render();
+    }
+
+    async function saveEvent() {
+        const payload = {
+            title: document.getElementById('title').value,
+            startDate: document.getElementById('sDate').value,
+            endDate: document.getElementById('eDate').value || document.getElementById('sDate').value,
+            startTime: document.getElementById('sTime').value,
+            endTime: document.getElementById('eTime').value,
+            type: document.getElementById('type').value
+        };
+
+        if(!payload.title || !payload.startDate) return alert("필수값을 입력하세요.");
+
+        if(payload.type === 'public') {
+            await fetch('/api/ddays', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+        } else {
+            const privates = JSON.parse(localStorage.getItem('my_events') || '[]');
+            privates.push({...payload, id: Date.now().toString()});
+            localStorage.setItem('my_events', JSON.stringify(privates));
+        }
+
+        location.reload();
+    }
+
+    function render() {
+        renderList();
+        renderCal();
+    }
+
+    function renderList() {
+        const list = document.getElementById('listView');
+        list.innerHTML = '';
+        events.sort((a,b) => new Date(a.startDate) - new Date(b.startDate))
+              .forEach(e => {
+            const dday = Math.ceil((new Date(e.startDate) - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
+            const dText = dday === 0 ? "D-Day" : (dday > 0 ? `D-${dday}` : `D+${Math.abs(dday)}`);
+            list.innerHTML += `
+                <div class="card ${e.type}">
+                    <div style="font-weight:bold; color:var(--primary)">${dText}</div>
+                    <div style="font-size:18px; margin:5px 0;">${e.title}</div>
+                    <div style="font-size:12px; color:#666;">📅 ${e.startDate} ${e.endDate !== e.startDate ? '~ ' + e.endDate : ''}</div>
+                    ${e.startTime ? `<div style="font-size:12px; color:#888;">⏰ ${e.startTime} ${e.endTime ? '~ ' + e.endTime : ''}</div>` : ''}
+                </div>`;
+        });
+    }
+
+    function renderCal() {
+        const grid = document.getElementById('calGrid');
+        grid.innerHTML = '';
+        const y = viewDate.getFullYear();
+        const m = viewDate.getMonth();
+        document.getElementById('monthTitle').innerText = `${y}년 ${m+1}월`;
+
+        ['일','월','화','수','목','금','토'].forEach(d => grid.innerHTML += `<div class="cal-header">${d}</div>`);
+
+        const first = new Date(y, m, 1).getDay();
+        const last = new Date(y, m+1, 0).getDate();
+
+        for(let i=0; i<first; i++) grid.innerHTML += `<div class="cal-day"></div>`;
+
+        for(let d=1; d<=last; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayEvents = events.filter(e => dateStr >= e.startDate && dateStr <= e.endDate);
+            
+            let html = `<div class="cal-day"><strong>${d}</strong>`;
+            dayEvents.forEach(e => {
+                html += `<div class="event-tag ${e.type}">${e.title}</div>`;
+            });
+            html += `</div>`;
+            grid.innerHTML += html;
+        }
+    }
+
+    function toggleView(v) {
+        document.getElementById('listView').style.display = v === 'list' ? 'grid' : 'none';
+        document.getElementById('calView').style.display = v === 'cal' ? 'block' : 'none';
+    }
+
+    loadData();
+</script>
+</body>
+</html>
