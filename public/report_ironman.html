@@ -1436,12 +1436,12 @@
             
             if (me) {
                 const dragAttr = isDown ? '' : `draggable="true" ondragstart="handleDragStart(event, '${me.b}')" ondragend="handleDragEnd(event)" ontouchstart="handleTouchStart(event, '${me.b}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"`;
-                list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" ${dragAttr} onclick="removeAthlete('${me.b}')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
+                list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" ${dragAttr} onclick="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} <span class="ml-2 cursor-pointer hover:text-black/50" onclick="event.stopPropagation(); removeAthlete('${me.b}')">✕</span></div>`;
             }
             competitors.forEach((c, i) => {
                 const color = colors[(i + 1) % colors.length];
                 const dragAttr = isDown ? '' : `draggable="true" ondragstart="handleDragStart(event, '${c.b}')" ondragend="handleDragEnd(event)" ontouchstart="handleTouchStart(event, '${c.b}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"`;
-                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" ${dragAttr} onclick="removeAthlete('${c.b}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} ✕</div>`;
+                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" ${dragAttr} onclick="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} <span class="ml-2 cursor-pointer hover:text-black/50" onclick="event.stopPropagation(); removeAthlete('${c.b}')">✕</span></div>`;
             });
         }
 

@@ -222,6 +222,7 @@
                     <div class="relative flex-1">
                         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" id="searchBox" placeholder="이름 또는 배번 또는 클럽명 입력 후 Enter" onkeydown="if (event.key === 'Enter') performSearch(this.value);" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white font-bold transition-all">
+                        <input type="text" id="searchBox" placeholder="이름 또는 배번 입력 후 Enter" onkeydown="if (event.key === 'Enter') performSearch(this.value);" class="w-full bg-slate-100 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white font-bold transition-all">
                     </div>
                     <button id="addMeBtn" onclick="handleAddMeClick()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-black transition-all">분석기준선수로 등록</button>
                     <button id="addCompareBtn" onclick="handleAddCompareClick()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm whitespace-nowrap hover:bg-blue-700 transition-all">비교군 추가</button>
@@ -364,6 +365,7 @@
                         <div class="relative mb-4">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                             <input type="text" id="tableSearch" placeholder="이름(한글/영문) 또는 배번 또는 클럽명 검색 (예: 홍길동, 123, 부천트라이)" 
+                            <input type="text" id="tableSearch" placeholder="이름(한글/영문) 또는 배번 검색 (예: 홍길동, 123)" 
                                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-bold text-slate-700">
                         </div>
                         
@@ -1200,11 +1202,13 @@
             if (me) {
                 const dragAttr = isDown ? '' : `draggable="true" ondragstart="handleDragStart(event, '${me.b}')" ondragend="handleDragEnd(event)" ontouchstart="handleTouchStart(event, '${me.b}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"`;
                 list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" ${dragAttr} onclick="removeAthlete('${me.b}')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} ✕</div>`;
+                list.innerHTML += `<div class="athlete-chip shadow-xl shadow-red-200" style="background:#ef4444" ${dragAttr} onclick="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseenter="showAthleteTooltip(this, '${me.b}', '#ef4444')" onmouseleave="hideAthleteTooltip()"><i class="fas fa-user-check mr-2"></i>분석기준: ${me.n} <span class="ml-2 cursor-pointer hover:text-black/50" onclick="event.stopPropagation(); removeAthlete('${me.b}')">✕</span></div>`;
             }
             competitors.forEach((c, i) => {
                 const color = colors[(i + 1) % colors.length];
                 const dragAttr = isDown ? '' : `draggable="true" ondragstart="handleDragStart(event, '${c.b}')" ondragend="handleDragEnd(event)" ontouchstart="handleTouchStart(event, '${c.b}')" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"`;
                 list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" ${dragAttr} onclick="removeAthlete('${c.b}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} ✕</div>`;
+                list.innerHTML += `<div class="athlete-chip shadow-lg" style="background:${color}" ${dragAttr} onclick="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseenter="showAthleteTooltip(this, '${c.b}', '${color}')" onmouseleave="hideAthleteTooltip()">${c.n} <span class="ml-2 cursor-pointer hover:text-black/50" onclick="event.stopPropagation(); removeAthlete('${c.b}')">✕</span></div>`;
             });
         }
 
@@ -1218,6 +1222,7 @@
 
         function showAthleteTooltipAt(a, color, clientX, clientY, scores) {
             if (!a) return;
+            
             const tooltip = document.getElementById('globalTooltip');
             let scoreHtml = '';
             if (scores) {
@@ -1242,6 +1247,10 @@
                 </div>
                 ${scoreHtml}
             `;
+            
+            const rect = el.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
             tooltip.classList.remove('hidden');
 
             const tooltipWidth = tooltip.offsetWidth;
@@ -1286,11 +1295,13 @@
                 const n = p.n.toLowerCase();
                 const c = p.c ? p.c.toLowerCase() : '';
                 return b.includes(term) || n.includes(term)  || c.includes(term) || (koRegex && koRegex.test(p.n));
+                return b.includes(term) || n.includes(term) || (koRegex && koRegex.test(p.n));
             });
 
             if (matches.length === 0) {
                 showToast("검색 결과가 없습니다.");
             } else if (matches.length > 40) {
+            } else if (matches.length > 20) {
                 showToast("검색결과가 너무많습니다. 다른검색어로 재검색해보세요.");
             } else if (matches.length === 1) {
                 const p = matches[0];
