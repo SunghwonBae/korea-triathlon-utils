@@ -18,7 +18,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "xlsx": "^0.18.5",
-    "ioredis": "^5.9.1"
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.23",
