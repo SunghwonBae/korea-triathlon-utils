@@ -38,7 +38,7 @@ export default async function handler(req, res) {
             };
 
             // Redis 리스트의 앞부분(LPUSH)에 문자열로 변환하여 저장합니다.
-            await redis.lpush('public_ddays', JSON.stringify(newEvent));
+            await client.lpush('public_ddays', JSON.stringify(newEvent));
             return res.status(200).json(newEvent);
         }
     } catch (error) {
