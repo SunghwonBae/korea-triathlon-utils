@@ -53,8 +53,18 @@
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #eee; border-left: 1px solid #eee; }
         .day { min-height: 80px; padding: 5px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 12px; position: relative; }
         .day.header { font-weight: bold; background: #fdfdfd; min-height: auto; text-align: center; }
-        .day.today { background: #eef6ff; }
-        .ev-item { font-size: 10px; margin-top: 2px; padding: 2px 4px; border-radius: 3px; color: white; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .day.today {
+            background: #fffbe6; /* 노란색 배경으로 강조 */
+        }
+        .day.today > div:first-child {
+            font-weight: 900;
+            color: #c2410c; /* 진한 주황색 */
+            background-color: #fef9c3; /* 연한 노란색 배경 */
+            border-radius: 50%;
+            width: 18px; height: 18px; line-height: 18px; text-align: center;
+            margin: 0 0 4px 0;
+        }
+        .ev-item { font-size: 11px; margin-top: 3px; padding: 3px 5px; border-radius: 3px; color: white; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .ev-item.public { background: var(--primary); }
         .ev-item.private { background: var(--private); }
         .ev-item.copied { background: var(--copied); } /* 복사된 일정 스타일 */
@@ -87,31 +97,74 @@
             }
             .day > div:first-child { position: absolute; top: 4px; left: 4px; }
         }
+
+        /* 내 일정 카드 스타일 */
+        #myEvents .event-card {
+            background-color: #fffbf0; /* 연한 살구색 배경 */
+            border-color: #ffe0b2;
+        }
+        /* 지난 일정 스타일 */
+        .event-card.past {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+        /* 가이드 박스 */
+        .guide-box {
+            background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0;
+            padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6;
+        }
     </style>
 </head>
 <body>
+    <div class="guide-box">
+        <strong>💡 사용 가이드 (필독)</strong><br>
+        • <b>개인 일정 저장소:</b> 등록하신 '내 일정'은 서버가 아닌 <b>현재 사용 중인 브라우저의 로컬스토리지</b>에 저장됩니다.<br>
+        • <b>데이터 유실 주의:</b> 브라우저 캐시/데이터를 삭제하거나 시크릿 모드를 사용하면 일정이 지워질 수 있습니다.<br>
+        • <b>기기 간 연동:</b> 회사 컴퓨터와 집 컴퓨터(또는 모바일) 간에는 데이터가 자동 연동되지 않습니다. 하단의 <b>[일정 내보내기]</b>로 파일을 저장한 후, 다른 기기에서 <b>[일정 가져오기]</b>를 통해 직접 옮겨주세요.<br>
+        •  대회일정을 내일정으로 복사 할 수 있습니다.<br>
+        •  내일정에서 일정카드를 클릭하면 해당월로 바로 이동 할 수 있습니다.<br>
+        •  달력에 날짜를 클릭하면 그 날의 개인일정을 등록하는 창이 열립니다.<br>
+        •  달력에서 이전달 다음달로 이동할 때 해당하는 대회일정으로 자동스크롤 연동됩니다.<br>
+    </div>
+
     <!-- 개인 일정 추가 모달 -->
     <div id="addEventModal" class="modal-overlay">
-        <div class="modal-content">
+        <div class="modal-content" style="position: relative;">
+            <span onclick="closeModal()" style="position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 18px; color: #888;">&times;</span>
             <h4 style="margin:0 0 15px 0">🧡 내 일정 추가</h4>
             <div class="input-group">
                 <input type="text" id="title" placeholder="일정 제목">
                 <input type="date" id="date">
                 <button class="add-btn" onclick="addPrivate()">저장</button>
             </div>
-            <button onclick="closeModal()" style="margin-top:10px; background: #eee; border:none; padding:8px; border-radius:6px; cursor:pointer;">닫기</button>
         </div>
     </div>
     
     <div class="section">
-        <h4>🗓️ 대회일정</h4>
+        <h4 style="margin:0 0 10px 0;">🧡 내 일정</h4>
+        <div id="myEvents" class="upcoming-events-container"></div>
+    </div>
+
+    <div class="section">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <h4 id="upcomingHeaderTitle" style="margin:0;">🗓️ 국내 대회일정</h4>
+            <select id="locationFilter" onchange="init()" style="padding: 5px; border-radius: 6px; border: 1px solid #ddd;">
+                <option value="local">국내</option>
+                <option value="abroad">해외</option>
+                <option value="all">전체</option>
+            </select>
+            <span id="upcomingCount" style="font-size: 13px; font-weight: bold; color: #666;">(0) 건</span>
+        </div>
         <div id="upcomingEvents" class="upcoming-events-container"></div>
     </div>
 
     <div class="section">
         <div class="cal-header">
             <button onclick="changeMonth(-1)">◀ 이전달</button>
-            <h3 id="currentMonthStr">2026. 01</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h3 id="currentMonthStr">2026. 01</h3>
+                <button onclick="goToToday()" style="padding: 4px 10px; font-size: 12px; border-radius: 15px; background: #f1f1f1; border: 1px solid #ddd;">오늘</button>
+            </div>
             <button onclick="changeMonth(1)">다음달 ▶</button>
         </div>
         <div id="calendarGrid" class="calendar"></div>
@@ -134,6 +187,7 @@
         const STORAGE_KEY = 'my_private_ddays';
         const addEventModal = document.getElementById('addEventModal');
         const eventTooltip = document.getElementById('eventTooltip');
+        let currentLocationFilter = 'local';
 
         // 1. 모달 제어
         function openModal() { addEventModal.style.display = 'flex'; }
@@ -153,15 +207,31 @@
 
         // 3. 통합 로드 및 초기화
         async function init() {
+            currentLocationFilter = document.getElementById('locationFilter').value;
+
             const res = await fetch('/api/ddays');
-            const publicData = await res.json();
+            let publicData = await res.json();
             const privateData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             
             // 복사된 public 이벤트 ID 목록 생성
             const copiedPublicIds = new Set(privateData.filter(e => e.copiedFrom).map(e => e.copiedFrom));
 
-            const upcoming = renderUpcomingEvents(publicData, copiedPublicIds);
-            renderCalendar(publicData, privateData, copiedPublicIds);
+            // Filter public data based on location
+            let filteredPublicData = publicData;
+            if (currentLocationFilter !== 'all') {
+                // Treat events without a 'where' property as 'local'
+                filteredPublicData = publicData.filter(e => (e.where || 'local') === currentLocationFilter);
+            }
+
+            // 헤더 텍스트 업데이트
+            const headerTitle = document.getElementById('upcomingHeaderTitle');
+            if (currentLocationFilter === 'local') headerTitle.innerText = '🗓️ 국내 대회일정';
+            else if (currentLocationFilter === 'abroad') headerTitle.innerText = '🗓️ 해외 대회일정';
+            else headerTitle.innerText = '🗓️ 전체 대회일정';
+
+            const upcoming = renderUpcomingEvents(filteredPublicData, copiedPublicIds);
+            renderMyEvents(privateData);
+            renderCalendar(filteredPublicData, privateData, copiedPublicIds);
 
             // 현재 달력 월의 첫번째 대회 카드로 스크롤
             const currentMonth = currentViewDate.getMonth();
@@ -193,7 +263,7 @@
 
             upcoming.forEach(e => {
                 const eventDate = new Date(e.startDate);
-                const diffTime = eventDate - today;
+                const diffTime = eventDate.setHours(0,0,0,0) - today - 1;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 const isCopied = copiedPublicIds.has(e.id);
 
@@ -227,7 +297,59 @@
                     </div>
                 `;
             });
+            
+            // 건수 업데이트
+            document.getElementById('upcomingCount').innerText = `(${upcoming.length}) 건`;
             return upcoming;
+        }
+
+        // 4-1. 내 일정 카드 렌더링 (필터 없음, 전체 표시)
+        function renderMyEvents(privateEvents) {
+            const container = document.getElementById('myEvents');
+            container.innerHTML = '';
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            // 날짜순 정렬
+            const sortedEvents = privateEvents.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+            if (sortedEvents.length === 0) {
+                container.innerHTML = '<div style="padding:10px; font-size:12px; color:#888;">등록된 내 일정이 없습니다.</div>';
+                return;
+            }
+
+            sortedEvents.forEach(e => {
+                const eventDate = new Date(e.startDate);
+                const diffTime = eventDate.setHours(0,0,0,0) - today -1;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                const isPast = diffDays < 0;
+                const pastClass = isPast ? ' past' : '';
+                
+                let dDayStr = diffDays === 0 ? 'D-Day' : (diffDays > 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`);
+                let actionBtnHtml = e.copiedFrom 
+                    ? `<button class="action-btn remove" onclick="event.stopPropagation(); handleAction('${e.copiedFrom}', 'remove')"><i class="fas fa-minus-circle"></i> 제외</button>`
+                    : `<button class="action-btn remove" onclick="event.stopPropagation(); handleAction('${e.id}', 'delete_private')"><i class="fas fa-trash-alt"></i> 삭제</button>`;
+
+                const dayOfWeek = eventDate.getDay();
+                const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                let dateColor = dayOfWeek === 0 ? 'var(--copied)' : (dayOfWeek === 6 ? 'var(--primary)' : '#888');
+                const dateString = `${e.startDate} (${dayNames[dayOfWeek]})`;
+
+                let locBadge = e.where === 'abroad' ? '<span style="font-size:10px; color:#6f42c1; font-weight:bold; display:block; margin-bottom:2px;">[해외]</span>' : '';
+
+                container.innerHTML += `
+                    <div class="event-card${pastClass}" onclick="goToDate('${e.startDate}')" style="cursor: pointer;">
+                        <div>
+                            <div class="d-day" style="color:${diffDays < 0 ? '#888' : 'var(--private)'}">${dDayStr}</div>
+                            ${locBadge}
+                            <div class="title">${e.title}</div>
+                            <div class="date" style="font-size: 11px; font-weight: bold; color: ${dateColor};">${dateString}</div>
+                        </div>
+                        ${actionBtnHtml}
+                    </div>
+                `;
+            });
         }
 
         // 5. 달력 렌더링
@@ -266,7 +388,7 @@
                 });
                 
                 const isToday = dateStr === todayStr;
-                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}"><div>${d}</div>${evHtml}</div>`;
+                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}" onclick="openModalWithDate('${dateStr}')" style="cursor: pointer;"><div>${d}</div>${evHtml}</div>`;
             }
         }
 
@@ -306,6 +428,12 @@
             init();
         }
 
+        // 오늘 날짜로 이동하는 함수
+        function goToToday() {
+            currentViewDate = new Date();
+            init();
+        }
+
         // 8. 이벤트 툴팁 제어
         function hideEventTooltip() {
             if (eventTooltip) eventTooltip.style.display = 'none';
@@ -327,11 +455,11 @@
             const today = new Date();
             today.setHours(0,0,0,0);
             const eventDate = new Date(eventData.startDate);
-            const diffTime = eventDate - today;
+            const diffTime = eventDate.setHours(0,0,0,0) - today - 1;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             let actionButtonHtml = '';
-            const isPublic = !eventData.type;
+            const isPublic = eventData.type === 'public' || !eventData.type;
             const isCopied = !!eventData.copiedFrom;
             const isPrivate = eventData.type === 'private' && !isCopied;
 
@@ -363,6 +491,10 @@
                 ${actionButtonHtml}
             `;
 
+            // [수정] 정확한 크기 측정을 위해 display:block으로 설정하되, 깜빡임 방지를 위해 visibility:hidden 처리
+            eventTooltip.style.display = 'block';
+            eventTooltip.style.visibility = 'hidden';
+
             const rect = clickEvent.currentTarget.getBoundingClientRect();
             const tooltipWidth = eventTooltip.offsetWidth, tooltipHeight = eventTooltip.offsetHeight;
             const windowWidth = window.innerWidth, windowHeight = window.innerHeight;
@@ -374,8 +506,19 @@
             if (top < 10) top = 10;
 
             eventTooltip.style.top = `${top}px`; eventTooltip.style.left = `${left}px`;
-            eventTooltip.style.display = 'block';
+            // [수정] 위치 설정 완료 후 시각적으로 표시
+            eventTooltip.style.visibility = 'visible';
             setTimeout(() => document.addEventListener('click', handleOutsideClick, true), 0);
+        }
+
+        function goToDate(dateStr) {
+            currentViewDate = new Date(dateStr);
+            init();
+        }
+
+        function openModalWithDate(dateStr) {
+            document.getElementById('date').value = dateStr;
+            openModal();
         }
 
         // 9. 일정 내보내기/가져오기
