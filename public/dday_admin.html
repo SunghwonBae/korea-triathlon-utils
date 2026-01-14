@@ -3,29 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>철인3종 대회 관리자</title>
+    <title>관리자 - 날짜 정규화 등록</title>
     <style>
         :root { --primary: #0070f3; --bg: #f4f7f6; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.5rem; margin-bottom: 20px; color: var(--primary); }
-        textarea { width: 100%; height: 300px; border: 1px solid #ddd; border-radius: 8px; padding: 15px; font-size: 14px; resize: vertical; margin-bottom: 15px; }
-        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #0056b3; }
-        #log { margin-top: 20px; padding: 15px; border-radius: 8px; background: #eee; font-size: 13px; max-height: 200px; overflow-y: auto; }
-        .success { color: #2ecc71; } .error { color: #e74c3c; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 250px; border: 1px solid #ddd; border-radius: 8px; padding: 15px; font-size: 14px; margin-bottom: 15px; }
+        button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        #log { margin-top: 20px; padding: 15px; border-radius: 8px; background: #eee; font-size: 13px; max-height: 250px; overflow-y: auto; line-height: 1.6; }
+        .success { color: #2ecc71; } .error { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏆 대회 일정 일괄 등록</h1>
-        <p>카페의 대회 목록 텍스트를 아래에 붙여넣으세요.</p>
-        <textarea id="rawText" placeholder="2026. 3. 29&#10;일&#10;나주 영산강듀애슬론 대회&#10;..."></textarea>
-        <button onclick="processData()">파싱 및 데이터 전송</button>
+        <h1>🏆 대회 일정 정규화 등록</h1>
+        <p>카페 텍스트를 붙여넣으면 <b>YYYY-MM-DD</b> 형식으로 자동 변환하여 저장합니다.</p>
+        <textarea id="rawText" placeholder="2026. 3. 29&#10;일&#10;나주 대회..."></textarea>
+        <button onclick="processData()">파싱 및 정규화 저장 시작</button>
         <div id="log">준비 완료...</div>
     </div>
 
     <script>
+        // 날짜를 YYYY-MM-DD 형식으로 정규화하는 핵심 함수
+        function normalizeDate(dateStr) {
+            // 모든 마침표, 공백을 하이픈으로 통일
+            let clean = dateStr.replace(/\./g, '-').replace(/\s/g, '');
+            let parts = clean.split('-');
+            
+            if (parts.length === 3) {
+                let y = parts[0];
+                let m = parts[1].padStart(2, '0'); // '3' -> '03'
+                let d = parts[2].padStart(2, '0'); // '5' -> '05'
+                return `${y}-${m}-${d}`;
+            }
+            return dateStr; // 형식이 안 맞으면 원본 반환
+        }
+
         function addLog(msg, type = '') {
             const logDiv = document.getElementById('log');
             logDiv.innerHTML += `<div class="${type}">${msg}</div>`;
@@ -37,7 +50,7 @@
             if(!text.trim()) return alert("텍스트를 입력해주세요.");
             
             const logDiv = document.getElementById('log');
-            logDiv.innerHTML = "<b>분석 시작...</b><br>";
+            logDiv.innerHTML = "<b>분석 및 정규화 시작...</b><br>";
             
             const lines = text.split('\n').map(l => l.trim()).filter(l => l !== "");
             let count = 0;
@@ -47,22 +60,24 @@
                 const dateMatch = lines[i].match(/^(\d{4}\.\s?\d{1,2}\.\s?\d{1,2})/);
                 
                 if (dateMatch) {
-                    const startDate = dateMatch[1].replace(/\s/g, '').replace(/\./g, '-');
+                    const originalDate = dateMatch[1];
+                    const standardizedDate = normalizeDate(originalDate); // 정규화 실행
                     const title = lines[i+2]; // 요일 다음 줄이 대회명
 
-                    if (title && !title.includes('요일') && title.length > 2) {
+                    if (title && !title.includes('요일')) {
                         try {
                             const res = await fetch('/api/ddays', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
+                                    id: title, // 해시 키로 제목 사용
                                     title: title,
-                                    startDate: startDate,
+                                    startDate: standardizedDate,
                                     type: 'public'
                                 })
                             });
                             if (res.ok) {
-                                addLog(`✅ 등록 성공: ${title}`, 'success');
+                                addLog(`✅ [${standardizedDate}] ${title}`, 'success');
                                 count++;
                             }
                         } catch (err) {
@@ -71,7 +86,7 @@
                     }
                 }
             }
-            addLog(`<b>총 ${count}개의 대회가 등록/업데이트 되었습니다.</b>`);
+            addLog(`<br><b>총 ${count}개의 대회가 정규화되어 저장되었습니다.</b>`);
         }
     </script>
 </body>
