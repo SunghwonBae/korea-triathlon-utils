@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
         // 2. 등록 및 업데이트 (POST)
         if (req.method === 'POST') {
-            const { title, startDate, type, id } = req.body;
+            const { title, startDate, type, id , where} = req.body;
             
             // 고유 ID 생성 (수정이면 기존 ID 사용, 신규면 생성)
             // 대회명이 같으면 업데이트되게 하려면 title을 ID로 써도 되지만, 
@@ -31,7 +31,8 @@ export default async function handler(req, res) {
                 title,
                 startDate,
                 endDate: startDate,
-                type: type || 'public'
+                type: type || 'public',
+                where: where || 'local'
             };
 
             // hSet(바구니명, 키, 값) -> 키가 같으면 자동으로 덮어쓰기(Update) 됩니다.
