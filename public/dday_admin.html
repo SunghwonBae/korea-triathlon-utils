@@ -18,6 +18,10 @@
     <div class="container">
         <h1>🏆 대회 일정 정규화 등록</h1>
         <p>카페 텍스트를 붙여넣으면 <b>YYYY-MM-DD</b> 형식으로 자동 변환하여 저장합니다.</p>
+        <select id="locationSelector" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px;">
+            <option value="local">국내 (local)</option>
+            <option value="abroad">해외 (abroad)</option>
+        </select>
         <textarea id="rawText" placeholder="2026. 3. 29&#10;일&#10;나주 대회..."></textarea>
         <button onclick="processData()">파싱 및 정규화 저장 시작</button>
         <div id="log">준비 완료...</div>
@@ -48,6 +52,7 @@
         async function processData() {
             const text = document.getElementById('rawText').value;
             if(!text.trim()) return alert("텍스트를 입력해주세요.");
+            const whereValue = document.getElementById('locationSelector').value;
             
             const logDiv = document.getElementById('log');
             logDiv.innerHTML = "<b>분석 및 정규화 시작...</b><br>";
@@ -73,7 +78,8 @@
                                     id: title, // 해시 키로 제목 사용
                                     title: title,
                                     startDate: standardizedDate,
-                                    type: 'public'
+                                    type: 'public',
+                                    where: whereValue
                                 })
                             });
                             if (res.ok) {

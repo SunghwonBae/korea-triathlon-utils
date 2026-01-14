@@ -18,6 +18,22 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; }
 
+        /* 달력 이벤트 툴팁 */
+        .event-tooltip {
+            display: none;
+            position: fixed;
+            z-index: 101;
+            width: 200px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 15px;
+        }
+        .event-tooltip .d-day { font-size: 22px; font-weight: bold; color: var(--primary); text-align: center; }
+        .event-tooltip .title { font-size: 14px; font-weight: bold; margin: 8px 0; text-align: center; }
+        .event-tooltip .date { font-size: 12px; color: #888; text-align: center; margin-bottom: 12px; }
+
         /* 다가오는 대회 카드 */
         .upcoming-events-container { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
         .event-card { flex: 0 0 150px; border: 1px solid #eee; border-radius: 8px; padding: 10px; background: #fff; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
@@ -42,7 +58,7 @@
         .ev-item.public { background: var(--primary); }
         .ev-item.private { background: var(--private); }
         .ev-item.copied { background: var(--copied); } /* 복사된 일정 스타일 */
-        .ev-item.private, .ev-item.copied { cursor: pointer; }
+        .ev-item { cursor: pointer; }
 
         /* 입력 폼 */
         .input-group { display: flex; flex-direction: column; gap: 8px; }
@@ -53,6 +69,24 @@
         /* 리스트 보기 */
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .del-btn { color: #ff4d4f; border: none; background: none; cursor: pointer; font-size: 12px; }
+
+        @media (max-width: 768px) {
+            .day {
+                padding: 4px;
+                min-height: 60px;
+            }
+            .ev-item {
+                width: 10px;
+                height: 10px;
+                padding: 0;
+                border-radius: 50%;
+                text-indent: -9999px; /* Hide text */
+                overflow: hidden;
+                margin: 2px auto; /* Center the dot */
+                border: 1px solid rgba(0,0,0,0.1);
+            }
+            .day > div:first-child { position: absolute; top: 4px; left: 4px; }
+        }
     </style>
 </head>
 <body>
@@ -70,11 +104,7 @@
     </div>
     
     <div class="section">
-        <button class="open-modal-btn" onclick="openModal()">개인 일정 등록</button>
-    </div>
-
-    <div class="section">
-        <h4>🗓️ 다가오는 대회</h4>
+        <h4>🗓️ 대회일정</h4>
         <div id="upcomingEvents" class="upcoming-events-container"></div>
     </div>
 
@@ -87,10 +117,23 @@
         <div id="calendarGrid" class="calendar"></div>
     </div>
 
+    <div class="section">
+        <button class="open-modal-btn" onclick="openModal()">개인 일정 등록</button>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importEvents(event)">
+            <button class="action-btn" onclick="document.getElementById('importFile').click()" style="flex: 1; background: #198754; color: white;"><i class="fas fa-file-import" style="margin-right: 5px;"></i> 일정 가져오기</button>
+            <button class="action-btn" onclick="exportEvents()" style="flex: 1; background: #6c757d; color: white;"><i class="fas fa-file-export" style="margin-right: 5px;"></i> 일정 내보내기</button>
+        </div>
+    </div>
+
+    <!-- 이벤트 상세 정보 툴팁 -->
+    <div id="eventTooltip" class="event-tooltip"></div>
+
     <script>
         let currentViewDate = new Date();
         const STORAGE_KEY = 'my_private_ddays';
         const addEventModal = document.getElementById('addEventModal');
+        const eventTooltip = document.getElementById('eventTooltip');
 
         // 1. 모달 제어
         function openModal() { addEventModal.style.display = 'flex'; }
@@ -117,8 +160,24 @@
             // 복사된 public 이벤트 ID 목록 생성
             const copiedPublicIds = new Set(privateData.filter(e => e.copiedFrom).map(e => e.copiedFrom));
 
-            renderUpcomingEvents(publicData, copiedPublicIds);
+            const upcoming = renderUpcomingEvents(publicData, copiedPublicIds);
             renderCalendar(publicData, privateData, copiedPublicIds);
+
+            // 현재 달력 월의 첫번째 대회 카드로 스크롤
+            const currentMonth = currentViewDate.getMonth();
+            const currentYear = currentViewDate.getFullYear();
+            
+            const firstEventOfMonth = upcoming.find(e => {
+                const eventDate = new Date(e.startDate);
+                return eventDate.getFullYear() === currentYear && eventDate.getMonth() === currentMonth;
+            });
+
+            if (firstEventOfMonth) {
+                const cardElement = document.getElementById(`card-${firstEventOfMonth.id}`);
+                if (cardElement) {
+                    setTimeout(() => cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }), 100);
+                }
+            }
         }
 
         // 4. 다가오는 대회 카드 렌더링
@@ -144,17 +203,31 @@
                 const actionClass = isCopied ? 'remove' : 'copy';
                 const action = isCopied ? 'remove' : 'copy';
 
+                // 날짜 스타일링 로직 추가
+                const dayOfWeek = eventDate.getDay(); // 0=Sun, 6=Sat
+                const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                let dateColor = '#888';
+                if (dayOfWeek === 0) dateColor = 'var(--copied)'; // Sunday Red
+                else if (dayOfWeek === 6) dateColor = 'var(--primary)'; // Saturday Blue
+                const dateString = `${e.startDate} (${dayNames[dayOfWeek]})`;
+
+                let locBadge = '';
+                if (e.where === 'local') locBadge = '<span style="font-size:10px; color:#198754; font-weight:bold; display:block; margin-bottom:2px;">[국내]</span>';
+                else if (e.where === 'abroad') locBadge = '<span style="font-size:10px; color:#6f42c1; font-weight:bold; display:block; margin-bottom:2px;">[해외]</span>';
+
                 container.innerHTML += `
-                    <div class="event-card">
+                    <div class="event-card" id="card-${e.id}">
                         <div>
                             <div class="d-day">D-${diffDays}</div>
+                            ${locBadge}
                             <div class="title">${e.title}</div>
-                            <div class="date">${e.startDate}</div>
+                            <div class="date" style="font-size: 11px; font-weight: bold; color: ${dateColor};">${dateString}</div>
                         </div>
                         <button class="action-btn ${actionClass}" onclick="handleAction('${e.id}', '${action}')">${actionIcon}</button>
                     </div>
                 `;
             });
+            return upcoming;
         }
 
         // 5. 달력 렌더링
@@ -181,14 +254,15 @@
                 let evHtml = '';
                 // Public 이벤트 (복사되지 않은 것만)
                 publicEvents.filter(e => e.startDate.startsWith(dateStr) && !copiedPublicIds.has(e.id)).forEach(e => {
-                    evHtml += `<div class="ev-item public">${e.title}</div>`;
+                    const eventData = JSON.stringify(e).replace(/"/g, '&quot;');
+                    evHtml += `<div class="ev-item public" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
                 });
 
                 // Private 이벤트 (직접 생성 또는 복사된 것)
                 privateEvents.filter(e => e.startDate.startsWith(dateStr)).forEach(e => {
                     let eventClass = e.copiedFrom ? 'copied' : 'private';
-                    let action = e.copiedFrom ? `handleAction('${e.copiedFrom}', 'remove')` : `handleAction('${e.id}', 'delete_private')`;
-                    evHtml += `<div class="ev-item ${eventClass}" onclick="${action}" title="클릭하여 삭제">${e.title}</div>`;
+                    const eventData = JSON.stringify(e).replace(/"/g, '&quot;');
+                    evHtml += `<div class="ev-item ${eventClass}" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
                 });
                 
                 const isToday = dateStr === todayStr;
@@ -230,6 +304,122 @@
         function changeMonth(val) {
             currentViewDate.setMonth(currentViewDate.getMonth() + val);
             init();
+        }
+
+        // 8. 이벤트 툴팁 제어
+        function hideEventTooltip() {
+            if (eventTooltip) eventTooltip.style.display = 'none';
+            document.removeEventListener('click', handleOutsideClick, true);
+        }
+
+        function handleOutsideClick(event) {
+            if (eventTooltip && !eventTooltip.contains(event.target)) {
+                if (!event.target.closest('.ev-item')) {
+                    hideEventTooltip();
+                }
+            }
+        }
+
+        function showEventTooltip(clickEvent, eventData) {
+            clickEvent.stopPropagation();
+            hideEventTooltip();
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const eventDate = new Date(eventData.startDate);
+            const diffTime = eventDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            let actionButtonHtml = '';
+            const isPublic = !eventData.type;
+            const isCopied = !!eventData.copiedFrom;
+            const isPrivate = eventData.type === 'private' && !isCopied;
+
+            if (isPublic) {
+                const privateEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                const alreadyCopied = privateEvents.some(e => e.copiedFrom === eventData.id);
+                if (alreadyCopied) {
+                    actionButtonHtml = `<button class="action-btn remove" onclick="handleAction('${eventData.id}', 'remove'); hideEventTooltip();"><i class="fas fa-minus-circle"></i> 내일정에서 제외</button>`;
+                } else {
+                    actionButtonHtml = `<button class="action-btn copy" onclick="handleAction('${eventData.id}', 'copy'); hideEventTooltip();"><i class="fas fa-plus-circle"></i> 내일정으로</button>`;
+                }
+            } else if (isCopied) {
+                actionButtonHtml = `<button class="action-btn remove" onclick="handleAction('${eventData.copiedFrom}', 'remove'); hideEventTooltip();"><i class="fas fa-minus-circle"></i> 내일정에서 제외</button>`;
+            } else if (isPrivate) {
+                actionButtonHtml = `<button class="action-btn remove" onclick="handleAction('${eventData.id}', 'delete_private'); hideEventTooltip();"><i class="fas fa-trash-alt"></i> 개인일정 삭제</button>`;
+            }
+
+            const dayOfWeek = eventDate.getDay();
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            let dateColor = '#888';
+            if (dayOfWeek === 0) dateColor = 'var(--copied)';
+            else if (dayOfWeek === 6) dateColor = 'var(--primary)';
+            const dateString = `${eventData.startDate} (${dayNames[dayOfWeek]})`;
+
+            eventTooltip.innerHTML = `
+                <div class="d-day">D-${diffDays}</div>
+                <div class="title">${eventData.title}</div>
+                <div class="date" style="color: ${dateColor};">${dateString}</div>
+                ${actionButtonHtml}
+            `;
+
+            const rect = clickEvent.currentTarget.getBoundingClientRect();
+            const tooltipWidth = eventTooltip.offsetWidth, tooltipHeight = eventTooltip.offsetHeight;
+            const windowWidth = window.innerWidth, windowHeight = window.innerHeight;
+            let top = rect.bottom + 8, left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+
+            if (left < 10) left = 10;
+            if (left + tooltipWidth > windowWidth - 10) left = windowWidth - tooltipWidth - 10;
+            if (top + tooltipHeight > windowHeight - 10) top = rect.top - tooltipHeight - 8;
+            if (top < 10) top = 10;
+
+            eventTooltip.style.top = `${top}px`; eventTooltip.style.left = `${left}px`;
+            eventTooltip.style.display = 'block';
+            setTimeout(() => document.addEventListener('click', handleOutsideClick, true), 0);
+        }
+
+        // 9. 일정 내보내기/가져오기
+        function exportEvents() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (!data || data === '[]') {
+                return alert('내보낼 개인 일정이 없습니다.');
+            }
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const today = new Date().toISOString().slice(0, 10);
+            a.download = `my_ddays_backup_${today}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importEvents(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedEvents = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedEvents)) throw new Error('JSON 형식이 올바르지 않습니다.');
+                    const existingEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    const existingIds = new Set(existingEvents.map(ev => ev.id));
+                    let newCount = 0;
+                    importedEvents.forEach(importedEvent => {
+                        if (importedEvent.id && !existingIds.has(importedEvent.id)) {
+                            existingEvents.push(importedEvent); newCount++;
+                        }
+                    });
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(existingEvents));
+                    alert(`${newCount}개의 새로운 일정을 가져왔습니다. 총 ${existingEvents.length}개의 개인 일정이 있습니다.`);
+                    init();
+                } catch (err) { alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message); } 
+                finally { event.target.value = ''; }
+            };
+            reader.readAsText(file);
         }
 
         // 초기 실행
