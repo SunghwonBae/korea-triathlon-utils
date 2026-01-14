@@ -2,10 +2,17 @@ import Redis from 'ioredis';
 
 // 환경 변수에 있는 REDIS_URL로 접속합니다.
 // tls 옵션을 추가하여 보안 연결 거부를 방지합니다.
-const redis = new Redis(process.env.REDIS_URL, {
+// URL이 redis://로 시작하면 TLS가 정상 작동하지 않을 수 있습니다.
+// .replace를 통해 rediss://(보안 프로토콜)로 강제 변경합니다.
+const redisUrl = process.env.REDIS_URL ? process.env.REDIS_URL.replace('redis://', 'rediss://') : '';
+
+const redis = new Redis(redisUrl, {
     tls: {
+        // 인증서 검증 우회 설정 (서버리스 환경 필수)
         rejectUnauthorized: false
-    }
+    },
+    // 연결 시간 초과 설정 (에러가 길게 늘어지는 것을 방지)
+    connectTimeout: 10000 
 });
 
 export default async function handler(req, res) {
