@@ -7,11 +7,19 @@
     <style>
         :root { --primary: #0070f3; --bg: #f4f7f6; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 20px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         textarea { width: 100%; height: 250px; border: 1px solid #ddd; border-radius: 8px; padding: 15px; font-size: 14px; margin-bottom: 15px; }
         button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         #log { margin-top: 20px; padding: 15px; border-radius: 8px; background: #eee; font-size: 13px; max-height: 250px; overflow-y: auto; line-height: 1.6; }
         .success { color: #2ecc71; } .error { color: #e74c3c; font-weight: bold; }
+
+        /* 목록 테이블 스타일 */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; font-weight: bold; }
+        .actions button { width: auto; padding: 6px 12px; font-size: 13px; margin-right: 5px; border-radius: 6px; }
+        .btn-edit { background: #ffc107; color: #333; } .btn-save { background: #28a745; } .btn-delete { background: #dc3545; }
+        [contenteditable="true"] { background-color: #fff9c4; outline: 2px solid #0070f3; padding: 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -25,6 +33,11 @@
         <textarea id="rawText" placeholder="2026. 3. 29&#10;일&#10;나주 대회..."></textarea>
         <button onclick="processData()">파싱 및 정규화 저장 시작</button>
         <div id="log">준비 완료...</div>
+    </div>
+
+    <div class="container">
+        <h2>📅 등록된 대회 목록</h2>
+        <div id="eventListContainer"></div>
     </div>
 
     <script>
@@ -94,6 +107,139 @@
             }
             addLog(`<br><b>총 ${count}개의 대회가 정규화되어 저장되었습니다.</b>`);
         }
+
+        // --- 추가된 기능 ---
+
+        // 1. 이벤트 목록 로드 및 렌더링
+        async function loadAndRenderEvents() {
+            addLog('목록을 불러옵니다...', 'info');
+            try {
+                const res = await fetch('/api/ddays');
+                if (!res.ok) throw new Error('데이터를 불러오는데 실패했습니다.');
+                
+                const events = await res.json();
+                // 날짜순으로 정렬
+                events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+                const container = document.getElementById('eventListContainer');
+                if (events.length === 0) {
+                    container.innerHTML = '<p>등록된 대회가 없습니다.</p>';
+                    return;
+                }
+
+                let tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th>대회명</th>
+                                <th>지역</th>
+                                <th style="width: 180px;">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                events.forEach(event => {
+                    tableHtml += `
+                        <tr data-id="${event.id}">
+                            <td><span class="data-startDate">${event.startDate}</span></td>
+                            <td><span class="data-title">${event.title}</span></td>
+                            <td><span class="data-where">${event.where || 'local'}</span></td>
+                            <td class="actions">
+                                <button class="btn-edit" onclick="toggleEdit(this, '${event.id}')">수정</button>
+                                <button class="btn-delete" onclick="deleteEvent('${event.id}')">삭제</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += '</tbody></table>';
+                container.innerHTML = tableHtml;
+                addLog(`${events.length}개의 대회를 불러왔습니다.`);
+
+            } catch (error) {
+                addLog(error.message, 'error');
+            }
+        }
+
+        // 2. 이벤트 삭제
+        async function deleteEvent(id) {
+            if (!confirm(`'${id}' 대회를 정말 삭제하시겠습니까?`)) return;
+
+            addLog(`'${id}' 삭제 중...`);
+            try {
+                const res = await fetch(`/api/ddays?id=${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error('삭제에 실패했습니다.');
+                
+                addLog(`'${id}' 삭제 완료.`, 'success');
+                loadAndRenderEvents(); // 목록 새로고침
+            } catch (error) {
+                addLog(error.message, 'error');
+            }
+        }
+
+        // 3. 수정 모드 토글
+        function toggleEdit(btn, id) {
+            const row = btn.closest('tr');
+            const isEditing = btn.innerText === '저장';
+
+            const titleEl = row.querySelector('.data-title');
+            const dateEl = row.querySelector('.data-startDate');
+            const whereEl = row.querySelector('.data-where');
+
+            if (isEditing) {
+                // 저장 로직 실행
+                const updatedEvent = {
+                    id: id, // 기존 ID (또는 title)를 그대로 사용
+                    title: titleEl.innerText.trim(),
+                    startDate: dateEl.innerText.trim(),
+                    where: whereEl.innerText.trim()
+                };
+                
+                // 날짜 형식 검사
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(updatedEvent.startDate)) {
+                    alert('날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식으로 입력해주세요.');
+                    return;
+                }
+
+                saveEvent(updatedEvent);
+
+            } else {
+                // 수정 모드로 변경
+                btn.innerText = '저장';
+                btn.classList.remove('btn-edit');
+                btn.classList.add('btn-save');
+
+                [titleEl, dateEl, whereEl].forEach(el => {
+                    el.contentEditable = true;
+                });
+                titleEl.focus();
+            }
+        }
+
+        // 4. 이벤트 저장 (수정)
+        async function saveEvent(eventData) {
+            addLog(`'${eventData.id}' 저장 중...`);
+            try {
+                const res = await fetch('/api/ddays', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(eventData)
+                });
+                if (!res.ok) throw new Error('저장에 실패했습니다.');
+                
+                addLog(`'${eventData.id}' 저장 완료.`, 'success');
+                loadAndRenderEvents(); // 목록 새로고침
+            } catch (error) {
+                addLog(error.message, 'error');
+            }
+        }
+
+        // 페이지 로드 시 이벤트 목록 자동 로드
+        window.onload = loadAndRenderEvents;
     </script>
 </body>
 </html>
