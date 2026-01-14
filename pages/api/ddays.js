@@ -4,11 +4,7 @@ export default async function handler(req, res) {
     // REDIS_URL 환경변수를 사용합니다. 
     // Vercel 배포 시에는 자동으로 보안 연결이 설정됩니다.
     const client = createClient({
-        url: process.env.REDIS_URL,
-        socket: {
-            tls: true,
-            rejectUnauthorized: false
-        }
+        url: process.env.REDIS_URL
     });
 
     client.on('error', (err) => console.log('Redis Client Error', err));
