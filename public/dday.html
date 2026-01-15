@@ -125,8 +125,10 @@
         }
 
         /* Header Button Group Layout */
-        .header-btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
-        
+        #pageHeaderTitle { order: 1; }
+        .header-btn-group { display: flex; gap: 5px; flex-wrap: wrap; order: 2;}
+        #toggleMyEventsBtn {order: 3;}
+
         @media (max-width: 768px) {
             .header-btn-group {
                 width: 100%;
@@ -244,14 +246,14 @@
 
     <div class="section" id="my-schedule-section">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px; order: 1;">
+            <div id="pageHeaderTitle" style="display: flex; align-items: center; gap: 10px;">
                 <button id="menuToggle" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#333; padding:0; line-height:1;">☰</button>
                 <h4 style="margin:0;">🧡 내 일정 <span id="myEventsCount" style="font-size: 13px; font-weight: bold; color: #666;">(0)</span></h4>
             </div>
             
-            <button id="toggleMyEventsBtn" onclick="toggleMyEvents()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555; order: 3;">[접기]</button>
+            <button id="toggleMyEventsBtn" onclick="toggleMyEvents()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555;">접기</button>
 
-            <div class="header-btn-group" style="order: 2;">
+            <div class="header-btn-group">
                 <button onclick="openGuideModal()" class="header-btn"><i class="fas fa-info-circle"></i> 사용가이드</button>
                 <button onclick="openModal()" class="header-btn"><i class="fas fa-plus"></i> 일정등록</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importEvents(event)">
@@ -424,11 +426,11 @@
             const btn = document.getElementById('toggleMyEventsBtn');
             if (container.style.display === 'none') {
                 container.style.display = 'flex';
-                btn.innerText = '[접기]';
+                btn.innerText = '접기';
                 localStorage.setItem('dday_myevents_expanded', 'true');
             } else {
                 container.style.display = 'none';
-                btn.innerText = '[펼치기]';
+                btn.innerText = '펼치기';
                 localStorage.setItem('dday_myevents_expanded', 'false');
             }
         }
