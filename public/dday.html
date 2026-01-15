@@ -696,6 +696,11 @@
 
                 let locBadge = '';
                 if (e.where === 'abroad') locBadge = '<span style="font-size:10px; color:#6f42c1; font-weight:bold; display:block; margin-bottom:2px;">[해외]</span>';
+                if (!e.copiedFrom) {
+                    locBadge = `<span style="font-size:10px; color:var(--private); font-weight:bold; display:block; margin-bottom:2px;">[개인]</span>`;
+                } else if (e.where === 'local') {
+                    locBadge = `<span style="font-size:10px; color:#198754; font-weight:bold; display:block; margin-bottom:2px;">[국내]</span>`;
+                } else if (e.where === 'abroad') locBadge = '<span style="font-size:10px; color:#6f42c1; font-weight:bold; display:block; margin-bottom:2px;">[해외]</span>';
                 else if (e.where === 'open') locBadge = '<span style="font-size:10px; color:#10b981; font-weight:bold; display:block; margin-bottom:2px;">[공개]</span>';
 
                 container.innerHTML += `
