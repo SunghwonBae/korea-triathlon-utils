@@ -10,6 +10,7 @@
             --primary: #0070f3; /* public */
             --private: #ff9800; /* private */
             --copied: #e74c3c;  /* copied public */
+            --open: #10b981;    /* open public */
         }
         body { font-family: sans-serif; margin: 0; padding: 15px; background: #f8f9fa; }
         .section { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -66,6 +67,7 @@
         }
         .ev-item { font-size: 11px; margin-top: 3px; padding: 3px 5px; border-radius: 3px; color: white; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .ev-item.public { background: var(--primary); }
+        .ev-item.open { background: var(--open); }
         .ev-item.private { background: var(--private); }
         .ev-item.copied { background: var(--copied); } /* 복사된 일정 스타일 */
         .ev-item { cursor: pointer; }
@@ -171,7 +173,7 @@
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <h4 id="upcomingHeaderTitle" style="margin:0;">🗓️ 국내 대회일정</h4>
-                <select id="locationFilter" onchange="init()" style="padding: 5px; border-radius: 6px; border: 1px solid #ddd;">
+                <select id="locationFilter" onchange="init(false)" style="padding: 5px; border-radius: 6px; border: 1px solid #ddd;">
                     <option value="local">국내</option>
                     <option value="abroad">해외</option>
                     <option value="open">공개</option>
@@ -179,7 +181,7 @@
                 </select>
                 <span id="upcomingCount" style="font-size: 13px; font-weight: bold; color: #666;">(0) 건</span>
             </div>
-            <button id="toggleUpcomingBtn" onclick="toggleUpcoming()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555;">[접기]</button>
+            <button id="toggleUpcomingBtn" onclick="toggleUpcoming()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555;">접기</button>
         </div>
         <div id="upcomingEvents" class="upcoming-events-container"></div>
     </div>
@@ -189,8 +191,8 @@
             <button onclick="changeMonth(-1)">◀ 이전달</button>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="position: relative;">
-                    <h3 id="currentMonthStr" style="cursor: pointer;" title="눌러서 월 선택">2026. 01</h3>
-                    <input type="month" id="monthPicker" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="selectMonth(this.value)">
+                    <h3 id="currentMonthStr" style="cursor: pointer; margin: 0;" title="눌러서 월 선택">2026. 01</h3>
+                    <input type="month" id="monthPicker" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;" onchange="selectMonth(this.value)">
                 </div>
                 <button onclick="goToToday()" style="padding: 4px 10px; font-size: 12px; border-radius: 15px; background: #f1f1f1; border: 1px solid #ddd;">오늘</button>
             </div>
@@ -217,6 +219,7 @@
         const addEventModal = document.getElementById('addEventModal');
         const eventTooltip = document.getElementById('eventTooltip');
         let currentLocationFilter = 'local';
+        let cachedPublicData = null;
 
         // 1. 모달 제어
         function openModal() { addEventModal.style.display = 'flex'; }
@@ -247,10 +250,10 @@
             const btn = document.getElementById('toggleUpcomingBtn');
             if (container.style.display === 'none') {
                 container.style.display = 'flex';
-                btn.innerText = '[접기]';
+                btn.innerText = '접기';
             } else {
                 container.style.display = 'none';
-                btn.innerText = '[펼치기]';
+                btn.innerText = '펼치기';
             }
         }
 
@@ -283,6 +286,9 @@
                         // 내 일정에 '복사된 일정'으로 추가 (삭제 불가, 제외만 가능하도록)
                         const localCopy = { ...newEvent, id: 'copied-' + newEvent.id, type: 'private', copiedFrom: newEvent.id };
                         localStorage.setItem(STORAGE_KEY, JSON.stringify([...prev, localCopy]));
+                        closeModal();
+                        init(true);
+                        return;
                     } else {
                         return alert('저장 실패');
                     }
@@ -294,15 +300,18 @@
             }
             
             closeModal();
-            init();
+            init(false);
         }
 
         // 3. 통합 로드 및 초기화
-        async function init() {
+        async function init(fetchData = false) {
             currentLocationFilter = document.getElementById('locationFilter').value;
 
-            const res = await fetch('/api/ddays');
-            let publicData = await res.json();
+            if (fetchData || !cachedPublicData) {
+                const res = await fetch('/api/ddays');
+                cachedPublicData = await res.json();
+            }
+            let publicData = cachedPublicData;
             const privateData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             
             // 복사된 public 이벤트 ID 목록 생성
@@ -340,9 +349,6 @@
                     setTimeout(() => cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }), 100);
                 }
             }
-
-            // 가이드 모달 체크
-            checkGuideModal();
         }
 
         // 4. 다가오는 대회 카드 렌더링
@@ -379,7 +385,7 @@
                 let locBadge = '';
                 if (e.where === 'local') locBadge = '<span style="font-size:10px; color:#198754; font-weight:bold; display:block; margin-bottom:2px;">[국내]</span>';
                 else if (e.where === 'abroad') locBadge = '<span style="font-size:10px; color:#6f42c1; font-weight:bold; display:block; margin-bottom:2px;">[해외]</span>';
-                else if (e.where === 'open') locBadge = '<span style="font-size:10px; color:#0070f3; font-weight:bold; display:block; margin-bottom:2px;">[공개]</span>';
+                else if (e.where === 'open') locBadge = '<span style="font-size:10px; color:#10b981; font-weight:bold; display:block; margin-bottom:2px;">[공개]</span>';
 
                 container.innerHTML += `
                     <div class="event-card" id="card-${e.id}">
@@ -434,7 +440,7 @@
 
                 let locBadge = '';
                 if (e.where === 'abroad') locBadge = '<span style="font-size:10px; color:#6f42c1; font-weight:bold; display:block; margin-bottom:2px;">[해외]</span>';
-                else if (e.where === 'open') locBadge = '<span style="font-size:10px; color:#0070f3; font-weight:bold; display:block; margin-bottom:2px;">[공개]</span>';
+                else if (e.where === 'open') locBadge = '<span style="font-size:10px; color:#10b981; font-weight:bold; display:block; margin-bottom:2px;">[공개]</span>';
 
                 container.innerHTML += `
                     <div class="event-card${pastClass}" onclick="goToDate('${e.startDate}')" style="cursor: pointer;">
@@ -477,18 +483,18 @@
                 const pastClass = isPast ? ' past' : '';
                 
                 let evHtml = '';
+ 
                 // Public 이벤트 (복사되지 않은 것만)
                 publicEvents.filter(e => e.startDate.startsWith(dateStr) && !copiedPublicIds.has(e.id)).forEach(e => {
                     const eventData = JSON.stringify(e).replace(/"/g, '&quot;');
-                    evHtml += `<div class="ev-item public" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
-                    evHtml += `<div class="ev-item public${pastClass}" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
+                    const typeClass = e.where === 'open' ? 'open' : 'public';
+                    evHtml += `<div class="ev-item ${typeClass}${pastClass}" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
                 });
 
                 // Private 이벤트 (직접 생성 또는 복사된 것)
                 privateEvents.filter(e => e.startDate.startsWith(dateStr)).forEach(e => {
                     let eventClass = e.copiedFrom ? 'copied' : 'private';
                     const eventData = JSON.stringify(e).replace(/"/g, '&quot;');
-                    evHtml += `<div class="ev-item ${eventClass}" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
                     evHtml += `<div class="ev-item ${eventClass}${pastClass}" onclick='showEventTooltip(event, ${eventData})'>${e.title}</div>`;
                 });
                 
@@ -524,13 +530,13 @@
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPrivateEvents));
             }
             
-            init();
+            init(false);
         }
 
         // 7. 월 변경
         function changeMonth(val) {
             currentViewDate.setMonth(currentViewDate.getMonth() + val);
-            init();
+            init(false);
         }
 
         // 7-1. 월 직접 선택
@@ -538,13 +544,13 @@
             if (!val) return;
             const [y, m] = val.split('-');
             currentViewDate = new Date(y, m - 1, 1);
-            init();
+            init(false);
         }
 
         // 오늘 날짜로 이동하는 함수
         function goToToday() {
             currentViewDate = new Date();
-            init();
+            init(false);
         }
 
         // 8. 이벤트 툴팁 제어
@@ -627,7 +633,7 @@
 
         function goToDate(dateStr) {
             currentViewDate = new Date(dateStr);
-            init();
+            init(false);
         }
 
         function openModalWithDate(dateStr) {
@@ -672,7 +678,7 @@
                     });
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(existingEvents));
                     alert(`${newCount}개의 새로운 일정을 가져왔습니다. 총 ${existingEvents.length}개의 개인 일정이 있습니다.`);
-                    init();
+                    init(false);
                 } catch (err) { alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message); } 
                 finally { event.target.value = ''; }
             };
@@ -680,7 +686,10 @@
         }
 
         // 초기 실행
-        init();
+        (async function() {
+            await init(true);
+            checkGuideModal();
+        })();
     </script>
 </body>
 </html>
