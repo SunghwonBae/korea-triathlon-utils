@@ -39,7 +39,7 @@
         .upcoming-events-container { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; }
         .event-card { flex: 0 0 150px; border: 1px solid #eee; border-radius: 8px; padding: 10px; background: #fff; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
         .event-card .d-day { font-size: 20px; font-weight: bold; color: var(--primary); }
-        .event-card .title { font-size: 12px; font-weight: bold; margin: 5px 0; height: 30px; overflow: hidden; }
+        .event-card .title { font-size: 12px; font-weight: bold; margin: 5px 0; height: 35px; overflow: hidden; }
         .event-card .date { font-size: 10px; color: #888; }
         .action-btn { font-size: 12px; cursor: pointer; border: none; background: #f1f1f1; margin-top: 8px; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
         .action-btn .fas { font-size: 14px; }
@@ -716,7 +716,7 @@
 
             listContainer.style.display = 'block';
             let html = `<div style="font-size: 12px; color: #666; margin-bottom: 8px; font-weight:bold;">📅 ${dateStr} 등록된 일정</div>`;
-            html += `<div style="max-height: 100px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">`;
+            html += `<div style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">`;
             
             events.forEach(e => {
                 let bgStyle = 'background: var(--private)';
