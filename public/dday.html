@@ -230,8 +230,9 @@
                     <li style="margin-bottom: 6px;"><b>개인 일정 저장소:</b> 등록하신 '내 일정'은 서버가 아닌 <b>현재 사용 중인 브라우저의 로컬스토리지</b>에 저장됩니다.</li>
                     <li style="margin-bottom: 6px;"><b>데이터 유실 주의:</b> 브라우저 캐시/데이터를 삭제하거나 시크릿 모드를 사용하면 일정이 지워질 수 있습니다.</li>
                     <li style="margin-bottom: 6px;"><b>기기 간 연동:</b> 회사 컴퓨터와 집 컴퓨터(또는 모바일) 간에는 데이터가 자동 연동되지 않습니다. 하단의 <b>[일정 내보내기]</b>로 파일을 저장한 후, 다른 기기에서 <b>[일정 가져오기]</b>를 통해 직접 옮겨주세요.</li>
-                    <li style="margin-bottom: 6px;">철인대회 또는 공개일정을 '내일정'으로 복사 할 수 있습니다.</li>
-                    <li style="margin-bottom: 6px;">철인대회 아닌 마라톤, 그란폰도등을 누구나 공개일정으로 등록 할 수 있습니다. 대신 한번 등록된 공개일정은 관리자만 수정삭제할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">철인대회 또는 공개일정을 '내 일정'으로 복사 할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">철인대회 아닌 마라톤, 그란폰도 등을 누구나 공개일정으로 등록 할 수 있습니다. 대신 한번 등록된 공개일정은 관리자만 수정/삭제 할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">철인대회 또는 공개일정이 날짜변경이 생기면 자동으로 '내 일정'으로 복사된 경우 날짜변경 업데이트 알림이 표시됩니다.</li>
                     <li style="margin-bottom: 6px;">내일정에서 일정카드를 클릭하면 해당월로 바로 이동 할 수 있습니다.</li>
                     <li style="margin-bottom: 6px;">달력에 날짜를 클릭하면 그 날의 개인/공개 일정을 등록하는 창이 열립니다.</li>
                     <li>달력에서 이전달 다음달로 이동할 때 해당하는 대회일정으로 자동스크롤 연동됩니다.</li>
@@ -576,14 +577,22 @@
             container.innerHTML = '';
             const today = new Date();
             today.setHours(0,0,0,0);
+            const todayStr = today.toISOString().slice(0, 10);
+            const displayYear = currentViewDate.getFullYear();
+            const currentYear = today.getFullYear();
 
-            const upcoming = publicEvents
-                .filter(e => new Date(e.startDate) >= today)
-                .sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+            let yearFilteredEvents = publicEvents.filter(e => e.startDate.startsWith(String(displayYear)));
+
+            // 현재 연도를 볼 때만 오늘 이후의 일정을 표시합니다.
+            if (displayYear === currentYear) {
+                yearFilteredEvents = yearFilteredEvents.filter(e => e.startDate >= todayStr);
+            }
+
+            const upcoming = yearFilteredEvents.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
             upcoming.forEach(e => {
                 const eventDate = new Date(e.startDate);
-                const diffTime = eventDate.setHours(0,0,0,0) - today - 1;
+                const diffTime = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()).getTime() - today.getTime();
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 const isCopied = copiedPublicIds.has(e.id);
 
@@ -592,6 +601,9 @@
                     : '<i class="fas fa-plus-circle"></i> 내일정으로';
                 const actionClass = isCopied ? 'remove' : 'copy';
                 const action = isCopied ? 'remove' : 'copy';
+                
+                let dDayStr = diffDays >= 0 ? `D-${diffDays}` : `D+${Math.abs(diffDays)}`;
+                if (diffDays === 0) dDayStr = 'D-Day';
 
                 // 날짜 스타일링 로직 추가
                 const dayOfWeek = eventDate.getDay(); // 0=Sun, 6=Sat
@@ -609,7 +621,7 @@
                 container.innerHTML += `
                     <div class="event-card" id="card-${e.id}">
                         <div>
-                            <div class="d-day">D-${diffDays}</div>
+                            <div class="d-day">${dDayStr}</div>
                             ${locBadge}
                             <div class="title">${e.title}</div>
                             <div class="date" style="font-size: 11px; font-weight: bold; color: ${dateColor};">${dateString}</div>
@@ -630,9 +642,13 @@
             container.innerHTML = '';
             const today = new Date();
             today.setHours(0,0,0,0);
+            const displayYear = currentViewDate.getFullYear();
 
-            // 날짜순 정렬
-            const sortedEvents = privateEvents.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+            // 1. 현재 달력의 연도에 해당하는 일정만 필터링
+            const yearFilteredEvents = privateEvents.filter(e => e.startDate.startsWith(String(displayYear)));
+
+            // 2. 날짜순으로 정렬
+            const sortedEvents = yearFilteredEvents.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
             // 건수 업데이트
             const countSpan = document.getElementById('myEventsCount');
@@ -645,7 +661,7 @@
 
             sortedEvents.forEach(e => {
                 const eventDate = new Date(e.startDate);
-                const diffTime = eventDate.setHours(0,0,0,0) - today -1;
+                const diffTime = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()).getTime() - today.getTime();
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 
                 const isPast = diffDays < 0;
