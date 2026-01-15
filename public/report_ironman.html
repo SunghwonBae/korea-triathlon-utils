@@ -1669,10 +1669,12 @@
             }
         }
 
-        function removeAthlete(bib) {
-            if (me && me.b === bib) me = null;
-            else competitors = competitors.filter(c => c.b !== bib);
-            updateAthleteList(); updateDashboard();
+        function removeAthlete(bib) { 
+            if (me && me.b === bib) me = null; 
+            else competitors = competitors.filter(c => c.b !== bib); 
+            hideAthleteTooltip();
+            updateAthleteList(); 
+            updateDashboard(); 
         }
 
         // --- 고급 필터 및 한글 검색 로직 ---
