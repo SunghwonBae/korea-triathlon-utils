@@ -446,6 +446,7 @@
                 localStorage.setItem('dday_upcoming_expanded', 'true');
             }
             init(false);
+            showToast('달력에도 필터가 적용됩니다');
         }
 
         // 2. 개인 일정 저장 (로컬스토리지)
@@ -1006,7 +1007,7 @@
             const myEventsBtn = document.getElementById('toggleMyEventsBtn');
             if (myEventsExpanded === 'false') {
                 myEventsContainer.style.display = 'none';
-                myEventsBtn.innerText = '[펼치기]';
+                myEventsBtn.innerText = '펼치기';
             }
 
             await init(true);
