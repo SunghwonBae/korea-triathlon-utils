@@ -1217,9 +1217,8 @@
             showAthleteTooltipAt(a, color, rect.left, rect.bottom + 8);
         }
 
-        function showAthleteTooltipAt(a, color, clientX, clientY, scores) {
+       function showAthleteTooltipAt(a, color, clientX, clientY, scores) {
             if (!a) return;
-            
             const tooltip = document.getElementById('globalTooltip');
             let scoreHtml = '';
             if (scores) {
@@ -1244,10 +1243,6 @@
                 </div>
                 ${scoreHtml}
             `;
-            
-            const rect = el.getBoundingClientRect();
-            tooltip.style.left = rect.left + 'px';
-            tooltip.style.top = (rect.bottom + 8) + 'px';
             tooltip.classList.remove('hidden');
 
             const tooltipWidth = tooltip.offsetWidth;
@@ -1267,6 +1262,7 @@
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
         }
+
 
 
         function hideAthleteTooltip() {
