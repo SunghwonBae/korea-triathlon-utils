@@ -135,9 +135,10 @@
                 width: 100%;
                 order: 3; /* Mobile: Move to next line */
                 margin-top: 8px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
             }
             .header-btn-group .header-btn {
-                flex: 1; /* Mobile: Fill width evenly */
                 justify-content: center;
             }
             /* Mobile: Fold button stays on top right (order 2) */
@@ -584,7 +585,7 @@
             if (currentLocationFilter === 'local') headerTitle.innerText = '🗓️ 국내 대회일정';
             else if (currentLocationFilter === 'abroad') headerTitle.innerText = '🗓️ 해외 대회일정';
             else if (currentLocationFilter === 'open') headerTitle.innerText = '🗓️ 공개일정';
-            else if (currentLocationFilter === 'local_open') headerTitle.innerText = '🗓️ 국내/공개 일정';
+            else if (currentLocationFilter === 'local_open') headerTitle.innerText = '🗓️ 국내/공개일정';
             else headerTitle.innerText = '🗓️ 전체일정';
 
             const upcoming = renderUpcomingEvents(filteredPublicData, copiedPublicIds);
