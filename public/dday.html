@@ -57,7 +57,22 @@
 
         /* 달력 헤더 */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .cal-header button { padding: 5px 15px; cursor: pointer; border: 1px solid #ddd; background: white; border-radius: 5px; }
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            background: white;
+            cursor: pointer;
+            color: #555;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background-color: #f8f9fa; color: var(--primary); border-color: var(--primary); }
         
         /* 달력 그리드 */
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #eee; border-left: 1px solid #eee; }
@@ -338,13 +353,13 @@
 
     <div class="section">
         <div class="cal-header">
-            <button onclick="changeMonth(-1)">◀ 이전달</button>
+            <button onclick="changeMonth(-1)" class="nav-btn" title="이전달로 이동"><i class="fas fa-chevron-left"></i></button>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <h3 id="currentMonthStr" style="margin: 0; cursor: pointer;" title="눌러서 월 선택" onclick="document.getElementById('monthPicker').showPicker()">2026년 1월</h3>
                 <input type="month" id="monthPicker" style="position: absolute; width: 0; height: 0; border: 0; padding: 0; opacity: 0;" onchange="selectMonth(this.value)">
-                <button onclick="goToToday()" style="padding: 4px 10px; font-size: 12px; border-radius: 15px; background: #f1f1f1; border: 1px solid #ddd;">오늘</button>
+                <button onclick="goToToday()" style="padding: 4px 10px; font-size: 12px; border-radius: 15px; background: #f1f1f1; border: 1px solid #ddd; cursor: pointer;">오늘</button>
             </div>
-            <button onclick="changeMonth(1)">다음달 ▶</button>
+            <button onclick="changeMonth(1)" class="nav-btn" title="다음달로 이동"><i class="fas fa-chevron-right"></i></button>
         </div>
         <div id="calendarGrid" class="calendar"></div>
     </div>
