@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; // 추가
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Script from 'next/script';
 
@@ -41,7 +41,6 @@ export default function MainIndex() {
   };
 
   const menuItems = [
-
     { icon: "🏆", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
     { icon: "🥇", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
     { icon: "🏁", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
@@ -57,6 +56,48 @@ export default function MainIndex() {
     { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/runpace_calculator.html" },
     { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/run_mileage_calculator.html" },
   ];
+
+  const [displayItems, setDisplayItems] = useState(menuItems);
+
+  useEffect(() => {
+    const STORAGE_KEY = 'my_private_ddays';
+    try {
+      const privateData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+      if (privateData.length > 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = privateData
+          .filter(e => new Date(e.startDate) >= today)
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+          .slice(0, 2);
+
+        const ddayItems = upcoming.map(event => {
+          const eventDate = new Date(event.startDate);
+          const diffTime = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()).getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          let dDayStr = `D-${diffDays}`;
+          if (diffDays === 0) dDayStr = 'D-DAY';
+
+          return {
+            isDday: true,
+            id: event.id,
+            title: event.title,
+            desc: event.startDate,
+            dday: dDayStr,
+            url: `/dday.html?date=${event.startDate}`
+          };
+        });
+
+        if (ddayItems.length > 0) {
+          setDisplayItems([...ddayItems, ...menuItems]);
+        }
+      }
+    } catch (error) {
+      console.error("Error processing D-Day events:", error);
+    }
+  }, []);
 
   return (
     <div className="main-container">
@@ -91,15 +132,30 @@ export default function MainIndex() {
 
       <section className="content-section">
         <div className="menu-grid">
-          {menuItems.map((item, index) => (
-            <a key={index} href={item.url} className="menu-card">
-              <span className="card-icon">{item.icon}</span>
-              <div className="card-text">
-                <span className="card-title">{item.title}</span>
-                <span className="card-desc">{item.desc}</span>
-              </div>
-            </a>
-          ))}
+          {displayItems.map((item, index) => {
+            if (item.isDday) {
+              return (
+                <a key={item.id || index} href={item.url} className="menu-card dday-card">
+                  <div className="dday-header">
+                    <span className="dday-tag">{item.dday}</span>
+                  </div>
+                  <div className="card-text">
+                    <span className="card-title">{item.title}</span>
+                    <span className="card-desc">{item.desc}</span>
+                  </div>
+                </a>
+              );
+            }
+            return (
+              <a key={index} href={item.url} className="menu-card">
+                <span className="card-icon">{item.icon}</span>
+                <div className="card-text">
+                  <span className="card-title">{item.title}</span>
+                  <span className="card-desc">{item.desc}</span>
+                </div>
+              </a>
+            );
+          })}
         </div>
       </section>
 
@@ -149,7 +205,8 @@ export default function MainIndex() {
         }
         .menu-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          /* 수정됨: 1fr 대신 minmax(0, 1fr) 사용하여 텍스트가 길어도 강제로 늘어나지 않게 함 */
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 20px;
         }
         .menu-card {
@@ -168,6 +225,8 @@ export default function MainIndex() {
           cursor: pointer;
           user-select: none;
           -webkit-tap-highlight-color: transparent;
+          /* 수정됨: Flexbox/Grid 아이템이 내부 컨텐츠에 의해 늘어나는 것을 방지 */
+          min-width: 0;
         }
         .menu-card:hover {
           transform: translateY(-8px);
@@ -187,12 +246,21 @@ export default function MainIndex() {
           display: flex;
           flex-direction: column;
           flex: 1;
+          width: 100%;
+          min-width: 0;
         }
         .card-title {
           font-size: 1.2rem;
           font-weight: 700;
           color: #1f2937;
           margin-bottom: 8px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          width: 100%;
+          /* 수정됨: 안전장치 추가 */
+          max-width: 100%;
         }
         .card-desc {
           font-size: 0.9rem;
@@ -207,7 +275,8 @@ export default function MainIndex() {
         }
         @media (max-width: 1024px) {
           .menu-grid {
-            grid-template-columns: repeat(3, 1fr);
+            /* 수정됨 */
+            grid-template-columns: repeat(3, minmax(0, 1fr));
           }
         }
         @media (max-width: 640px) {
@@ -225,7 +294,8 @@ export default function MainIndex() {
           }
           .subtitle { font-size: 1rem; }
           .mobile-br { display: block; }
-          .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          /* 수정됨 */
+          .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
           .menu-card {
             flex-direction: column;
             text-align: center;
@@ -251,7 +321,6 @@ export default function MainIndex() {
           .header-content h1 {
             font-size: 1.4rem;
             margin-bottom: 5px;
-            /* 모바일 세로모드에서 설정된 absolute 위치 초기화 및 중앙 정렬 */
             position: relative;
             inset: auto !important;
             width: 100%;
@@ -265,7 +334,8 @@ export default function MainIndex() {
             margin-top: -50px;
           }
           .menu-grid {
-            grid-template-columns: repeat(4, 1fr);
+            /* 수정됨 */
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
           }
           .menu-card {
@@ -282,7 +352,65 @@ export default function MainIndex() {
           .card-title { font-size: 0.95rem; }
           .card-desc { font-size: 0.8rem; line-height: 1.3; }
         }
-          /* 기존 스타일 하단에 추가 */
+        .dday-card {
+          background: linear-gradient(135deg, #fff9e6, #fff2d1);
+          border: 1px solid #ffe0b2;
+          align-items: center;
+          text-align: center;
+          padding: 20px;
+          justify-content: center;
+        }
+        .dday-card:hover {
+          border-color: #ffc107;
+        }
+        .dday-header {
+          margin-bottom: 25px;
+        }
+        .dday-tag {
+          background-color: #ff9800;
+          color: white;
+          font-weight: 900;
+          padding: 16px 20px;
+          border-radius: 100px;
+          font-size: 1.5rem;
+          display: inline-block;
+          box-shadow: 0 10px 6px rgba(255, 152, 0, 0.3);
+          min-width: 100px;
+          min-height: 70px;
+        }
+        .dday-card .card-text {
+          text-align: center;
+          width: 100%;
+          overflow: hidden;
+        }
+        .dday-card .card-title {
+          font-size: 1.15rem;
+          color: #4a2c00;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          margin-bottom: 4px;
+        }
+        .dday-card .card-desc {
+          color: #6d4c41;
+          font-size: 0.95rem;
+          font-weight: 600;
+        }
+        @media (max-width: 640px) {
+          .dday-tag {
+            font-size: 1.3rem;
+            padding: 20px 16px;
+            min-width: 80px;
+            min-height: 60px;
+          }
+          .dday-card {
+            padding: 12px;
+          }
+          .dday-header {
+            margin-bottom: 10px;
+          }
+        }
         .install-overlay {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;

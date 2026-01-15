@@ -12,8 +12,24 @@ export default async function handler(req, res) {
         // 1. 전체 목록 조회 (GET)
         if (req.method === 'GET') {
             const data = await client.hGetAll(HASH_KEY);
-            // Hash는 {id: '데이터'} 형태이므로 값들만 뽑아서 배열로 만듭니다.
-            const events = Object.values(data).map(item => JSON.parse(item));
+            
+            // [성능 최적화] 데이터 과다로 인한 브라우저 크래시 방지
+            // 1. 작년 1월 1일 기준 설정 (너무 오래된 데이터는 제외)
+            const cutoffDate = new Date();
+            cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
+            cutoffDate.setMonth(0, 1);
+            cutoffDate.setHours(0, 0, 0, 0);
+
+            const events = Object.values(data)
+                .map(item => {
+                    try { return JSON.parse(item); } catch { return null; }
+                })
+                .filter(event => {
+                    // 유효한 데이터이며, 기준일(작년 1월 1일) 이후의 일정만 전송
+                    return event && event.startDate && new Date(event.startDate) >= cutoffDate;
+                })
+                .sort((a, b) => new Date(a.startDate) - new Date(b.startDate)); // 날짜순 정렬
+
             return res.status(200).json(events);
         }
 

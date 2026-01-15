@@ -13,6 +13,7 @@
             --private: #ff9800; /* private */
             --copied: #e74c3c;  /* copied public */
             --open: #10b981;    /* open public */
+            --primary-blue: #0A317E; 
         }
         body { font-family: sans-serif; margin: 0; padding: 15px; background: #f8f9fa; }
         .section { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -186,16 +187,58 @@
         .menu-overlay.is-active { opacity: 1; visibility: visible; }
         .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
         .slide-menu.is-active { left: 0; }
-        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary); }
-        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */ }
+        .menu-header h2 { font-size: 1.2rem; font-weight: 600; margin: 0; }
         .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; }
-        .menu-list { list-style: none; padding: 0; margin: 0; }
-        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
-        .menu-link:hover { background: #f8f9fa; color: var(--primary); }
-        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto; /* 메뉴가 길어지면 스크롤 */
+        }
+
+        .menu-list li {
+            border-bottom: 1px solid #eee;
+        }
+
+        .menu-link {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .menu-link:hover, .menu-link:active {
+            background-color: #f5f5f5;
+            color: var(--primary-blue);
+        }
+
+        /* 현재 페이지 하이라이트 효과 (옵션) */
+        .menu-link.active {
+            background-color: #eef2ff;
+            color: var(--primary-blue);
+            font-weight: 700;
+            border-left: 5px solid var(--primary-blue);
+        }
+
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 타겟 날짜 강조 효과 */
+        @keyframes target-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); background-color: #fff3e0; }
+            70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); background-color: #fff; }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); background-color: #fff3e0; }
+        }
+        .day.highlight-target {
+            animation: target-pulse 1.5s infinite;
+            border: 2px solid #ff9800 !important;
+            z-index: 5;
+        }
     </style>
 </head>
 <body>
@@ -341,6 +384,7 @@
         const eventTooltip = document.getElementById('eventTooltip');
         let currentLocationFilter = 'local';
         let cachedPublicData = null;
+        let highlightDateStr = null;
         
         // 확인 모달 변수
         const alertModal = document.getElementById('alertModal');
@@ -604,7 +648,10 @@
             if (displayYear === currentYear) {
                 yearFilteredEvents = yearFilteredEvents.filter(e => e.startDate >= todayStr);
             }
-
+            if (yearFilteredEvents.length === 0) {
+                container.innerHTML = '<div style="padding:10px; font-size:12px; color:#888;">등록된 일정이 없습니다.</div>';
+                return;
+            }
             const upcoming = yearFilteredEvents.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
             upcoming.forEach(e => {
@@ -760,7 +807,8 @@
                 });
                 
                 const isToday = dateStr === todayStr;
-                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}" onclick="openModalWithDate('${dateStr}')" style="cursor: pointer;"><div>${d}</div>${evHtml}</div>`;
+                const isTarget = dateStr === highlightDateStr;
+                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''} ${isTarget ? 'highlight-target' : ''}" onclick="openModalWithDate('${dateStr}')" style="cursor: pointer;"><div>${d}</div>${evHtml}</div>`;
             }
         }
 
@@ -800,6 +848,7 @@
         // 7. 월 변경
         function changeMonth(val) {
             currentViewDate.setMonth(currentViewDate.getMonth() + val);
+            highlightDateStr = null;
             init(false);
         }
 
@@ -808,12 +857,14 @@
             if (!val) return;
             const [y, m] = val.split('-');
             currentViewDate = new Date(y, m - 1, 1);
+            highlightDateStr = null;
             init(false);
         }
 
         // 오늘 날짜로 이동하는 함수
         function goToToday() {
             currentViewDate = new Date();
+            highlightDateStr = null;
             init(false);
         }
 
@@ -1013,6 +1064,17 @@
 
         // 초기 실행
         (async function() {
+            // URL 파라미터로 전달된 날짜가 있으면 해당 월로 이동
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateParam = urlParams.get('date');
+            if (dateParam) {
+                const targetDate = new Date(dateParam);
+                if (!isNaN(targetDate.getTime())) {
+                    currentViewDate = targetDate;
+                    highlightDateStr = dateParam;
+                }
+            }
+
             // 접기/펼치기 상태 복원
             const expanded = localStorage.getItem('dday_upcoming_expanded');
             const container = document.getElementById('upcomingEvents');
