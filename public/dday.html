@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>철인3종 통합 캘린더</title>
+    <title>D-Day</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="menu_full_handler.js" defer></script>
+    <script src="back_exit_handler.js" defer></script>
     <style>
         :root { 
             --primary: #0070f3; /* public */
@@ -16,8 +18,14 @@
         .section { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
         /* 모달 */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { 
+            background: white; padding: 25px; border-radius: 16px; 
+            width: 85%; max-width: 400px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* 달력 이벤트 툴팁 */
         .event-tooltip {
@@ -131,6 +139,50 @@
             background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0;
             padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.6;
         }
+
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background-color: rgba(30, 41, 59, 0.9); color: white; padding: 12px 24px;
+            border-radius: 9999px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            z-index: 9999; font-size: 14px; font-weight: bold; opacity: 0;
+            transition: all 0.3s ease-out; pointer-events: none;
+        }
+        .toast-notification.show {
+            opacity: 1; transform: translateX(-50%) translateY(0);
+        }
+
+        /* Sticky Header Section */
+        #my-schedule-section {
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            margin: -15px -15px 20px -15px;
+            padding: 15px;
+            width: calc(100% + 30px);
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; overscroll-behavior: none; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary); }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: var(--primary); }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -160,15 +212,17 @@
     <div id="guideModal" class="modal-overlay">
         <div class="modal-content">
             <h4 style="margin:0 0 15px 0">💡 사용 가이드 (필독)</h4>
-            <div style="font-size: 13px; line-height: 1.6; color: #333; max-height: 60vh; overflow-y: auto;">
-                • <b>개인 일정 저장소:</b> 등록하신 '내 일정'은 서버가 아닌 <b>현재 사용 중인 브라우저의 로컬스토리지</b>에 저장됩니다.<br>
-                • <b>데이터 유실 주의:</b> 브라우저 캐시/데이터를 삭제하거나 시크릿 모드를 사용하면 일정이 지워질 수 있습니다.<br>
-                • <b>기기 간 연동:</b> 회사 컴퓨터와 집 컴퓨터(또는 모바일) 간에는 데이터가 자동 연동되지 않습니다. 하단의 <b>[일정 내보내기]</b>로 파일을 저장한 후, 다른 기기에서 <b>[일정 가져오기]</b>를 통해 직접 옮겨주세요.<br>
-                • 철인대회 또는 공개일정을 '내일정'으로 복사 할 수 있습니다.<br>
-                • 철인대회 아닌 마라톤, 그란폰도등을 누구나 공개일정으로 등록 할 수 있습니다. 대신 한번 등록된 공개일정은 관리자만 수정삭제할 수 있습니다.<br>
-                • 내일정에서 일정카드를 클릭하면 해당월로 바로 이동 할 수 있습니다.<br>
-                • 달력에 날짜를 클릭하면 그 날의 개인/공개 일정을 등록하는 창이 열립니다.<br>
-                • 달력에서 이전달 다음달로 이동할 때 해당하는 대회일정으로 자동스크롤 연동됩니다.<br>
+            <div style="font-size: 13px; line-height: 1.6; color: #444; max-height: 60vh; overflow-y: auto;">
+                <ul style="padding-left: 15px; margin: 0; list-style-type: disc;">
+                    <li style="margin-bottom: 6px;"><b>개인 일정 저장소:</b> 등록하신 '내 일정'은 서버가 아닌 <b>현재 사용 중인 브라우저의 로컬스토리지</b>에 저장됩니다.</li>
+                    <li style="margin-bottom: 6px;"><b>데이터 유실 주의:</b> 브라우저 캐시/데이터를 삭제하거나 시크릿 모드를 사용하면 일정이 지워질 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;"><b>기기 간 연동:</b> 회사 컴퓨터와 집 컴퓨터(또는 모바일) 간에는 데이터가 자동 연동되지 않습니다. 하단의 <b>[일정 내보내기]</b>로 파일을 저장한 후, 다른 기기에서 <b>[일정 가져오기]</b>를 통해 직접 옮겨주세요.</li>
+                    <li style="margin-bottom: 6px;">철인대회 또는 공개일정을 '내일정'으로 복사 할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">철인대회 아닌 마라톤, 그란폰도등을 누구나 공개일정으로 등록 할 수 있습니다. 대신 한번 등록된 공개일정은 관리자만 수정삭제할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">내일정에서 일정카드를 클릭하면 해당월로 바로 이동 할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">달력에 날짜를 클릭하면 그 날의 개인/공개 일정을 등록하는 창이 열립니다.</li>
+                    <li>달력에서 이전달 다음달로 이동할 때 해당하는 대회일정으로 자동스크롤 연동됩니다.</li>
+                </ul>
             </div>
             <div style="margin-top: 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
                 <button onclick="closeGuideModal(true)" style="padding: 8px 12px; background: #eee; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; color: #555;">오늘 하루 보지 않기</button>
@@ -177,9 +231,13 @@
         </div>
     </div>
 
-    <div class="section">
+    <div class="section" id="my-schedule-section">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-            <h4 style="margin:0;">🧡 내 일정</h4>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button id="menuToggle" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#333; padding:0; line-height:1;">☰</button>
+                <h4 style="margin:0;">🧡 내 일정 <span id="myEventsCount" style="font-size: 13px; font-weight: bold; color: #666;">(0)</span></h4>
+                <button id="toggleMyEventsBtn" onclick="toggleMyEvents()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555;">[접기]</button>
+            </div>
             <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                 <button onclick="openGuideModal()" class="header-btn"><i class="fas fa-info-circle"></i> 사용가이드</button>
                 <button onclick="openModal()" class="header-btn"><i class="fas fa-plus"></i> 일정등록</button>
@@ -212,15 +270,39 @@
         <div class="cal-header">
             <button onclick="changeMonth(-1)">◀ 이전달</button>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <label style="cursor: pointer; display: flex; align-items: center;">
-                    <h3 id="currentMonthStr" style="margin: 0;" title="눌러서 월 선택">2026. 01</h3>
-                    <input type="month" id="monthPicker" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;" onchange="selectMonth(this.value)">
-                </label>
+                <h3 id="currentMonthStr" style="margin: 0; cursor: pointer;" title="눌러서 월 선택" onclick="document.getElementById('monthPicker').showPicker()">2026년 1월</h3>
+                <input type="month" id="monthPicker" style="position: absolute; width: 0; height: 0; border: 0; padding: 0; opacity: 0;" onchange="selectMonth(this.value)">
                 <button onclick="goToToday()" style="padding: 4px 10px; font-size: 12px; border-radius: 15px; background: #f1f1f1; border: 1px solid #ddd;">오늘</button>
             </div>
             <button onclick="changeMonth(1)">다음달 ▶</button>
         </div>
         <div id="calendarGrid" class="calendar"></div>
+    </div>
+
+    <!-- 확인 모달 -->
+    <div id="confirmModal" class="modal-overlay" style="z-index: 200;">
+        <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 40px; color: #ff4d4f;"></i>
+            </div>
+            <h4 style="margin:0 0 25px 0; font-size: 16px; color: #333; font-weight: bold;" id="confirmMessage">정말 삭제하시겠습니까?</h4>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button onclick="closeConfirm()" style="flex: 1; padding: 12px 0; background: #f1f1f1; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; color: #555; font-weight: bold;">취소</button>
+                <button id="confirmOkBtn" style="flex: 1; padding: 12px 0; background: #ff4d4f; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 모달 (확인 버튼만 있음) -->
+    <div id="alertModal" class="modal-overlay" style="z-index: 210;">
+        <div class="modal-content" style="text-align: center; max-width: 400px; padding: 30px 20px;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-info-circle" style="font-size: 40px; color: var(--primary);"></i>
+            </div>
+            <h4 style="margin:0 0 15px 0; font-size: 16px; color: #333; font-weight: bold;">일정 업데이트 알림</h4>
+            <div id="alertMessage" style="text-align: left; font-size: 13px; color: #555; margin-bottom: 25px; max-height: 200px; overflow-y: auto; line-height: 1.6; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;"></div>
+            <button onclick="closeAlert()" style="width: 100%; padding: 12px 0; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">확인</button>
+        </div>
     </div>
 
     <!-- 이벤트 상세 정보 툴팁 -->
@@ -233,6 +315,40 @@
         const eventTooltip = document.getElementById('eventTooltip');
         let currentLocationFilter = 'local';
         let cachedPublicData = null;
+        
+        // 확인 모달 변수
+        const alertModal = document.getElementById('alertModal');
+        const alertMessage = document.getElementById('alertMessage');
+
+        function showAlert(msg) {
+            alertMessage.innerHTML = msg;
+            alertModal.style.display = 'flex';
+        }
+
+        function closeAlert() {
+            alertModal.style.display = 'none';
+        }
+
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmOkBtn = document.getElementById('confirmOkBtn');
+        let confirmCallback = null;
+
+        function showConfirm(msg, callback) {
+            confirmMessage.innerText = msg;
+            confirmCallback = callback;
+            confirmModal.style.display = 'flex';
+        }
+
+        function closeConfirm() {
+            confirmModal.style.display = 'none';
+            confirmCallback = null;
+        }
+        
+        confirmOkBtn.onclick = function() {
+            if (confirmCallback) confirmCallback();
+            closeConfirm();
+        };
 
         // 1. 모달 제어
         function openModal() { 
@@ -289,6 +405,21 @@
             }
         }
 
+        // 1-4. 내 일정 토글
+        function toggleMyEvents() {
+            const container = document.getElementById('myEvents');
+            const btn = document.getElementById('toggleMyEventsBtn');
+            if (container.style.display === 'none') {
+                container.style.display = 'flex';
+                btn.innerText = '[접기]';
+                localStorage.setItem('dday_myevents_expanded', 'true');
+            } else {
+                container.style.display = 'none';
+                btn.innerText = '[펼치기]';
+                localStorage.setItem('dday_myevents_expanded', 'false');
+            }
+        }
+
         // 1-3. 필터 변경 시 펼치기
         function handleFilterChange() {
             const container = document.getElementById('upcomingEvents');
@@ -308,8 +439,8 @@
             const typeRadio = document.querySelector('input[name="eventType"]:checked');
             const type = typeRadio ? typeRadio.value : 'private';
 
-            if(!title) return alert("일정 제목을 입력해주세요.");
-            if(!startDate) return alert("날짜를 선택해주세요.");
+            if(!title) return showToast("일정 제목을 입력해주세요.");
+            if(!startDate) return showToast("날짜를 선택해주세요.");
 
             if (type === 'public') {
                 // 공개 일정: 서버 저장 + 로컬 복사
@@ -335,9 +466,9 @@
                         init(true);
                         return;
                     } else {
-                        return alert('저장 실패');
+                        return showToast('저장 실패');
                     }
-                } catch (e) { return alert('에러: ' + e.message); }
+                } catch (e) { return showToast('에러: ' + e.message); }
             } else {
                 // 개인 일정: 로컬 저장
                 const prev = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -359,6 +490,9 @@
             let publicData = cachedPublicData;
             const privateData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             
+            // 동기화 체크 (공개 일정 날짜 변경 시 내 일정 자동 업데이트)
+            syncCopiedEvents(publicData, privateData);
+
             // 복사된 public 이벤트 ID 목록 생성
             const copiedPublicIds = new Set(privateData.filter(e => e.copiedFrom).map(e => e.copiedFrom));
 
@@ -394,6 +528,30 @@
                 if (cardElement) {
                     setTimeout(() => cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' }), 100);
                 }
+            }
+        }
+
+        // 3-1. 복사된 일정 동기화
+        function syncCopiedEvents(publicData, privateData) {
+            let updated = false;
+            let messages = [];
+            
+            privateData.forEach(p => {
+                if (p.copiedFrom) {
+                    const original = publicData.find(pub => pub.id === p.copiedFrom);
+                    // 원본이 존재하고 날짜가 다르면 업데이트
+                    if (original && original.startDate !== p.startDate) {
+                        messages.push(`<b>[${p.title}]</b><br> ${p.startDate} ➔ <span style="color:var(--primary); font-weight:bold;">${original.startDate}</span>`);
+                        p.startDate = original.startDate;
+                        updated = true;
+                    }
+                }
+            });
+
+            if (updated) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(privateData));
+                const msgHtml = messages.map(m => `<div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:4px;">${m}</div>`).join('');
+                showAlert(`원본 일정의 날짜가 변경되어<br>내 일정도 자동으로 업데이트되었습니다.<br><br>${msgHtml}`);
             }
         }
 
@@ -461,6 +619,10 @@
             // 날짜순 정렬
             const sortedEvents = privateEvents.sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
 
+            // 건수 업데이트
+            const countSpan = document.getElementById('myEventsCount');
+            if(countSpan) countSpan.innerText = `(${sortedEvents.length})`;
+
             if (sortedEvents.length === 0) {
                 container.innerHTML = '<div style="padding:10px; font-size:12px; color:#888;">등록된 내 일정이 없습니다.</div>';
                 return;
@@ -510,7 +672,7 @@
             
             const year = currentViewDate.getFullYear();
             const month = currentViewDate.getMonth();
-            monthStr.innerText = `${year}. ${String(month + 1).padStart(2, '0')}`;
+            monthStr.innerText = `${year}년 ${month + 1}월`;
             
             // 월 선택기 값 동기화
             document.getElementById('monthPicker').value = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -566,17 +728,20 @@
                     };
                     privateEvents.push(newPrivateEvent);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(privateEvents));
+                    init(false);
                 }
             } else if (action === 'remove') {
                 const updatedPrivateEvents = privateEvents.filter(e => e.copiedFrom !== id);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPrivateEvents));
+                init(false);
             } else if (action === 'delete_private') {
-                if(!confirm('이 개인 일정을 삭제할까요?')) return;
-                const updatedPrivateEvents = privateEvents.filter(e => e.id !== id);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPrivateEvents));
+                showConfirm('이 개인 일정을 삭제할까요?', () => {
+                    const updatedPrivateEvents = privateEvents.filter(e => e.id !== id);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPrivateEvents));
+                    init(false);
+                    showToast('일정이 삭제되었습니다.');
+                });
             }
-            
-            init(false);
         }
 
         // 7. 월 변경
@@ -741,7 +906,7 @@
         function exportEvents() {
             const data = localStorage.getItem(STORAGE_KEY);
             if (!data || data === '[]') {
-                return alert('내보낼 개인 일정이 없습니다.');
+                return showToast('내보낼 개인 일정이 없습니다.');
             }
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -773,12 +938,24 @@
                         }
                     });
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(existingEvents));
-                    alert(`${newCount}개의 새로운 일정을 가져왔습니다. 총 ${existingEvents.length}개의 개인 일정이 있습니다.`);
+                    showToast(`${newCount}개의 새로운 일정을 가져왔습니다.`);
                     init(false);
-                } catch (err) { alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message); } 
+                } catch (err) { showToast('파일을 읽는 중 오류가 발생했습니다: ' + err.message); } 
                 finally { event.target.value = ''; }
             };
             reader.readAsText(file);
+        }
+
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.className = 'toast-notification';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('show'));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
         }
 
         // 초기 실행
@@ -792,7 +969,21 @@
                 btn.innerText = '펼치기';
             }
 
+            // 내 일정 접기/펼치기 상태 복원
+            const myEventsExpanded = localStorage.getItem('dday_myevents_expanded');
+            const myEventsContainer = document.getElementById('myEvents');
+            const myEventsBtn = document.getElementById('toggleMyEventsBtn');
+            if (myEventsExpanded === 'false') {
+                myEventsContainer.style.display = 'none';
+                myEventsBtn.innerText = '[펼치기]';
+            }
+
             await init(true);
+            checkGuideModal();
+        })();
+    </script>
+</body>
+</html>     await init(true);
             checkGuideModal();
         })();
     </script>
