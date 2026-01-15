@@ -139,6 +139,7 @@
         <div class="modal-content" style="position: relative;">
             <span onclick="closeModal()" style="position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 18px; color: #888;">&times;</span>
             <h4 style="margin:0 0 15px 0">🧡 개인/공개 일정 추가</h4>
+            <div id="modalEventList" style="margin-bottom: 15px; display: none;"></div>
             <div class="input-group">
                 <input type="text" id="title" placeholder="일정 제목">
                 <input type="date" id="date">
@@ -211,10 +212,10 @@
         <div class="cal-header">
             <button onclick="changeMonth(-1)">◀ 이전달</button>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="position: relative;">
-                    <h3 id="currentMonthStr" style="cursor: pointer; margin: 0;" title="눌러서 월 선택">2026. 01</h3>
-                    <input type="month" id="monthPicker" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;" onchange="selectMonth(this.value)">
-                </div>
+                <label style="cursor: pointer; display: flex; align-items: center;">
+                    <h3 id="currentMonthStr" style="margin: 0;" title="눌러서 월 선택">2026. 01</h3>
+                    <input type="month" id="monthPicker" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;" onchange="selectMonth(this.value)">
+                </label>
                 <button onclick="goToToday()" style="padding: 4px 10px; font-size: 12px; border-radius: 15px; background: #f1f1f1; border: 1px solid #ddd;">오늘</button>
             </div>
             <button onclick="changeMonth(1)">다음달 ▶</button>
@@ -239,6 +240,13 @@
             document.getElementById('title').value = '';
             document.getElementById('date').value = '';
             
+            // 이벤트 리스트 초기화
+            const list = document.getElementById('modalEventList');
+            if(list) {
+                list.innerHTML = '';
+                list.style.display = 'none';
+            }
+
             // 라디오 버튼 '개인'으로 초기화
             const privateRadio = document.querySelector('input[name="eventType"][value="private"]');
             if (privateRadio) privateRadio.checked = true;
@@ -273,9 +281,11 @@
             if (container.style.display === 'none') {
                 container.style.display = 'flex';
                 btn.innerText = '접기';
+                localStorage.setItem('dday_upcoming_expanded', 'true');
             } else {
                 container.style.display = 'none';
                 btn.innerText = '펼치기';
+                localStorage.setItem('dday_upcoming_expanded', 'false');
             }
         }
 
@@ -286,6 +296,7 @@
             if (container.style.display === 'none') {
                 container.style.display = 'flex';
                 btn.innerText = '접기';
+                localStorage.setItem('dday_upcoming_expanded', 'true');
             }
             init(false);
         }
@@ -362,7 +373,8 @@
             const headerTitle = document.getElementById('upcomingHeaderTitle');
             if (currentLocationFilter === 'local') headerTitle.innerText = '🗓️ 국내 대회일정';
             else if (currentLocationFilter === 'abroad') headerTitle.innerText = '🗓️ 해외 대회일정';
-            else headerTitle.innerText = '🗓️ 전체 대회일정';
+            else if (currentLocationFilter === 'open') headerTitle.innerText = '🗓️ 공개일정';
+            else headerTitle.innerText = '🗓️ 전체일정';
 
             const upcoming = renderUpcomingEvents(filteredPublicData, copiedPublicIds);
             renderMyEvents(privateData);
@@ -673,7 +685,56 @@
         function openModalWithDate(dateStr) {
             openModal();//먼저 초기화 하고 모달 열기
             document.getElementById('date').value = dateStr;
+            renderModalEventList(dateStr);
+        }
+
+        function renderModalEventList(dateStr) {
+            const listContainer = document.getElementById('modalEventList');
+            if (!listContainer) return;
             
+            const publicEvents = cachedPublicData || [];
+            const privateEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const copiedPublicIds = new Set(privateEvents.filter(e => e.copiedFrom).map(e => e.copiedFrom));
+
+            const events = [];
+
+            // Public events (not copied)
+            publicEvents.forEach(e => {
+                if (e.startDate === dateStr && !copiedPublicIds.has(e.id)) {
+                    events.push({ ...e, source: 'public' });
+                }
+            });
+
+            // Private events
+            privateEvents.forEach(e => {
+                if (e.startDate === dateStr) {
+                    events.push({ ...e, source: 'private' });
+                }
+            });
+
+            if (events.length === 0) return;
+
+            listContainer.style.display = 'block';
+            let html = `<div style="font-size: 12px; color: #666; margin-bottom: 8px; font-weight:bold;">📅 ${dateStr} 등록된 일정</div>`;
+            html += `<div style="max-height: 100px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">`;
+            
+            events.forEach(e => {
+                let bgStyle = 'background: var(--private)';
+                if (e.source === 'public') {
+                     if (e.where === 'open') bgStyle = 'background: var(--open)';
+                     else bgStyle = 'background: var(--primary)';
+                } else {
+                    if (e.copiedFrom) bgStyle = 'background: var(--copied)';
+                }
+
+                html += `
+                    <div style="padding: 6px 10px; border-radius: 4px; color: white; font-size: 12px; ${bgStyle}; display:flex; justify-content:space-between; align-items:center;">
+                        <span>${e.title}</span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            listContainer.innerHTML = html;
         }
 
         // 9. 일정 내보내기/가져오기
@@ -722,6 +783,72 @@
 
         // 초기 실행
         (async function() {
+            // 접기/펼치기 상태 복원
+            const expanded = localStorage.getItem('dday_upcoming_expanded');
+            const container = document.getElementById('upcomingEvents');
+            const btn = document.getElementById('toggleUpcomingBtn');
+            if (expanded === 'false') {
+                container.style.display = 'none';
+                btn.innerText = '펼치기';
+            }
+
+            await init(true);
+            checkGuideModal();
+        })();
+    </script>
+</body>
+</html>     if (!data || data === '[]') {
+                return alert('내보낼 개인 일정이 없습니다.');
+            }
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const today = new Date().toISOString().slice(0, 10);
+            a.download = `my_ddays_backup_${today}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importEvents(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedEvents = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedEvents)) throw new Error('JSON 형식이 올바르지 않습니다.');
+                    const existingEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    const existingIds = new Set(existingEvents.map(ev => ev.id));
+                    let newCount = 0;
+                    importedEvents.forEach(importedEvent => {
+                        if (importedEvent.id && !existingIds.has(importedEvent.id)) {
+                            existingEvents.push(importedEvent); newCount++;
+                        }
+                    });
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(existingEvents));
+                    alert(`${newCount}개의 새로운 일정을 가져왔습니다. 총 ${existingEvents.length}개의 개인 일정이 있습니다.`);
+                    init(false);
+                } catch (err) { alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message); } 
+                finally { event.target.value = ''; }
+            };
+            reader.readAsText(file);
+        }
+
+        // 초기 실행
+        (async function() {
+            // 접기/펼치기 상태 복원
+            const expanded = localStorage.getItem('dday_upcoming_expanded');
+            const container = document.getElementById('upcomingEvents');
+            const btn = document.getElementById('toggleUpcomingBtn');
+            if (expanded === 'false') {
+                container.style.display = 'none';
+                btn.innerText = '펼치기';
+            }
+
             await init(true);
             checkGuideModal();
         })();
