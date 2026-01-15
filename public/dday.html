@@ -237,6 +237,15 @@
                     <li style="margin-bottom: 6px;">달력에 날짜를 클릭하면 그 날의 개인/공개 일정을 등록하는 창이 열립니다.</li>
                     <li>달력에서 이전달 다음달로 이동할 때 해당하는 대회일정으로 자동스크롤 연동됩니다.</li>
                 </ul>
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <h5 style="font-weight: bold; margin-bottom: 8px;">달력 색상 안내</h5>
+                    <ul style="padding-left: 0; margin: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <li style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--primary);"></span> 대회 일정</li>
+                        <li style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--open);"></span> 공유 일정</li>
+                        <li style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--private);"></span> 개인 일정</li>
+                        <li style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; background-color: var(--copied);"></span> 복사된 일정</li>
+                    </ul>
+                </div>
             </div>
             <div style="margin-top: 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
                 <button onclick="closeGuideModal(true)" style="padding: 8px 12px; background: #eee; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; color: #555;">오늘 하루 보지 않기</button>
@@ -273,6 +282,7 @@
                     <option value="local">국내</option>
                     <option value="abroad">해외</option>
                     <option value="open">공개</option>
+                    <option value="local_open">국내 + 공개</option>
                     <option value="all">전체</option>
                 </select>
                 <span id="upcomingCount" style="font-size: 13px; font-weight: bold; color: #666;">(0) 건</span>
@@ -515,7 +525,12 @@
 
             // Filter public data based on location
             let filteredPublicData = publicData;
-            if (currentLocationFilter !== 'all') {
+            if (currentLocationFilter === 'local_open') {
+                filteredPublicData = publicData.filter(e => {
+                    const w = e.where || 'local';
+                    return w === 'local' || w === 'open';
+                });
+            } else if (currentLocationFilter !== 'all') {
                 // Treat events without a 'where' property as 'local'
                 filteredPublicData = publicData.filter(e => (e.where || 'local') === currentLocationFilter);
             }
@@ -525,6 +540,7 @@
             if (currentLocationFilter === 'local') headerTitle.innerText = '🗓️ 국내 대회일정';
             else if (currentLocationFilter === 'abroad') headerTitle.innerText = '🗓️ 해외 대회일정';
             else if (currentLocationFilter === 'open') headerTitle.innerText = '🗓️ 공개일정';
+            else if (currentLocationFilter === 'local_open') headerTitle.innerText = '🗓️ 국내/공개 일정';
             else headerTitle.innerText = '🗓️ 전체일정';
 
             const upcoming = renderUpcomingEvents(filteredPublicData, copiedPublicIds);
