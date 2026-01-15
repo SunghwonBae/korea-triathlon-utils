@@ -83,6 +83,21 @@
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .del-btn { color: #ff4d4f; border: none; background: none; cursor: pointer; font-size: 12px; }
 
+        .header-btn {
+            font-size: 12px;
+            padding: 4px 8px;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #555;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .header-btn:hover { background: #e2e2e2; }
+
         @media (max-width: 768px) {
             .day {
                 padding: 4px;
@@ -162,9 +177,15 @@
     </div>
 
     <div class="section">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
             <h4 style="margin:0;">🧡 내 일정</h4>
-            <button onclick="openGuideModal()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555;"><i class="fas fa-info-circle"></i> 사용가이드</button>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                <button onclick="openGuideModal()" class="header-btn"><i class="fas fa-info-circle"></i> 사용가이드</button>
+                <button onclick="openModal()" class="header-btn"><i class="fas fa-plus"></i> 일정등록</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importEvents(event)">
+                <button onclick="document.getElementById('importFile').click()" class="header-btn"><i class="fas fa-file-import"></i> 가져오기</button>
+                <button onclick="exportEvents()" class="header-btn"><i class="fas fa-file-export"></i> 내보내기</button>
+            </div>
         </div>
         <div id="myEvents" class="upcoming-events-container"></div>
     </div>
@@ -173,7 +194,7 @@
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <h4 id="upcomingHeaderTitle" style="margin:0;">🗓️ 국내 대회일정</h4>
-                <select id="locationFilter" onchange="init(false)" style="padding: 5px; border-radius: 6px; border: 1px solid #ddd;">
+                <select id="locationFilter" onchange="handleFilterChange()" style="padding: 5px; border-radius: 6px; border: 1px solid #ddd;">
                     <option value="local">국내</option>
                     <option value="abroad">해외</option>
                     <option value="open">공개</option>
@@ -201,15 +222,6 @@
         <div id="calendarGrid" class="calendar"></div>
     </div>
 
-    <div class="section">
-        <button class="open-modal-btn" onclick="openModal()">개인/공유 일정 등록</button>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importEvents(event)">
-            <button class="action-btn" onclick="document.getElementById('importFile').click()" style="flex: 1; background: #198754; color: white;"><i class="fas fa-file-import" style="margin-right: 5px;"></i> 일정 가져오기</button>
-            <button class="action-btn" onclick="exportEvents()" style="flex: 1; background: #6c757d; color: white;"><i class="fas fa-file-export" style="margin-right: 5px;"></i> 일정 내보내기</button>
-        </div>
-    </div>
-
     <!-- 이벤트 상세 정보 툴팁 -->
     <div id="eventTooltip" class="event-tooltip"></div>
 
@@ -222,7 +234,17 @@
         let cachedPublicData = null;
 
         // 1. 모달 제어
-        function openModal() { addEventModal.style.display = 'flex'; }
+        function openModal() { 
+            // 입력 필드 초기화
+            document.getElementById('title').value = '';
+            document.getElementById('date').value = '';
+            
+            // 라디오 버튼 '개인'으로 초기화
+            const privateRadio = document.querySelector('input[name="eventType"][value="private"]');
+            if (privateRadio) privateRadio.checked = true;
+
+            addEventModal.style.display = 'flex'; 
+        }
         function closeModal() { addEventModal.style.display = 'none'; }
 
         // 1-1. 가이드 모달 제어
@@ -257,14 +279,26 @@
             }
         }
 
+        // 1-3. 필터 변경 시 펼치기
+        function handleFilterChange() {
+            const container = document.getElementById('upcomingEvents');
+            const btn = document.getElementById('toggleUpcomingBtn');
+            if (container.style.display === 'none') {
+                container.style.display = 'flex';
+                btn.innerText = '접기';
+            }
+            init(false);
+        }
+
         // 2. 개인 일정 저장 (로컬스토리지)
         async function saveEvent() {
-            const title = document.getElementById('title').value;
+            const title = document.getElementById('title').value.trim();
             const startDate = document.getElementById('date').value;
             const typeRadio = document.querySelector('input[name="eventType"]:checked');
             const type = typeRadio ? typeRadio.value : 'private';
 
-            if(!title || !startDate) return alert("입력 필수!");
+            if(!title) return alert("일정 제목을 입력해주세요.");
+            if(!startDate) return alert("날짜를 선택해주세요.");
 
             if (type === 'public') {
                 // 공개 일정: 서버 저장 + 로컬 복사
@@ -637,8 +671,9 @@
         }
 
         function openModalWithDate(dateStr) {
+            openModal();//먼저 초기화 하고 모달 열기
             document.getElementById('date').value = dateStr;
-            openModal();
+            
         }
 
         // 9. 일정 내보내기/가져오기
