@@ -124,6 +124,23 @@
             .day > div:first-child { position: absolute; top: 4px; left: 4px; }
         }
 
+        /* Header Button Group Layout */
+        .header-btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
+        
+        @media (max-width: 768px) {
+            .header-btn-group {
+                width: 100%;
+                order: 3; /* Mobile: Move to next line */
+                margin-top: 8px;
+            }
+            .header-btn-group .header-btn {
+                flex: 1; /* Mobile: Fill width evenly */
+                justify-content: center;
+            }
+            /* Mobile: Fold button stays on top right (order 2) */
+            #toggleMyEventsBtn { order: 2; }
+        }
+
         /* 내 일정 카드 스타일 */
         #myEvents .event-card {
             background-color: #fffbf0; /* 연한 살구색 배경 */
@@ -157,11 +174,6 @@
             position: sticky;
             top: 0;
             z-index: 90;
-            margin: -15px -15px 20px -15px;
-            padding: 15px;
-            width: calc(100% + 30px);
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
@@ -231,21 +243,21 @@
     </div>
 
     <div class="section" id="my-schedule-section">
-        <div style="position: relative; padding-right: 50px; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button id="menuToggle" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#333; padding:0; line-height:1;">☰</button>
-                    <h4 style="margin:0;">🧡 내 일정 <span id="myEventsCount" style="font-size: 13px; font-weight: bold; color: #666;">(0)</span></h4>
-                </div>
-                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    <button onclick="openGuideModal()" class="header-btn"><i class="fas fa-info-circle"></i> 사용가이드</button>
-                    <button onclick="openModal()" class="header-btn"><i class="fas fa-plus"></i> 일정등록</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importEvents(event)">
-                    <button onclick="document.getElementById('importFile').click()" class="header-btn"><i class="fas fa-file-import"></i> 가져오기</button>
-                    <button onclick="exportEvents()" class="header-btn"><i class="fas fa-file-export"></i> 내보내기</button>
-                </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; order: 1;">
+                <button id="menuToggle" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#333; padding:0; line-height:1;">☰</button>
+                <h4 style="margin:0;">🧡 내 일정 <span id="myEventsCount" style="font-size: 13px; font-weight: bold; color: #666;">(0)</span></h4>
             </div>
-            <button id="toggleMyEventsBtn" onclick="toggleMyEvents()" style="position: absolute; top: 0; right: 0; font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555;">[접기]</button>
+            
+            <button id="toggleMyEventsBtn" onclick="toggleMyEvents()" style="font-size: 12px; padding: 4px 8px; background: #f1f1f1; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; color: #555; order: 3;">[접기]</button>
+
+            <div class="header-btn-group" style="order: 2;">
+                <button onclick="openGuideModal()" class="header-btn"><i class="fas fa-info-circle"></i> 사용가이드</button>
+                <button onclick="openModal()" class="header-btn"><i class="fas fa-plus"></i> 일정등록</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importEvents(event)">
+                <button onclick="document.getElementById('importFile').click()" class="header-btn"><i class="fas fa-file-import"></i> 가져오기</button>
+                <button onclick="exportEvents()" class="header-btn"><i class="fas fa-file-export"></i> 내보내기</button>
+            </div>
         </div>
         <div id="myEvents" class="upcoming-events-container"></div>
     </div>
