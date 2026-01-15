@@ -133,7 +133,7 @@
                             <tr>
                                 <th>날짜</th>
                                 <th>대회명</th>
-                                <th>지역</th>
+                                <th>타입</th>
                                 <th style="width: 180px;">관리</th>
                             </tr>
                         </thead>
@@ -145,7 +145,7 @@
                         <tr data-id="${event.id}">
                             <td><span class="data-startDate">${event.startDate}</span></td>
                             <td><span class="data-title">${event.title}</span></td>
-                            <td><span class="data-where">${event.where || 'local'}</span></td>
+                            <td><span class="data-where">${event.where}</span></td>
                             <td class="actions">
                                 <button class="btn-edit" onclick="toggleEdit(this, '${event.id}')">수정</button>
                                 <button class="btn-delete" onclick="deleteEvent('${event.id}')">삭제</button>
