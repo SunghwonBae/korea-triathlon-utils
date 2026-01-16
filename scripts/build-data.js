@@ -176,11 +176,11 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
             
             const findCol = (candidates) => {
                 for (const c of candidates) {
-                    const exact = keys.find(k => norm(k) === c);
+                    const exact = keys.find(k => norm(k) === norm(c));
                     if (exact) return exact;
                 }
                 for (const c of candidates) {
-                    const partial = keys.find(k => norm(k).includes(c));
+                    const partial = keys.find(k => norm(k).includes(norm(c)));
                     if (partial) return partial;
                 }
                 return null;
