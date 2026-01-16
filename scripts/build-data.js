@@ -210,7 +210,7 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
                     b: findCol(['b', 'bib', 'no', 'number', '배번호']) || 'b',
                     n: findCol(['n', 'name', 'athlete', 'user', '한글이름', '이름']) || 'n',
                     d: findCol(['category', 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
-                    c: findCol(['state', 'club', 'team', '소속', '클럽']) || 'State',
+                    c: findCol(['state', 'club', 'team', '소속', '클럽','단체']) || 'State',
                     s: findCol(['swim', 's', 'finishswim', '수영']) || 's',
                     t1: findCol(['t1', 'trans1', 'startbike']) || 't1',
                     bk: findCol(['bike', 'cycle', 'b1', 'bk', 'finishbike', '사이클']) || 'bk',
