@@ -37,27 +37,29 @@
             <h2 class="text-2xl font-bold mb-2">선수 통합 검색</h2>
             <p class="text-slate-500 text-sm mb-6">아이언맨, 챌린지, 협회 대회를 한 번에 검색하세요.</p>
             
+            <!-- Filter Section -->
+            <div class="max-w-lg mx-auto mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-left">
+                <label class="block text-xs font-bold text-slate-500 mb-2">1. 대회 타입 선택</label>
+                <div id="typeToggles" class="flex gap-2 mb-4 justify-center flex-wrap">
+                    <span class="text-sm text-slate-400">데이터 로딩중...</span>
+                </div>
+
+                <div id="raceSelectArea" class="hidden transition-all duration-300">
+                    <label class="block text-xs font-bold text-slate-500 mb-2">2. 대회 선택 (최대 3개, 다중선택)</label>
+                    <select id="raceSelect" multiple class="w-full p-2 border border-slate-300 rounded-lg text-sm h-32 focus:ring-2 focus:ring-slate-500 focus:outline-none"></select>
+                    <p class="text-xs text-slate-400 mt-1 text-right">* PC: Ctrl+클릭, 모바일: 터치하여 선택</p>
+                </div>
+            </div>
+
             <div class="relative max-w-lg mx-auto">
                 <input type="text" id="searchInput" 
                     class="w-full p-4 pl-12 rounded-full border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-lg"
                     placeholder="이름 (홍길동, Hong) 또는 배번호 검색...">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl"></i>
             </div>
-            <div class="mt-2 text-xs text-slate-400">
-                * 동명이인이 있을 수 있으니 기록을 확인하고 [담기] 하세요.
-            </div>
         </div>
 
-        <div id="memoryBar" class="hidden fixed bottom-6 right-6 bg-slate-800 text-white p-4 rounded-lg shadow-2xl z-40 max-w-xs animate-bounce-in">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold"><i class="fa-solid fa-basket-shopping mr-2"></i>T-Memory</span>
-                <span id="memoryCount" class="bg-red-500 text-xs px-2 py-0.5 rounded-full">0</span>
-            </div>
-            <p class="text-xs text-slate-300 mb-3">선택한 기록이 저장되었습니다.</p>
-            <button onclick="saveAndGo()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm py-2 rounded transition">
-                분석 하러가기
-            </button>
-        </div>
+
 
         <div id="resultsArea" class="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
             <div class="col-span-full text-center text-slate-400 py-10">
@@ -69,15 +71,23 @@
 
     <script>
         let allData = [];
+        let raceMeta = [];
         let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+        
+        let selectedType = null;
+        let selectedRaces = [];
 
         // 1. 데이터 로드 (빌드된 통합 JSON)
         async function loadData() {
             try {
-                const res = await fetch('/data/all_records.json');
-                allData = await res.json();
-                console.log(`Data Loaded: ${allData.length} records`);
-                updateMemoryUI();
+                const [resRecords, resMeta] = await Promise.all([
+                    fetch('/data/all_records.json'),
+                    fetch('/data/race_meta.json')
+                ]);
+                allData = await resRecords.json();
+                raceMeta = await resMeta.json();
+                console.log(`Data Loaded: ${allData.length} records, ${raceMeta.length} races`);
+                initFilterUI();
             } catch (e) {
                 console.error("데이터 로드 실패:", e);
                 document.getElementById('resultsArea').innerHTML = `<div class="p-4 bg-red-100 text-red-600 rounded">데이터 파일을 찾을 수 없습니다. (build script 실행 필요)</div>`;
@@ -111,35 +121,116 @@
             return new RegExp(regexStr, 'i'); // case-insensitive
         }
 
-        const input = document.getElementById('searchInput');
-        input.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            if (val.length < 2) {
-                document.getElementById('resultsArea').innerHTML = '<div class="col-span-full text-center text-slate-400 py-10">2글자 이상 입력해주세요.</div>';
+        // Filter UI Initialization
+        function initFilterUI() {
+            const types = [...new Set(raceMeta.map(r => r.type))].sort();
+            const container = document.getElementById('typeToggles');
+            container.innerHTML = types.map(type => `
+                <button onclick="toggleType('${type}')" 
+                    class="type-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-colors bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+                    data-type="${type}">
+                    ${type}
+                </button>
+            `).join('');
+        }
+
+        window.toggleType = function(type) {
+            if (selectedType === type) {
+                selectedType = null;
+                document.getElementById('raceSelectArea').classList.add('hidden');
+                selectedRaces = [];
+            } else {
+                selectedType = type;
+                document.getElementById('raceSelectArea').classList.remove('hidden');
+                renderRaceOptions(type);
+                selectedRaces = [];
+            }
+            updateTypeButtons();
+            doSearch();
+        };
+
+        function updateTypeButtons() {
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                if (btn.dataset.type === selectedType) {
+                    btn.className = 'type-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-colors bg-slate-800 text-white border-slate-800 shadow';
+                } else {
+                    btn.className = 'type-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-colors bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
+                }
+            });
+        }
+
+        function renderRaceOptions(type) {
+            const select = document.getElementById('raceSelect');
+            const races = raceMeta.filter(r => r.type === type).sort((a,b) => b.year - a.year);
+            select.innerHTML = races.map(r => `<option value="${r.name}">${r.name} (${r.participants}명)</option>`).join('');
+        }
+
+        document.getElementById('raceSelect').addEventListener('change', (e) => {
+            const options = e.target.options;
+            const selected = [];
+            for(let i=0; i<options.length; i++) {
+                if(options[i].selected) selected.push(options[i].value);
+            }
+            
+            if(selected.length > 3) {
+                alert("최대 3개까지만 선택 가능합니다.");
+                // Enforce limit by deselecting extras
+                let count = 0;
+                for(let i=0; i<options.length; i++) {
+                    if(options[i].selected) {
+                        if(count < 3) count++;
+                        else options[i].selected = false;
+                    }
+                }
+                // Re-calculate selected
+                selected.length = 0;
+                for(let i=0; i<options.length; i++) {
+                    if(options[i].selected) selected.push(options[i].value);
+                }
+            }
+            selectedRaces = selected;
+            doSearch();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', doSearch);
+
+        function doSearch() {
+            const val = document.getElementById('searchInput').value.trim();
+            
+            if (val.length < 2 && selectedRaces.length === 0) {
+                document.getElementById('resultsArea').innerHTML = '<div class="col-span-full text-center text-slate-400 py-10">검색어를 입력하거나 대회를 선택해주세요.</div>';
                 return;
             }
             
-            // 검색 실행
-            // 1. 영어 이름 매칭 (Romanization logic or simple substring)
-            // 2. 한글 이름/초성 매칭
-            // 3. 배번호 매칭
-            
-            const regex = getKoreanRegex(val);
+            const regex = val.length >= 2 ? getKoreanRegex(val) : null;
+            const searchVal = val.toLowerCase().replace(/\s/g, '');
             const isEnglish = /^[A-Za-z\s]+$/.test(val);
             
-            const filtered = allData.filter(item => {
-                // 통합 SearchKey 활용
-                if (regex.test(item.n)) return true; // 한글 이름 매칭
-                if (item.n && item.n.toLowerCase().includes(val.toLowerCase())) return true; // 영어 이름 매칭
-                if (item.b== val) return true; // 배번호 일치
+            const results = [];
+            for (let i = 0; i < allData.length; i++) {
+                const item = allData[i];
                 
-                // (추가) 영어로 쳤는데 한글이름 발음검색? 
-                // 이는 복잡하므로 여기선 영문 이름 필드가 있는 경우만 매칭
-                return false;
-            });
+                // 1. Race Filter
+                if (selectedRaces.length > 0 && !selectedRaces.includes(item.raceName)) continue;
 
-            renderResults(filtered);
-        });
+                // 2. Text Filter
+                if (val.length >= 2) {
+                    let match = false;
+                    if ((item.searchKey && item.searchKey.includes(searchVal)) || 
+                        (isEnglish && item.n && item.n.toLowerCase().includes(val.toLowerCase())) ||
+                        (regex && regex.test(item.n)) ||
+                        (item.n && item.n.toLowerCase().includes(val.toLowerCase())) ||
+                        (item.c && item.c.toLowerCase().includes(val.toLowerCase()))) {
+                        match = true;
+                    }
+                    if (!match) continue;
+                }
+
+                results.push(item);
+                if (results.length >= 500) break;
+            }
+            renderResults(results);
+        }
 
         // 3. 렌더링
         function renderResults(list) {
@@ -167,12 +258,21 @@
                 if(typeof item.s === 'number') {
                         // 초 단위인 경우 변환 로직 필요하나 build script에서 이미 변환 추천. 
                         // 여기서는 텍스트 그대로 출력 (Build script가 잘 처리했다고 가정)
-                        details = `S: ${formatSec(item.s)} / B: ${formatSec(item.bk)} / R: ${formatSec(item.rn)}`;
+                        details = `S: ${formatSec(item.s)} / T1: ${formatSec(item.t1)} / B: ${formatSec(item.bk)} / T2: ${formatSec(item.t2)} / R: ${formatSec(item.rn)}`;
                 } else {
                     // 이미 텍스트인 경우
-                    details = `S: ${item.s || '-'} / B: ${item.bk || '-'} / R: ${item.rn || '-'}`;
+                    details = `S: ${item.s || '-'} / T1: ${item.t || '-'} / B: ${item.bk || '-'} / T2: ${item.t2 || '-'} / R: ${item.rn || '-'}`;
                 }
                 
+                // Meta info lookup
+                const meta = raceMeta.find(r => r.name === item.raceName);
+                let metaInfo = "";
+                if (meta) {
+                    metaInfo = `<div class="mt-2 pt-2 border-t border-slate-100 flex justify-between text-[10px] text-slate-400">
+                        <span><i class="fa-solid fa-users mr-1"></i>전체 ${meta.participants}명</span>
+                        <span><i class="fa-solid fa-stopwatch mr-1"></i>평균 ${formatSec(meta.avgTotal)}</span>
+                    </div>`;
+                }
 
                 return `
                 <div class="record-card bg-white p-4 rounded-lg shadow border border-slate-100 relative overflow-hidden">
@@ -181,7 +281,7 @@
                             <span class="text-xs font-bold px-2 py-1 rounded ${badgeClass} mb-1 inline-block uppercase">${item.source}</span>
                             <h3 class="font-bold text-lg text-slate-800">
                                 ${item.n} 
-                                <span class="text-sm text-slate-400 font-normal">${item.n}</span>
+                                <span class="text-sm text-slate-400 font-normal">${item.c}</span>
                             </h3>
                         </div>
                         <div class="text-right">
@@ -198,11 +298,8 @@
                     <div class="bg-slate-50 p-2 rounded text-xs text-slate-500 font-mono mb-3 text-center">
                         ${details}
                     </div>
-                    
-                    <button onclick='toggleMemory(${JSON.stringify(item).replace(/'/g, "&#39;")})' 
-                        class="w-full py-2 rounded text-sm font-bold transition ${isSaved ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-700'}">
-                        ${isSaved ? '<i class="fa-solid fa-check"></i> 저장됨' : '<i class="fa-solid fa-plus"></i> T-Memory 담기'}
-                    </button>
+                    ${metaInfo}
+     
                 </div>
                 `;
             }).join('');
@@ -219,50 +316,7 @@
             return h > 0 ? `${h}h ${m}m` : `${m}m`;
         }
 
-        // 4. T-Memory 기능
-        window.toggleMemory = function(item) {
-            // 이미 있는지 확인
-            const existsIdx = memory.findIndex(m => m.raceName === item.raceName && m.bib === item.b);
-            
-            if (existsIdx > -1) {
-                // 이미 있으면 삭제? 아니면 유지? 기획에 따라 다름. 여기선 중복 방지 알림.
-                alert("이미 담겨있는 기록입니다.");
-                return;
-            }
 
-            const sameTypeItems = memory.filter(m => m.raceType === item.raceType);
-            const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
-            const sortOrder = maxOrder + 1;
-
-            const memoryItem = {
-                ...item,
-                sortOrder: sortOrder,
-                savedAt: new Date().toISOString()
-            };
-
-            memory.push(memoryItem);
-            localStorage.setItem('triathlon_memory', JSON.stringify(memory));
-            updateMemoryUI();
-            
-            // 버튼 상태 업데이트를 위해 리렌더링은 비효율적이므로 버튼만 바꿀 수도 있지만, 
-            // 여기선 input 이벤트를 트리거해서 리렌더링
-            input.dispatchEvent(new Event('input'));
-        };
-
-        function updateMemoryUI() {
-            const bar = document.getElementById('memoryBar');
-            const count = document.getElementById('memoryCount');
-            count.innerText = memory.length;
-            if (memory.length > 0) {
-                bar.classList.remove('hidden');
-            } else {
-                bar.classList.add('hidden');
-            }
-        }
-
-        window.saveAndGo = function() {
-            window.location.href = 'memory_report.html';
-        };
 
         // 초기화
         loadData();

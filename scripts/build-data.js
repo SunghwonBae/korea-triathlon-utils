@@ -195,7 +195,7 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
                     b: findCol(['b', 'bib', 'no', 'number', '배번호']) || 'b',
                     n: findCol(['n', 'name', 'athlete', 'user', '한글이름', '이름']) || 'n',
                     d: findCol(['category', 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
-                    c: findCol(['state', 'club', 'team', '소속', '클럽']) || 'State',
+                    c: findCol(['state', 'club', 'team', '소속', '클럽','단체명']) || 'State',
                     ss: findCol(['startswim']),
                     fs: findCol(['finishswim']),
                     sb: findCol(['startbike']),
@@ -293,14 +293,82 @@ const optimizedRecords = allRecords.map(record => {
 }); 
 
 // 폴더가 없으면 생성
+// const outputDir = path.dirname(OUTPUT_FILE);
+// if (!fs.existsSync(outputDir)) {
+//     fs.mkdirSync(outputDir, { recursive: true });
+// }
+
+// fs.writeFileSync(OUTPUT_FILE, JSON.stringify(optimizedRecords));
+
+// console.log(`\n[SUCCESS] 통합 데이터 생성 완료!`);
+// console.log(`- 저장 경로: ${OUTPUT_FILE}`);
+// console.log(`- 총 데이터: ${optimizedRecords.length}건`);
+// console.log(`- 내장 한글 로마자 변환기 적용됨 (npm 설치 필요없음).`);
+
+
+// ==========================================
+// 5. [NEW] 대회별 메타 데이터(통계) 생성
+// ==========================================
+console.log("Generating Race Metadata...");
+
+const raceMetaMap = {};
+
+optimizedRecords.forEach(rec => {
+    const key = rec.raceName; // 대회명 기준 그룹핑
+    
+    if (!raceMetaMap[key]) {
+        raceMetaMap[key] = {
+            id: key,
+            name: rec.raceName,
+            year: rec.raceYear,
+            type: rec.raceType,
+            count: 0,
+            sumT: 0, sumS: 0, sumB: 0, sumR: 0, // 합계 (평균 계산용)
+            countS: 0, countB: 0, countR: 0 // 완주자 수 (평균 계산용)
+        };
+    }
+
+    const meta = raceMetaMap[key];
+    meta.count++;
+    
+    // 전체 시간
+    if (rec.t > 0) meta.sumT += rec.t;
+    
+    // 종목별 시간 (0보다 큰 경우만)
+    if (rec.s > 0) { meta.sumS += rec.s; meta.countS++; }
+    if (rec.bk > 0) { meta.sumB += rec.bk; meta.countB++; }
+    if (rec.rn > 0) { meta.sumR += rec.rn; meta.countR++; }
+});
+
+// 평균값 계산 및 배열로 변환
+const raceMetaList = Object.values(raceMetaMap).map(m => ({
+    id: m.id,
+    name: m.name,
+    year: m.year,
+    type: m.type,
+    participants: m.count,
+    avgTotal: m.count > 0 ? Math.round(m.sumT / m.count) : 0,
+    avgSwim: m.countS > 0 ? Math.round(m.sumS / m.countS) : 0,
+    avgBike: m.countB > 0 ? Math.round(m.sumB / m.countB) : 0,
+    avgRun: m.countR > 0 ? Math.round(m.sumR / m.countR) : 0
+})).sort((a, b) => b.year - a.year); // 최신순 정렬
+
+// ==========================================
+// 6. 파일 저장
+// ==========================================
+
 const outputDir = path.dirname(OUTPUT_FILE);
 if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
 }
 
+// 1. 전체 검색용 데이터
 fs.writeFileSync(OUTPUT_FILE, JSON.stringify(optimizedRecords));
 
-console.log(`\n[SUCCESS] 통합 데이터 생성 완료!`);
-console.log(`- 저장 경로: ${OUTPUT_FILE}`);
-console.log(`- 총 데이터: ${optimizedRecords.length}건`);
-console.log(`- 내장 한글 로마자 변환기 적용됨 (npm 설치 필요없음).`);
+// 2. [NEW] 통계 분석용 메타 데이터
+const META_FILE = path.join(outputDir, 'race_meta.json');
+fs.writeFileSync(META_FILE, JSON.stringify(raceMetaList));
+
+console.log(`\n[SUCCESS] 데이터 생성 완료!`);
+console.log(`- 전체 기록: ${OUTPUT_FILE} (${optimizedRecords.length}건)`);
+console.log(`- 대회 정보: ${META_FILE} (${raceMetaList.length}개 대회)`);
