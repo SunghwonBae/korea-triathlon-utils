@@ -3,90 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Triathlon Total Search</title>
+    <title>대회 비교 분석</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="menu_full_handler.js" defer></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
-        .record-card { transition: all 0.2s; }
-        .record-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .source-badge-ironman { background-color: #ef4444; color: white; }
-        .source-badge-challenge { background-color: #f59e0b; color: white; }
-        .source-badge-triathlon { background-color: #3b82f6; color: white; }
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+        .card { background: white; border-radius: 1.5rem; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        
+        /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #2563eb; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+
+        /* 모바일 세로모드 최적화 */
+        @media (max-width: 768px) {
+            body { padding: 1rem !important; }
+            main { padding: 0 !important; margin-top: 1rem !important; }
+            .card { padding: 1.5rem 1rem !important; }
+            h2.text-2xl { font-size: 1.5rem !important; }
+            .slide-menu { width: 85% !important; left: -85% !important; }
+            .slide-menu.is-active { left: 0 !important; }
+            #menuToggle { top: 1.5rem !important; left: 1.5rem !important; }
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="p-6 md:p-10">
 
-    <header class="bg-slate-900 text-white p-4 sticky top-0 z-50 shadow-lg">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-person-running"></i> IRON SEARCH
-            </h1>
-            <div class="relative group">
-                <button onclick="window.location.href='memory_report.html'" class="text-sm bg-slate-700 px-3 py-1 rounded hover:bg-slate-600 transition">
-                    <i class="fa-solid fa-chart-pie mr-1"></i> 분석실로 이동
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-4xl mx-auto p-4 mt-6">
+    <main class="max-w-5xl mx-auto">
+        <button id="menuToggle" class="absolute left-6 top-6 z-50 bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-blue-900 shadow-md hover:bg-slate-50 transition-all"><i class="fas fa-bars"></i></button>
         
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold mb-2">선수 통합 검색</h2>
-            <p class="text-slate-500 text-sm mb-6">아이언맨, 챌린지, 협회 대회를 한 번에 검색하세요.</p>
+        <div class="text-center mb-8 pt-8">
+            <h2 class="text-2xl font-black text-slate-800 mb-2">대회 비교 분석</h2>
+            <p class="text-slate-500 text-sm mb-6">대회타입(Ironman, Half, Olympic)을 선택 후 대회를 골라 비교하세요.</p>
             
-            <!-- Filter Section -->
-            <div class="max-w-lg mx-auto mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-left">
-                <label class="block text-xs font-bold text-slate-500 mb-2">1. 대회 타입 선택</label>
-                <div id="typeToggles" class="flex gap-2 mb-4 justify-center flex-wrap">
-                    <span class="text-sm text-slate-400">데이터 로딩중...</span>
+            <div class="max-w-2xl mx-auto mb-6 relative">
+                <div class="bg-white p-2 rounded-2xl shadow-md border border-slate-200">
+                    <div class="flex shadow-sm rounded-xl h-12">
+                        <button id="typeCycleBtn" onclick="cycleRaceType()" 
+                            class="flex-none px-4 bg-slate-800 text-white text-sm font-bold rounded-l-xl hover:bg-slate-700 transition-colors border border-slate-800 focus:outline-none z-10 w-24">
+                            Ironman
+                        </button>
+                        
+                        <div id="dropdownTrigger" onclick="toggleRaceDropdown()" 
+                            class="flex-1 bg-white border border-l-0 border-slate-300 rounded-r-xl flex items-center px-4 cursor-pointer hover:bg-slate-50 relative select-none">
+                            <span id="selectedRacesText" class="text-slate-400 text-sm">[대회선택 (최대 5개)]</span>
+                            <i class="fas fa-chevron-down absolute right-4 text-slate-400 text-xs"></i>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="raceSelectArea" class="hidden transition-all duration-300">
-                    <label class="block text-xs font-bold text-slate-500 mb-2">2. 대회 선택 (최대 3개, 다중선택)</label>
-                    <select id="raceSelect" multiple class="w-full p-2 border border-slate-300 rounded-lg text-sm h-32 focus:ring-2 focus:ring-slate-500 focus:outline-none"></select>
-                    <p class="text-xs text-slate-400 mt-1 text-right">* PC: Ctrl+클릭, 모바일: 터치하여 선택</p>
+                <div id="raceDropdownList" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                    <div class="p-4 text-center text-xs text-slate-400">대회 목록 로딩 중...</div>
                 </div>
-            </div>
-
-            <div class="relative max-w-lg mx-auto">
-                <input type="text" id="searchInput" 
-                    class="w-full p-4 pl-12 rounded-full border border-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 text-lg"
-                    placeholder="이름 (홍길동, Hong) 또는 배번호 검색...">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-xl"></i>
-            </div>
-        </div>
-
-
-
-        <div id="resultsArea" class="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-            <div class="col-span-full text-center text-slate-400 py-10">
-                검색어를 입력하면 전체 대회 기록이 나타납니다.
             </div>
         </div>
 
         <!-- 그룹 분석 섹션 -->
-        <div id="groupAnalysis" class="hidden mt-8 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h3 class="text-lg font-bold mb-4 text-center">선택된 대회별 그룹 분석 (총완주시간 기준 10% 그룹화)</h3>
+        <div id="groupAnalysis" class="hidden mt-8 card">
+            <h3 class="text-lg font-bold mb-4 text-center">대회별 그룹분석 (완주시간 기준 10% 그룹화)</h3>
             <div id="groupTable"></div>
-            <div class="mt-8">
+            <div class="mt-8 bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200">
                 <h4 class="text-md font-bold mb-4 text-center">각 종목별 평균속도 비교 차트</h4>
-                <div class="grid grid-cols-1 gap-6">
-                    <div class="chart-container" style="position: relative; height: 300px;">
-                        <h5 class="text-center font-semibold mb-2">수영 페이스 (100미터당)</h5>
+                <div class="grid grid-cols-1 gap-6 justify-items-center">
+                    <div class="chart-container mx-auto" style="position: relative; height: 400px; margin-bottom: 20px; width: 100%; max-width: 800px;">
+                        <h5 class="text-center font-semibold mb-2">수영 페이스 </h5>
                         <canvas id="swimSpeedChart"></canvas>
                     </div>
-                    <div class="chart-container" style="position: relative; height: 300px;">
-                        <h5 class="text-center font-semibold mb-2">자전거 속도 (km/h)</h5>
+                    <div class="chart-container mx-auto" style="position: relative; height: 400px; margin-bottom: 20px; width: 100%; max-width: 800px;">
+                        <h5 class="text-center font-semibold mb-2">싸이클 평속</h5>
                         <canvas id="bikeSpeedChart"></canvas>
                     </div>
-                    <div class="chart-container" style="position: relative; height: 300px;">
-                        <h5 class="text-center font-semibold mb-2">달리기 페이스 (1km당)</h5>
+                    <div class="chart-container mx-auto" style="position: relative; height: 400px; margin-bottom: 20px; width: 100%; max-width: 800px;">
+                        <h5 class="text-center font-semibold mb-2">런 페이스</h5>
                         <canvas id="runSpeedChart"></canvas>
                     </div>
+                </div>
+            </div>
+            <div class="mt-8 card">
+                <h3 class="text-xl font-bold mb-6 text-center">선택 대회 상호 비교 분석</h3>
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="chart-container" style="height: 400px;  margin-bottom: 20px;">
+                        <h4 class="text-center font-semibold mb-4 text-slate-600">대회별 평균 완주시간 구성 (Stack)</h4>
+                        <canvas id="raceCompositionChart"></canvas>
+                    </div>
+                    <div class="chart-container" style="height: 400px;  margin-bottom: 20px;">
+                        <h4 class="text-center font-semibold mb-4 text-slate-600">부문별 평균 기록 비교 (Grouped)</h4>
+                        <canvas id="divisionCompareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200">
+                <h4 class="text-md font-bold mb-4 text-center">부문별 그룹 분석</h4>
+                <div id="divisionTable"></div>
+                <div class="mt-8 ">
+                    <h5 class="text-sm font-bold mb-4 text-center">부문별 평균속도 비교 차트</h5>
+                    <div class="grid grid-cols-1 gap-6" id="divisionCharts"></div>
                 </div>
             </div>
         </div>
@@ -100,6 +128,24 @@
         
         let selectedType = null;
         let selectedRaces = [];
+
+        // Helper: 초 -> HH:MM:SS
+        function sToHms(s) {
+            if (!s || s <= 0) return "--:--:--";
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = Math.floor(s % 60);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+
+        
+        // Helper: 초 -> MM:SS
+        function sToMs(s) {
+            if (!s || s <= 0) return "00:00";
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
 
         // 거리 계산 함수
         function getRaceDistances(type) {
@@ -125,6 +171,11 @@
             return `${min}:${sec.toString().padStart(2, '0')}`;
         }
 
+        function getOverallAvg(raceName, field) {
+            const data = allData.filter(d => d.raceName === raceName && timeToSeconds(d[field]) > 0);
+            return data.length ? data.reduce((acc, cur) => acc + timeToSeconds(cur[field]), 0) / data.length : 0;
+        }
+
         // 1. 데이터 로드 (빌드된 통합 JSON)
         async function loadData() {
             try {
@@ -132,7 +183,14 @@
                     fetch('/data/all_records.json'),
                     fetch('/data/race_meta.json')
                 ]);
-                allData = await resRecords.json();
+                const rawRecords = await resRecords.json();
+
+                // 데이터 표준화 적용 (Division 명칭 통일)
+                allData = rawRecords.map(item => ({
+                    ...item,
+                    d: standardizeDivision(item.d)
+                }));
+                
                 raceMeta = await resMeta.json();
                 console.log(`Data Loaded: ${allData.length} records, ${raceMeta.length} races`);
                 initFilterUI();
@@ -169,200 +227,164 @@
             return new RegExp(regexStr, 'i'); // case-insensitive
         }
 
-        // Filter UI Initialization
-        function initFilterUI() {
-            const types = [...new Set(raceMeta.map(r => r.type))].sort();
-            const container = document.getElementById('typeToggles');
-            container.innerHTML = types.map(type => `
-                <button onclick="toggleType('${type}')" 
-                    class="type-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-colors bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
-                    data-type="${type}">
-                    ${type}
-                </button>
-            `).join('');
+        const RACE_TYPES = ['Ironman', 'Half', 'Olympic'];
+        let currentTypeIndex = 0; // 0: Ironman, 1: Half, 2: Olympic
+
+        // 2. 부문(Division) 명칭 표준화 함수
+        function standardizeDivision(div) {
+            if (!div) return 'Other';
+            let d = div.toString().replace(/\s+/g, '').toUpperCase();
+            let gender = ( d.includes('FEMALE') || d.includes('여자')|| d.includes('여') || (!d.startsWith('FULL') && d.startsWith('F')) ) ? 'F' : 'M';
+            let ageMatch = d.match(/\d{2}/);
+            let age = ageMatch ? ageMatch[0] : '';
+            if (d.includes('PRO') || d.includes('ELITE')) return 'PRO';
+            return age ? gender + age : 'Other';
         }
 
-        window.toggleType = function(type) {
-            if (selectedType === type) {
-                selectedType = null;
-                document.getElementById('raceSelectArea').classList.add('hidden');
-                selectedRaces = [];
-            } else {
-                selectedType = type;
-                document.getElementById('raceSelectArea').classList.remove('hidden');
-                renderRaceOptions(type);
-                selectedRaces = [];
-            }
-            updateTypeButtons();
-            doSearch();
-        };
+        // 초기화 함수 (데이터 로드 후 호출됨)
+        function initFilterUI() {
+            // 기본값 Ironman 설정
+            currentTypeIndex = 0;
+            selectedType = RACE_TYPES[currentTypeIndex];
+            
+            updateTypeButtonUI();
+            renderRaceCheckboxes(selectedType);
+            updateTriggerText();
+        }
 
-        function updateTypeButtons() {
-            document.querySelectorAll('.type-btn').forEach(btn => {
-                if (btn.dataset.type === selectedType) {
-                    btn.className = 'type-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-colors bg-slate-800 text-white border-slate-800 shadow';
-                } else {
-                    btn.className = 'type-btn px-3 py-1.5 rounded-full text-sm font-medium border transition-colors bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
-                }
+        // 1. 레이스 종류 순환 버튼 클릭 시
+        function cycleRaceType() {
+            // 인덱스 순환 (0 -> 1 -> 2 -> 0)
+            currentTypeIndex = (currentTypeIndex + 1) % RACE_TYPES.length;
+            selectedType = RACE_TYPES[currentTypeIndex];
+
+            // UI 업데이트
+            updateTypeButtonUI();
+            
+            // 선택 초기화 및 목록 갱신
+            selectedRaces = [];
+            document.getElementById('groupAnalysis').classList.add('hidden');
+            renderRaceCheckboxes(selectedType);
+            updateTriggerText();
+            
+            // 드롭다운이 열려있다면 닫지 않고 내용만 갱신된 상태 유지
+        }
+
+        // 버튼 텍스트 업데이트
+        function updateTypeButtonUI() {
+            const btn = document.getElementById('typeCycleBtn');
+            btn.textContent = selectedType;
+        }
+
+        // 2. 드롭다운 토글
+        function toggleRaceDropdown() {
+            const list = document.getElementById('raceDropdownList');
+            list.classList.toggle('hidden');
+        }
+
+        // 외부 클릭 시 드롭다운 닫기 (UX 향상)
+        window.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('raceDropdownList');
+            const trigger = document.getElementById('dropdownTrigger');
+            const btn = document.getElementById('typeCycleBtn');
+            
+            if (!dropdown.contains(e.target) && !trigger.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // 3. 체크박스 목록 렌더링 (드롭다운 내부)
+        function renderRaceCheckboxes(type) {
+            const container = document.getElementById('raceDropdownList');
+            const races = raceMeta.filter(r => r.type === type).sort((a,b) => b.year - a.year);
+
+            if (races.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">해당 타입의 대회 정보가 없습니다.</div>';
+                return;
+            }
+
+            container.innerHTML = races.map(r => `
+                <label class="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors">
+                    <input type="checkbox" value="${r.name}" class="race-checkbox w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                    <span class="text-sm text-slate-700">${r.name} <span class="text-slate-400 text-xs ml-1">(${r.participants}명)</span></span>
+                </label>
+            `).join('');
+
+            // 체크박스 이벤트 리스너 재등록
+            document.querySelectorAll('.race-checkbox').forEach(cb => {
+                cb.addEventListener('change', handleRaceSelection);
             });
         }
 
-        function renderRaceOptions(type) {
-            const select = document.getElementById('raceSelect');
-            const races = raceMeta.filter(r => r.type === type).sort((a,b) => b.year - a.year);
-            select.innerHTML = races.map(r => `<option value="${r.name}">${r.name} (${r.participants}명)</option>`).join('');
-        }
+        // 4. 대회 선택 처리
+        function handleRaceSelection() {
+            const checkedBoxes = document.querySelectorAll('.race-checkbox:checked');
+            const dropdown = document.getElementById('raceDropdownList');
 
-        document.getElementById('raceSelect').addEventListener('change', (e) => {
-            const options = e.target.options;
-            const selected = [];
-            for(let i=0; i<options.length; i++) {
-                if(options[i].selected) selected.push(options[i].value);
-            }
-            
-            if(selected.length > 3) {
-                alert("최대 3개까지만 선택 가능합니다.");
-                // Enforce limit by deselecting extras
-                let count = 0;
-                for(let i=0; i<options.length; i++) {
-                    if(options[i].selected) {
-                        if(count < 3) count++;
-                        else options[i].selected = false;
-                    }
-                }
-                // Re-calculate selected
-                selected.length = 0;
-                for(let i=0; i<options.length; i++) {
-                    if(options[i].selected) selected.push(options[i].value);
-                }
-            }
-            selectedRaces = selected;
-            doSearch();
-        });
-
-        document.getElementById('searchInput').addEventListener('input', doSearch);
-
-        function doSearch() {
-            const val = document.getElementById('searchInput').value.trim();
-            
-            if (val.length < 2 && selectedRaces.length === 0) {
-                document.getElementById('resultsArea').innerHTML = '<div class="col-span-full text-center text-slate-400 py-10">검색어를 입력하거나 대회를 선택해주세요.</div>';
+            if (checkedBoxes.length > 5) {
+                this.checked = false;
+                showToast("최대 5개까지만 선택 가능합니다.");
+                dropdown.classList.add('hidden');
                 return;
             }
-            
-            const regex = val.length >= 2 ? getKoreanRegex(val) : null;
-            const searchVal = val.toLowerCase().replace(/\s/g, '');
-            const isEnglish = /^[A-Za-z\s]+$/.test(val);
-            
-            const results = [];
-            for (let i = 0; i < allData.length; i++) {
-                const item = allData[i];
-                
-                // 1. Race Filter
-                if (selectedRaces.length > 0 && !selectedRaces.includes(item.raceName)) continue;
-
-                // 2. Text Filter
-                if (val.length >= 2) {
-                    let match = false;
-                    if ((item.searchKey && item.searchKey.includes(searchVal)) || 
-                        (isEnglish && item.n && item.n.toLowerCase().includes(val.toLowerCase())) ||
-                        (regex && regex.test(item.n)) ||
-                        (item.n && item.n.toLowerCase().includes(val.toLowerCase())) ||
-                        (item.c && item.c.toLowerCase().includes(val.toLowerCase()))) {
-                        match = true;
-                    }
-                    if (!match) continue;
-                }
-
-                results.push(item);
-                if (results.length >= 500) break;
+            if (checkedBoxes.length == 5) {
+                 dropdown.classList.add('hidden');
             }
-            renderResults(results);
+
+            selectedRaces = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            updateTriggerText();
             performGroupAnalysis();
         }
 
-        // 3. 렌더링
-        function renderResults(list) {
-            const area = document.getElementById('resultsArea');
-            if (list.length === 0) {
-                area.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">검색 결과가 없습니다.</div>';
-                return;
-            }
-
-            area.innerHTML = list.map(item => {
-                const isSaved = memory.some(m => m.savedAt && m.raceName === item.raceName && m.b === item.b); // 간단한 중복 체크
-                
-                // 뱃지 색상
-                let badgeClass = 'bg-gray-500';
-                if(item.source === 'ironman') badgeClass = 'source-badge-ironman';
-                else if(item.source === 'challenge') badgeClass = 'source-badge-challenge';
-                else if(item.source === 'triathlon') badgeClass = 'source-badge-triathlon';
-
-                // 시간 포맷
-                const totalTime = item.t || "DNF";
-                
-                // 상세 기록 문자열
-                let details = "";
-                
-                if(typeof item.s === 'number') {
-                        // 초 단위인 경우 변환 로직 필요하나 build script에서 이미 변환 추천. 
-                        // 여기서는 텍스트 그대로 출력 (Build script가 잘 처리했다고 가정)
-                        details = `S: ${formatSec(item.s)} / T1: ${formatSec(item.t1)} / B: ${formatSec(item.bk)} / T2: ${formatSec(item.t2)} / R: ${formatSec(item.rn)}`;
-                } else {
-                    // 이미 텍스트인 경우
-                    details = `S: ${item.s || '-'} / T1: ${item.t || '-'} / B: ${item.bk || '-'} / T2: ${item.t2 || '-'} / R: ${item.rn || '-'}`;
-                }
-                
-                // Meta info lookup
-                const meta = raceMeta.find(r => r.name === item.raceName);
-                let metaInfo = "";
-                if (meta) {
-                    metaInfo = `<div class="mt-2 pt-2 border-t border-slate-100 flex justify-between text-[10px] text-slate-400">
-                        <span><i class="fa-solid fa-users mr-1"></i>전체 ${meta.participants}명</span>
-                        <span><i class="fa-solid fa-stopwatch mr-1"></i>평균 ${formatSec(meta.avgTotal)}</span>
-                    </div>`;
-                }
-
-                return `
-                <div class="record-card bg-white p-4 rounded-lg shadow border border-slate-100 relative overflow-hidden">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-xs font-bold px-2 py-1 rounded ${badgeClass} mb-1 inline-block uppercase">${item.source}</span>
-                            <h3 class="font-bold text-lg text-slate-800">
-                                ${item.n} 
-                                <span class="text-sm text-slate-400 font-normal">${item.c}</span>
-                            </h3>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-slate-700">${formatSec(totalTime)}</div>
-                            <div class="text-xs text-slate-400">Rank: ${item.ra || '-'}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-sm text-slate-600 mb-2">
-                        <div class="font-medium">${item.raceName}</div>
-                        <div class="text-xs text-slate-400">${item.raceYear} | Bib: ${item.b} | ${item.d}</div>
-                    </div>
-
-                    <div class="bg-slate-50 p-2 rounded text-xs text-slate-500 font-mono mb-3 text-center">
-                        ${details}
-                    </div>
-                    ${metaInfo}
-     
-                </div>
-                `;
-            }).join('');
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
         }
 
-        // Helper: 초 -> MM:SS (화면 표시용 단순화)
-        function formatSec(val) {
-            if(!val) return "-";
-            if(String(val).includes(":")) return val; // 이미 텍스트면 패스
-            const num = parseInt(val);
-            if(isNaN(num)) return val;
-            const h = Math.floor(num/3600);
-            const m = Math.floor((num%3600)/60);
-            return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        // 입력창 텍스트 업데이트 (선택된 대회 표시)
+        function updateTriggerText() {
+            const textSpan = document.getElementById('selectedRacesText');
+            if (selectedRaces.length === 0) {
+                textSpan.textContent = "[대회선택 (최대 5개)]";
+                textSpan.classList.add('text-slate-400');
+                textSpan.classList.remove('text-slate-800', 'font-medium');
+            } else {
+                // 선택된 대회 이름 나열 혹은 개수 표시
+                // 공간이 좁을 수 있으므로 "000 외 1건" 형식 또는 그냥 나열
+                const text = selectedRaces.join(', ');
+                
+                // 너무 길면 잘라서 표시 (선택 사항)
+                if (text.length > 35) {
+                     textSpan.textContent = `${selectedRaces[0]} 외 ${selectedRaces.length - 1}건`;
+                } else {
+                     textSpan.textContent = text;
+                }
+                
+                textSpan.classList.remove('text-slate-400');
+                textSpan.classList.add('text-slate-800', 'font-medium');
+            }
+        }
+        
+        function calculateAverages(data) {
+            const divisions = [...new Set(data.map(d => d.d))].sort();
+            return divisions.map(div => {
+                const divData = data.filter(d => d.d === div);
+                return {
+                    division: div,
+                    totalSec: divData.reduce((acc, cur) => acc + timeToSeconds(cur.t), 0) / divData.length,
+                    swimPaceSec: divData.reduce((acc, cur) => acc + timeToSeconds(cur.s), 0) / divData.length,
+                    bikeSpeed: divData.reduce((acc, cur) => acc + (3600 * 180 / timeToSeconds(cur.bk)), 0) / divData.length,
+                    runPaceSec: divData.reduce((acc, cur) => acc + timeToSeconds(cur.rn), 0) / divData.length
+                };
+            });
         }
 
         // Helper: 시간 문자열을 초로 변환
@@ -433,14 +455,14 @@
                     const runPaceSec = avgRun / distances.run;
 
                     return {
-                        group: `${index * 10}-${(index + 1) * 10}%`,
+                        group: `${(index + 1) * 10}%`,
                         count,
-                        avgTotal: formatSec(Math.round(avgTotal)),
-                        avgSwim: formatSec(Math.round(avgSwim)),
-                        avgT1: formatSec(Math.round(avgT1)),
-                        avgBike: formatSec(Math.round(avgBike)),
-                        avgT2: formatSec(Math.round(avgT2)),
-                        avgRun: formatSec(Math.round(avgRun)),
+                        avgTotal: Math.round(avgTotal),
+                        avgSwim: Math.round(avgSwim),
+                        avgT1: Math.round(avgT1),
+                        avgBike: Math.round(avgBike),
+                        avgT2: Math.round(avgT2),
+                        avgRun: Math.round(avgRun),
                         avgSwimSpeed: parseFloat(avgSwimSpeed),
                         avgBikeSpeed: parseFloat(avgBikeSpeed),
                         avgRunSpeed: parseFloat(avgRunSpeed),
@@ -455,17 +477,132 @@
                 };
             }).filter(analysis => analysis !== null);
 
+
             renderGroupTables(raceAnalyses);
             renderDisciplineCharts(raceAnalyses);
+            
+            // 부문별 분석
+            performDivisionAnalysis();
+            const raceAnalyses2 = selectedRaces.map(raceName => {
+                const raceData = allData.filter(d => d.raceName === raceName && timeToSeconds(d.t) > 0);
+                return { raceName, averages: calculateAverages(raceData) };
+            });
+            renderComparisonCharts(raceAnalyses2); // 추가 차트 호출
+
             document.getElementById('groupAnalysis').classList.remove('hidden');
+        }
+
+        // 부문별 분석 수행
+        function performDivisionAnalysis() {
+            if (selectedRaces.length === 0) return;
+
+            // 각 대회별로 d별 평균 분석
+            const divisionAnalyses = selectedRaces.map(raceName => {
+                const raceData = allData.filter(item => item.raceName === raceName);
+                return analyzeDivisionsForRace(raceName, raceData);
+            }).filter(analysis => analysis !== null);
+            
+            renderDivisionTables(divisionAnalyses, false);
+            renderDivisionCharts(divisionAnalyses, false);
+        }
+
+        // 특정 대회/부문의 d별 분석
+        function analyzeDivisionsForRace(raceName, raceData) {
+            const raceInfo = raceMeta.find(r => r.name === raceName) || { type: 'Olympic' };
+            const distances = getRaceDistances(raceInfo.type);
+
+            // d별로 그룹화
+            const divisionGroups = {};
+            raceData.forEach(item => {
+                const d = item.d || '기타';
+                if (!divisionGroups[d]) divisionGroups[d] = [];
+                divisionGroups[d].push(item);
+            });
+
+            // 각 d별 평균 계산
+            const divisionAverages = Object.keys(divisionGroups).sort().map(division => {
+                const group = divisionGroups[division];
+                const count = group.length;
+                const avgTotal = group.reduce((sum, item) => sum + (timeToSeconds(item.t) || 0), 0) / count;
+                const avgSwim = group.reduce((sum, item) => sum + (timeToSeconds(item.s) || 0), 0) / count;
+                const avgT1 = group.reduce((sum, item) => sum + (timeToSeconds(item.t1) || 0), 0) / count;
+                const avgBike = group.reduce((sum, item) => sum + (timeToSeconds(item.bk) || 0), 0) / count;
+                const avgT2 = group.reduce((sum, item) => sum + (timeToSeconds(item.t2) || 0), 0) / count;
+                const avgRun = group.reduce((sum, item) => sum + (timeToSeconds(item.rn) || 0), 0) / count;
+                
+                const swimPaceSec = avgSwim / (distances.swim * 10);
+                const bikeSpeed = (distances.bike * 3600) / avgBike; // 속도 km/h
+                const runPaceSec = avgRun / distances.run;
+
+                return {
+                    division,
+                    count,
+                    avgTotal: Math.round(avgTotal),
+                    avgSwim: Math.round(avgSwim),
+                    avgT1: Math.round(avgT1),
+                    avgBike: Math.round(avgBike),
+                    avgT2: Math.round(avgT2),
+                    avgRun: Math.round(avgRun),
+                    swimPaceSec: parseFloat(swimPaceSec.toFixed(2)),
+                    bikePaceSec: parseFloat(bikeSpeed.toFixed(2)),
+                    runPaceSec: parseFloat(runPaceSec.toFixed(2))
+                };
+            });
+
+            return {
+                raceName,
+                averages: divisionAverages
+            };
+        }
+
+        // 그룹 분석 테이블 렌더링
+        function renderGroupTables(raceAnalyses) {
+            const tablesHtml = raceAnalyses.map(analysis => `
+                <div class="mb-8">
+                    <h4 class="text-md font-bold mb-4 text-center">${analysis.raceName} Group Analysis</h4>
+                    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-black tracking-wider">
+                                    <tr>
+                                        <th class="py-2 px-3">Group</th>
+                                        <th class="py-2 px-3">Count</th>
+                                        <th class="py-2 px-3">Avg Finish Time</th>
+                                        <th class="py-2 px-3">Swim</th>
+                                        <th class="py-2 px-3 hidden md:table-cell">T1</th>
+                                        <th class="py-2 px-3">Bike</th>
+                                        <th class="py-2 px-3 hidden md:table-cell">T2</th>
+                                        <th class="py-2 px-3">Run</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-bold text-slate-700">
+                                    ${analysis.averages.map(avg => `
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="py-2 px-3 text-center font-medium">${avg.group}</td>
+                                            <td class="py-2 px-3 text-center">${avg.count}</td>
+                                            <td class="py-2 px-3 text-center font-black text-slate-900 font-mono">${sToHms(avg.avgTotal)}</td>
+                                            <td class="py-2 px-3 text-center text-blue-500 font-mono">${sToHms(avg.avgSwim)}</td>
+                                            <td class="py-2 px-3 text-center text-slate-400 font-mono hidden md:table-cell">${sToMs(avg.avgT1)}</td>
+                                            <td class="py-2 px-3 text-center text-green-500 font-mono">${sToHms(avg.avgBike)}</td>
+                                            <td class="py-2 px-3 text-center text-slate-400 font-mono hidden md:table-cell">${sToMs(avg.avgT2)}</td>
+                                            <td class="py-2 px-3 text-center text-orange-500 font-mono">${sToHms(avg.avgRun)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('groupTable').innerHTML = tablesHtml;
         }
 
         // 각 종목별 속도 차트 렌더링
         function renderDisciplineCharts(raceAnalyses) {
             const disciplines = [
-                { id: 'swimSpeedChart', key: 'swimPaceSec', title: '100미터당 시간', unit: 'sec', formatCallback: formatPace },
-                { id: 'bikeSpeedChart', key: 'avgBikeSpeed', title: '속도 (km/h)', unit: 'kmh', formatCallback: null },
-                { id: 'runSpeedChart', key: 'runPaceSec', title: '1km당 시간', unit: 'sec', formatCallback: formatPace }
+                { id: 'swimSpeedChart', key: 'swimPaceSec', title: '수영 페이스', unit: 'sec', formatCallback: formatPace },
+                { id: 'bikeSpeedChart', key: 'avgBikeSpeed', title: '싸이클 평속', unit: 'kmh', formatCallback: null },
+                { id: 'runSpeedChart', key: 'runPaceSec', title: '런 페이스', unit: 'sec', formatCallback: formatPace }
             ];
 
             disciplines.forEach(discipline => {
@@ -489,9 +626,23 @@
 
                 const options = {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (discipline.id === 'swimSpeedChart') {
+                                        return formatPace(context.parsed.y) ;
+                                    } else if (discipline.id === 'bikeSpeedChart') {
+                                        return context.parsed.y.toFixed(2) ;
+                                    } else if (discipline.id === 'runSpeedChart') {
+                                        return formatPace(context.parsed.y) ;
+                                    }
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -517,7 +668,7 @@
                 window[discipline.id + 'Instance'] = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['0-10%', '10-20%', '20-30%', '30-40%', '40-50%', '50-60%', '60-70%', '70-80%', '80-90%', '90-100%'],
+                        labels: ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'],
                         datasets: datasets
                     },
                     options: options
@@ -525,45 +676,283 @@
             });
         }
 
-        // 그룹 테이블 렌더링 (각 대회별)
-        function renderGroupTables(raceAnalyses) {
-            const tablesHtml = raceAnalyses.map(analysis => `
+        // 부문별 테이블 렌더링
+        function renderDivisionTables(divisionAnalyses, isCommon) {
+            const tablesHtml = divisionAnalyses.map(analysis => `
                 <div class="mb-8">
-                    <h4 class="text-md font-bold mb-4 text-center">${analysis.raceName} 그룹 분석 (총완주시간 기준 10% 그룹화)</h4>
-                    <table class="w-full border-collapse border border-slate-300 text-sm">
-                        <thead>
-                            <tr class="bg-slate-100">
-                                <th class="border border-slate-300 p-2">그룹</th>
-                                <th class="border border-slate-300 p-2">인원</th>
-                                <th class="border border-slate-300 p-2">평균 완주시간</th>
-                                <th class="border border-slate-300 p-2">평균 수영</th>
-                                <th class="border border-slate-300 p-2">평균 T1</th>
-                                <th class="border border-slate-300 p-2">평균 싸이클</th>
-                                <th class="border border-slate-300 p-2">평균 T2</th>
-                                <th class="border border-slate-300 p-2">평균 런</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${analysis.averages.map(avg => `
-                                <tr class="hover:bg-slate-50">
-                                    <td class="border border-slate-300 p-2 text-center font-medium">${avg.group}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.count}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.avgTotal}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.avgSwim}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.avgT1}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.avgBike}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.avgT2}</td>
-                                    <td class="border border-slate-300 p-2 text-center">${avg.avgRun}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                    <h5 class="text-sm font-bold mb-4 text-center">${analysis.raceName} Division Analysis</h5>
+                     <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-black tracking-wider">
+                                    <tr>
+                                        <th class="py-2 px-3">Division</th>
+                                        <th class="py-2 px-3">Count</th>
+                                        <th class="py-2 px-3">Avg Finish Time</th>
+                                        <th class="py-2 px-3">Swim</th>
+                                        <th class="py-2 px-3 hidden md:table-cell">T1</th>
+                                        <th class="py-2 px-3">Bike</th>
+                                        <th class="py-2 px-3 hidden md:table-cell">T2</th>
+                                        <th class="py-2 px-3">Run</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-bold text-slate-700">
+                                    ${analysis.averages.map(avg => `
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="py-2 px-3 text-center font-medium">${avg.division}</td>
+                                            <td class="py-2 px-3 text-center">${avg.count}</td>
+                                            <td class="py-2 px-3 text-center font-black text-slate-900 font-mono">${sToHms(avg.avgTotal)}</td>
+                                            <td class="py-2 px-3 text-center text-blue-500 font-mono">${sToHms(avg.avgSwim)}</td>
+                                            <td class="py-2 px-3 text-center text-slate-400 font-mono hidden md:table-cell">${sToMs(avg.avgT1)}</td>
+                                            <td class="py-2 px-3 text-center text-green-500 font-mono">${sToHms(avg.avgBike)}</td>
+                                            <td class="py-2 px-3 text-center text-slate-400 font-mono hidden md:table-cell">${sToMs(avg.avgT2)}</td>
+                                            <td class="py-2 px-3 text-center text-orange-500 font-mono">${sToHms(avg.avgRun)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             `).join('');
-            document.getElementById('groupTable').innerHTML = tablesHtml;
+            document.getElementById('divisionTable').innerHTML = tablesHtml;
         }
 
+        // 부문별 차트 렌더링
+        // 부문별 차트 렌더링 (수정됨: 중앙 정렬 적용)
+        function renderDivisionCharts(divisionAnalyses, isCommon) {
+            const container = document.getElementById('divisionCharts');
+            container.innerHTML = '';
 
+            // 먼저 모든 차트 HTML 생성
+            let allChartsHtml = '';
+            divisionAnalyses.forEach(analysis => {
+                const chartHtml = `
+                    <div class="mb-6 w-full">
+                        <h6 class="text-center font-semibold mb-4">${analysis.raceName} 부문별 페이스 비교</h6>
+                        <div class="flex flex-col items-center gap-6">
+                            <div class="chart-container" style="position: relative; height: 350px; margin-bottom: 20px; width: 100%; max-width: 800px;">
+                                <h5 class="text-center font-medium mb-2">수영 페이스</h5>
+                                <canvas id="${analysis.raceName.replace(/\s+/g, '')}SwimChart"></canvas>
+                            </div>
+                            <div class="chart-container" style="position: relative; height: 350px; margin-bottom: 20px; width: 100%; max-width: 800px;">
+                                <h5 class="text-center font-medium mb-2">싸이클 평속</h5>
+                                <canvas id="${analysis.raceName.replace(/\s+/g, '')}BikeChart"></canvas>
+                            </div>
+                            <div class="chart-container" style="position: relative; height: 350px; margin-bottom: 20px; width: 100%; max-width: 800px;">
+                                <h5 class="text-center font-medium mb-2">런 페이스</h5>
+                                <canvas id="${analysis.raceName.replace(/\s+/g, '')}RunChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                allChartsHtml += chartHtml;
+            });
+            container.innerHTML = allChartsHtml;
+
+            // HTML 설정 후 차트 생성 (기존 로직 유지)
+            divisionAnalyses.forEach(analysis => {
+                // 수영 차트
+                const swimCtx = document.getElementById(`${analysis.raceName.replace(/\s+/g, '')}SwimChart`).getContext('2d');
+                new Chart(swimCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: analysis.averages.map(avg => avg.division),
+                        datasets: [{
+                            label: '수영 페이스',
+                            data: analysis.averages.map(avg => avg.swimPaceSec),
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: '#1d4ed8',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // 컨테이너 크기에 맞춤
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatPace(context.parsed.y) + ' (100m당)';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: { display: true, text: '시간 (초)' },
+                                ticks: { callback: formatPace }
+                            },
+                            x: { title: { display: true, text: '부문' } }
+                        }
+                    }
+                });
+
+                // 자전거 차트
+                const bikeCtx = document.getElementById(`${analysis.raceName.replace(/\s+/g, '')}BikeChart`).getContext('2d');
+                new Chart(bikeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: analysis.averages.map(avg => avg.division),
+                        datasets: [{
+                            label: '싸이클 평속',
+                            data: analysis.averages.map(avg => avg.bikePaceSec),
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: '#047857',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.parsed.y.toFixed(2) + ' km/h';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: { display: true, text: '속도 (km/h)' }
+                            },
+                            x: { title: { display: true, text: '부문' } }
+                        }
+                    }
+                });
+
+                // 달리기 차트
+                const runCtx = document.getElementById(`${analysis.raceName.replace(/\s+/g, '')}RunChart`).getContext('2d');
+                new Chart(runCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: analysis.averages.map(avg => avg.division),
+                        datasets: [{
+                            label: '런 페이스',
+                            data: analysis.averages.map(avg => avg.runPaceSec),
+                            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                            borderColor: '#b91c1c',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            barPercentage: 0.7,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatPace(context.parsed.y) + ' (1km당)';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: { display: true, text: '시간 (초)' },
+                                ticks: { callback: formatPace }
+                            },
+                            x: { title: { display: true, text: '부문' } }
+                        }
+                    }
+                });
+            });
+        }
+
+        // [신규]: 상호 비교 차트 렌더링
+        function renderComparisonCharts(raceAnalyses) {
+            const colors = [
+                'rgba(59, 130, 246, 0.7)', // Blue
+                'rgba(239, 68, 68, 0.7)',  // Red
+                'rgba(16, 185, 129, 0.7)', // Green
+                'rgba(245, 158, 11, 0.7)', // Yellow
+                'rgba(139, 92, 246, 0.7)'  // Purple
+            ];
+            const hoverColors = [
+                'rgba(59, 130, 246, 1.0)',
+                'rgba(239, 68, 68, 1.0)',
+                'rgba(16, 185, 129, 1.0)',
+                'rgba(245, 158, 11, 1.0)',
+                'rgba(139, 92, 246, 1.0)'
+            ];
+            
+            // 1. Stacked Bar
+            const ctxStack = document.getElementById('raceCompositionChart').getContext('2d');
+            if (window.stackChart) window.stackChart.destroy();
+            window.stackChart = new Chart(ctxStack, {
+                type: 'bar',
+                data: {
+                    labels: raceAnalyses.map(a => a.raceName),
+                    datasets: [
+                        { label: '수영', data: raceAnalyses.map(a => getOverallAvg(a.raceName, 's')), backgroundColor: 'rgba(59, 130, 246, 0.7)', hoverBackgroundColor: 'rgba(59, 130, 246, 1.0)' },
+                        { label: '자전거', data: raceAnalyses.map(a => getOverallAvg(a.raceName, 'bk')), backgroundColor: 'rgba(16, 185, 129, 0.7)', hoverBackgroundColor: 'rgba(16, 185, 129, 1.0)' },
+                        { label: '런', data: raceAnalyses.map(a => getOverallAvg(a.raceName, 'rn')), backgroundColor: 'rgba(239, 68, 68, 0.7)', hoverBackgroundColor: 'rgba(239, 68, 68, 1.0)' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => sToHms(v).substring(0,5) } } }
+                }
+            });
+
+            // Y-axis range logic
+            let yMin = 0;
+            let yMax = null;
+            if (selectedType === 'Ironman') {
+                yMin = 7 * 3600;
+                yMax = 17 * 3600;
+            } else if (selectedType === 'Half') {
+                yMin = 3 * 3600;
+                yMax = 8 * 3600;
+            } else { // Olympic
+                yMin = 1 * 3600;
+                yMax = 4 * 3600;
+            }
+
+            // 2. Grouped Bar (정규화된 부문 비교)
+            const targetDivs = ['M30', 'M35', 'M40', 'M45', 'M50','M55', 'M60', 'F30', 'F35', 'F40', 'F45', 'F50', 'F55','F60'];
+            const ctxDiv = document.getElementById('divisionCompareChart').getContext('2d');
+            if (window.divCompChart) window.divCompChart.destroy();
+            window.divCompChart = new Chart(ctxDiv, {
+                type: 'bar',
+                data: {
+                    labels: targetDivs,
+                    datasets: raceAnalyses.map((a, i) => ({
+                        label: a.raceName,
+                        data: targetDivs.map(div => {
+                            const found = a.averages.find(avg => avg.division === div);
+                            return found ? found.totalSec : null;
+                        }),
+                        backgroundColor: colors[i % colors.length],
+                        hoverBackgroundColor: hoverColors[i % hoverColors.length]
+                    }))
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { 
+                        y: { 
+                            min: yMin,
+                            max: yMax,
+                            ticks: { callback: v => sToHms(v).substring(0,5) } 
+                        } 
+                    }
+                }
+            });
+        }
 
         // 초기화
         loadData();
