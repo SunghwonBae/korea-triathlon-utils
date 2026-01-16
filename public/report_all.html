@@ -67,6 +67,12 @@
             </div>
         </div>
 
+        <!-- 그룹 분석 섹션 -->
+        <div id="groupAnalysis" class="hidden mt-8 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="text-lg font-bold mb-4 text-center">선택된 대회 그룹 분석 (총완주시간 기준 10% 그룹화)</h3>
+            <div id="groupTable"></div>
+        </div>
+
     </main>
 
     <script>
@@ -230,6 +236,7 @@
                 if (results.length >= 500) break;
             }
             renderResults(results);
+            performGroupAnalysis();
         }
 
         // 3. 렌더링
@@ -314,6 +321,116 @@
             const h = Math.floor(num/3600);
             const m = Math.floor((num%3600)/60);
             return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+
+        // Helper: 시간 문자열을 초로 변환
+        function timeToSeconds(timeStr) {
+            if (!timeStr || timeStr === "DNF") return null;
+            if (typeof timeStr === 'number') return timeStr;
+            const parts = timeStr.split(':');
+            if (parts.length === 3) {
+                return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+            } else if (parts.length === 2) {
+                return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            }
+            return null;
+        }
+
+        // 그룹 분석 수행
+        function performGroupAnalysis() {
+            if (selectedRaces.length === 0) {
+                document.getElementById('groupAnalysis').classList.add('hidden');
+                return;
+            }
+
+            // 선택된 대회의 데이터 필터링
+            const raceData = allData.filter(item => selectedRaces.includes(item.raceName));
+
+            // 총완주시간으로 정렬 (빠른 순서)
+            const sortedData = raceData
+                .map(item => ({
+                    ...item,
+                    totalSec: timeToSeconds(item.t)
+                }))
+                .filter(item => item.totalSec !== null)
+                .sort((a, b) => a.totalSec - b.totalSec);
+
+            if (sortedData.length === 0) {
+                document.getElementById('groupAnalysis').classList.add('hidden');
+                return;
+            }
+
+            // 10%씩 그룹화
+            const groupSize = Math.ceil(sortedData.length / 10);
+            const groups = [];
+            for (let i = 0; i < 10; i++) {
+                const start = i * groupSize;
+                const end = Math.min((i + 1) * groupSize, sortedData.length);
+                const groupData = sortedData.slice(start, end);
+                groups.push(groupData);
+            }
+
+            // 각 그룹 평균 계산
+            const groupAverages = groups.map((group, index) => {
+                const count = group.length;
+                if (count === 0) return null;
+
+                const avgTotal = group.reduce((sum, item) => sum + item.totalSec, 0) / count;
+                const avgSwim = group.reduce((sum, item) => sum + (timeToSeconds(item.s) || 0), 0) / count;
+                const avgT1 = group.reduce((sum, item) => sum + (timeToSeconds(item.t1) || 0), 0) / count;
+                const avgBike = group.reduce((sum, item) => sum + (timeToSeconds(item.bk) || 0), 0) / count;
+                const avgT2 = group.reduce((sum, item) => sum + (timeToSeconds(item.t2) || 0), 0) / count;
+                const avgRun = group.reduce((sum, item) => sum + (timeToSeconds(item.rn) || 0), 0) / count;
+
+                return {
+                    group: `${index * 10}-${(index + 1) * 10}%`,
+                    count,
+                    avgTotal: formatSec(Math.round(avgTotal)),
+                    avgSwim: formatSec(Math.round(avgSwim)),
+                    avgT1: formatSec(Math.round(avgT1)),
+                    avgBike: formatSec(Math.round(avgBike)),
+                    avgT2: formatSec(Math.round(avgT2)),
+                    avgRun: formatSec(Math.round(avgRun))
+                };
+            }).filter(g => g !== null);
+
+            renderGroupTable(groupAverages);
+            document.getElementById('groupAnalysis').classList.remove('hidden');
+        }
+
+        // 그룹 테이블 렌더링
+        function renderGroupTable(averages) {
+            const tableHtml = `
+                <table class="w-full border-collapse border border-slate-300 text-sm">
+                    <thead>
+                        <tr class="bg-slate-100">
+                            <th class="border border-slate-300 p-2">그룹</th>
+                            <th class="border border-slate-300 p-2">인원</th>
+                            <th class="border border-slate-300 p-2">평균 완주시간</th>
+                            <th class="border border-slate-300 p-2">평균 수영</th>
+                            <th class="border border-slate-300 p-2">평균 T1</th>
+                            <th class="border border-slate-300 p-2">평균 싸이클</th>
+                            <th class="border border-slate-300 p-2">평균 T2</th>
+                            <th class="border border-slate-300 p-2">평균 런</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${averages.map(avg => `
+                            <tr class="hover:bg-slate-50">
+                                <td class="border border-slate-300 p-2 text-center font-medium">${avg.group}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.count}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.avgTotal}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.avgSwim}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.avgT1}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.avgBike}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.avgT2}</td>
+                                <td class="border border-slate-300 p-2 text-center">${avg.avgRun}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('groupTable').innerHTML = tableHtml;
         }
 
 

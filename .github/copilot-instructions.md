@@ -9,40 +9,56 @@
 - 관리자용 HTML, 계산기, 정적 데이터는 `public/`에 있습니다. 데이터 JSON은 `public/data/` 아래의 `triathlon`, `ironman`, `challenge` 하위폴더에 저장됩니다.
 - 서버 측 유틸과 HTML 생성기는 `lib/template.js`에 있으며, 업로드 → HTML 변환 흐름은 `pages/api/convert.js`가 담당합니다.
 - 데이터 조회 API 예시는 `pages/api/triathlon_files.js`를 참고하세요 — 이 API들은 `public/data/*`의 파일을 직접 읽습니다.
+- 크롤링: `pages/api/admin/crawl.js`는 axios와 cheerio로 triathlon.or.kr을 스크래핑해 데이터를 수집합니다.
 
 아키텍처 & 데이터 플로우(간단 요약)
-- 프론트엔드: `pages/`의 Next.js 페이지들이 UI를 렌더링하며, 관리자 도구는 종종 `public/`에 있는 정적 HTML을 사용합니다.
+- 프론트엔드: `pages/index.js`가 메뉴를 렌더링하며, 대부분의 UI는 `public/`의 정적 HTML (계산기, 리포트, 관리자 도구)로 구성됩니다.
 - 서버/API: Next API 라우트는 서버(Node)에서 실행되며 `fs` 동기 호출로 `public/data/*`를 읽어 JSON이나 생성된 HTML을 반환합니다.
-- 데이터: 새로운 레코드나 대회를 추가하려면 `public/data/{triathlon,ironman,challenge}`에 UTF-8 인코딩의 JSON 파일을 추가하세요. DB는 없습니다.
-- 리포트 생성: `pages/api/convert.js`는 업로드된 Excel을 파싱해 `{ distances, players, title }` 형태를 만들고 `lib/template.js`의 `generateHtml`을 호출해 HTML을 생성합니다.
+- 데이터: 새로운 레코드나 대회를 추가하려면 `public/data/{triathlon,ironman,challenge}`에 UTF-8 인코딩의 JSON 파일을 추가하세요. DB는 없으며, 모든 데이터는 파일 기반입니다.
+- 리포트 생성: `pages/api/convert.js`는 업로드된 Excel을 파싱해 `{ distances: [...], players: [{ name, data:[...], avg }, ...], title }` 형태를 만들고 `lib/template.js`의 `generateHtml`을 호출해 Chart.js를 포함한 HTML을 생성합니다.
+- 크롤링 플로우: 관리자 HTML (예: `admin_triathlon_crawl.html`)이 `/api/admin/crawl`을 호출해 대회 데이터를 스크래핑하고 JSON으로 다운로드합니다.
 
 프로젝트 특이 관례
-- 데이터 파일 위치: 항상 `public/data/<카테고리>/`에 JSON을 두세요. 파일명/내용에 한글이 자주 사용됩니다.
+- 데이터 파일 위치: 항상 `public/data/<카테고리>/`에 JSON을 두세요. 파일명/내용에 한글이 자주 사용됩니다 (예: `고령대회_2024.json`).
+- 데이터 구조: 트라이애슬론 데이터는 배열로, 각 객체에 `category`, `rank`, `n`(이름), `b`(배번), `c`(클럽), `s`(수영), `t1`, `b1`(자전거), `t2`, `r`(달리기), `t`(총합), `sPartId` 필드가 있습니다.
 - API 코드 스타일: 기존 코드가 `fs.*Sync` 같은 동기 파일 API를 사용하므로, 서버 전용 API 핸들러 내에서 동기 호출을 사용하는 패턴을 따르세요.
 - 업로드 처리: `pages/api/convert.js`처럼 바디 파서를 끄고(`export const config = { api: { bodyParser: false } }`) `formidable`로 multipart를 파싱합니다.
 - 템플릿 입력 형태: `generateHtml`에 넘기는 데이터는 `{ distances: [...], players: [{ name, data:[...], avg }, ...], title }` 형태여야 합니다.
 - 파일명/응답 인코딩: 한글 파일명 처리 때문에 응답에는 `charset=utf-8`을 사용하고 `encodeURIComponent`로 파일명을 인코딩하는 패턴이 있습니다.
+- 크롤링: cheerio로 HTML 파싱, https.Agent로 SSL 우회, Map으로 중복 배번 방지.
 
 개발 작업 흐름 & 명령어
 - 개발 서버 실행: `npm run dev` (Next.js dev)
 - 빌드/배포 테스트: `npm run build` 이후 `npm run start`로 프로덕션 서버 실행
 - 린트: `npm run lint` (`eslint` 사용, 설정은 `eslint.config.mjs`)
 - 테스트: 테스트 프레임워크는 없음 — 변경사항 검증은 로컬 서버 실행과 관리자 페이지/API 호출로 확인하세요.
+- 데이터 관리: 관리자 HTML 페이지에서 크롤링/업로드를 수행해 `public/data/`에 JSON 저장.
 
 자주 발생하는 수정 패턴 & 주의사항
-- 새로운 API 라우트를 추가할 때는 `pages/api/` 아래에 파일을 생성하세요 (Next.js 라우팅 규칙).
+- 새로운 API 라우트를 추가할 때는 `pages/api/` 아래에 파일을 생성하세요 (Next.js 라우팅 규칙). 관리자 API는 `pages/api/admin/`에.
 - 클라이언트 번들에 포함되면 안 되는 Node 전용 모듈(`fs`, `path` 등)은 클라이언트 코드에서 직접 import 하지 마세요. 서버 전용 파일이나 API 핸들러에서만 사용합니다.
 - `lib/template.js`는 서버에서 실행되어 완전한 HTML 문자열을 반환합니다. 템플릿을 변경할 때는 UTF-8 인코딩과 다운로드 호환성을 확인하세요.
 - `public/`의 정적 HTML은 서버 재시작 없이도 서빙되므로 대량의 HTML 리팩터링은 주의하세요.
+- 크롤링 API 수정 시 triathlon.or.kr의 HTML 구조 변화를 고려하세요.
 
 구체적 예시
 - 대회 데이터 목록을 반환하는 API: `pages/api/triathlon_files.js`
 - 엑셀 → HTML 리포트 흐름: `pages/api/convert.js` 와 `lib/template.js` 를 함께 참고
+- 크롤링 API: `pages/api/admin/crawl.js` (axios + cheerio로 스크래핑)
+- 관리자 UI: `public/admin_triathlon_crawl.html` (API 호출 후 JSON 다운로드)
+
+주요 의존성
+- axios, cheerio: 웹 스크래핑
+- formidable: 파일 업로드 파싱
+- xlsx: Excel 처리
+- pdf2json, pdfjs-dist: PDF 관련 (사용 여부 확인 필요)
+- redis: 캐싱? (현재 미사용으로 보임)
 
 AI 에이전트를 위한 메모
 - 변경은 작고 목적이 분명한 작업을 우선하세요. 많은 HTML이 수작업으로 작성되어 있어 대규모 자동 수정은 문제를 일으킬 수 있습니다.
 - 한글 인코딩과 파일명 관행을 지켜주세요 (UTF-8, `encodeURIComponent` 사용).
 - 변경 확인은 `npm run dev`로 서버를 띄운 뒤 관리자 페이지 또는 `/api/triathlon_files` 같은 엔드포인트를 호출해 검증하세요.
+- PWA 기능: `pages/index.js`에 설치 프롬프트 로직이 있습니다.
 
 추가가 필요하면 알려주세요 (테스트/CI 문서화, 더 자세한 코드 가이드 등).
 
