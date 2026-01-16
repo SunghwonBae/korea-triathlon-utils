@@ -210,12 +210,12 @@ if (fs.existsSync(DATA_DIRS.challenge)) {
                     b: findCol(['b', 'bib', 'no', 'number', '배번호']) || 'b',
                     n: findCol(['n', 'name', 'athlete', 'user', '한글이름', '이름']) || 'n',
                     d: findCol(['category', 'division', 'age', 'group', 'd', '카테고리', '부문']) || 'd',
-                    c: findCol(['state', 'club', 'team', '소속', '클럽','단체']) || 'State',
-                    s: findCol(['swim', 's', 'finishswim', '수영']) || 's',
+                    c: findCol(['State','단체']) || 'c',
+                    s: findCol(['swim', 's', 'finishswim', '수영','Stage1']) || 's',
                     t1: findCol(['t1', 'trans1', 'startbike']) || 't1',
-                    bk: findCol(['bike', 'cycle', 'b1', 'bk', 'finishbike', '사이클']) || 'bk',
+                    bk: findCol(['bike', 'cycle', 'b1', 'bk', 'finishbike', '사이클','Stage2']) || 'bk',
                     t2: findCol(['t2', 'trans2', 'runstart']) || 't2',
-                    rn: findCol(['run', 'r', 'rn', '런', '달리기', 'finish']) || 'rn',
+                    rn: findCol(['run', 'r', 'rn', '런', '달리기', 'finish','Stage3']) || 'rn',
                     t: findCol(['total', 'chip', 'time', 't', '칩타임', '합계', 'RaceTime']) || 't',
                     ra: findCol(['rank', 'overall', 'placecat', '부문순위', '순위']) || 'rank'
                 };
