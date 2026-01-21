@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Old Records Converter (Perfect Date Fix)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #334155; }
+    </style>
+</head>
+<body class="p-8 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2"><i class="fa-solid fa-wrench text-blue-600 mr-2"></i>과거 기록 변환기 (날짜 보정판)</h1>
+            <p class="text-slate-500 text-sm">7/21/1991 및 1991-07-21 포맷 모두 지원</p>
+        </header>
+        
+        <div class="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group" id="dropZone">
+            <input type="file" id="fileInput" accept=".csv" class="hidden">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-file-csv text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-700 mb-1">수정된 로직으로 파일을 다시 올려주세요</h3>
+        </div>
+
+        <div id="statusArea" class="mt-6 hidden">
+            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-medium text-slate-700" id="statusTitle">처리 중...</span>
+                    <span class="text-xs font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded" id="fileCountBadge">0 files</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="statusText" class="text-xs text-slate-500">데이터를 분석하고 있습니다.</p>
+            </div>
+            <div id="downloadAction" class="mt-4 text-center hidden">
+                 <button onclick="downloadAll()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-colors flex items-center justify-center mx-auto w-full sm:w-auto">
+                    <i class="fa-solid fa-download mr-2"></i> JSON 파일 다운로드 (ZIP)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        let generatedFiles = {}; 
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-50'); };
+        dropZone.ondragleave = () => { dropZone.classList.remove('border-blue-500', 'bg-blue-50'); };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        };
+        fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+        function hmsToS(str) {
+            if (!str || typeof str !== 'string') return 0;
+            const cleanStr = str.trim();
+            if (cleanStr === '-' || cleanStr === '') return 0;
+            const parts = cleanStr.split(':');
+            if (parts.length < 2) return 0;
+            let seconds = 0;
+            if (parts.length === 3) seconds = (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2]);
+            else if (parts.length === 2) seconds = (+parts[0]) * 60 + (+parts[1]);
+            return isNaN(seconds) ? 0 : seconds;
+        }
+
+        function parseNum(val) {
+            if (!val) return 0;
+            if (typeof val === 'number') return val;
+            const cleanVal = val.toString().replace(/,/g, '').trim();
+            if (cleanVal === '-' || cleanVal === '') return 0;
+            const parsed = parseInt(cleanVal, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        // [핵심 수정] 날짜 포맷팅 로직 강화
+        function formatDateToYYYYMMDD(dateStr) {
+            if (!dateStr) return 'unknown';
+            const cleanStr = dateStr.trim();
+
+            // Case 1: 슬래시(/) 포맷 (예: 7/21/1991) -> M/D/YYYY
+            if (cleanStr.includes('/')) {
+                const parts = cleanStr.split('/');
+                if (parts.length === 3) {
+                    const m = parts[0].padStart(2, '0');
+                    const d = parts[1].padStart(2, '0');
+                    const y = parts[2];
+                    return `${y}${m}${d}`;
+                }
+            }
+
+            // Case 2: 하이픈(-) 포맷 (예: 1991-07-21) -> YYYY-MM-DD
+            if (cleanStr.includes('-')) {
+                const parts = cleanStr.split('-');
+                if (parts.length === 3) {
+                    // 보통 YYYY-MM-DD 순서
+                    if (parts[0].length === 4) {
+                        return parts[0] + parts[1].padStart(2, '0') + parts[2].padStart(2, '0');
+                    }
+                }
+            }
+
+            // 파싱 실패시 원본에서 숫자만 추출 (최후의 수단)
+            return cleanStr.replace(/[^0-9]/g, '');
+        }
+
+        async function handleFile(file) {
+            if (!file) return;
+            
+            document.getElementById('statusArea').classList.remove('hidden');
+            document.getElementById('downloadAction').classList.add('hidden');
+            document.getElementById('progressBar').style.width = '10%';
+            generatedFiles = {};
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    document.getElementById('progressBar').style.width = '50%';
+                    
+                    const games = {};
+                    let skippedCount = 0;
+
+                    results.data.forEach(row => {
+                        // 필드 매핑
+                        const rawDate = row['Game-date'];
+                        const gameName = row['Game-name'];
+                        const rawTotal = row['TOTAL'];
+                        const rawOverallRank = row['Overall- R'];
+
+                        // 필터링: TOTAL 없음, DNF, 날짜/이름 누락
+                        if (!rawDate || !gameName || 
+                            !rawTotal || rawTotal.trim() === '' || rawTotal === '-' || 
+                            rawOverallRank === 'DNF') {
+                            skippedCount++;
+                            return;
+                        }
+
+                        // 날짜 표준화 (YYYYMMDD)
+                        const formattedDate = formatDateToYYYYMMDD(rawDate);
+                        // 그룹 키는 대회명 + 날짜
+                        const groupKey = `${gameName}_${formattedDate}`;
+
+                        if (!games[groupKey]) {
+                            games[groupKey] = {
+                                name: gameName.trim(),
+                                date: formattedDate,
+                                fileName: `${gameName.replace(/[\/\\:*?"<>|]/g, "_")}_${formattedDate}.json`,
+                                records: []
+                            };
+                        }
+
+                        games[groupKey].records.push({
+                            b: row['Bib'] || '',
+                            n: row['User-name'] || '',
+                            d: row['Age-group'] || '',
+                            c: row['Club'] || '',
+                            r: row['Region'] ||'',
+                            t: hmsToS(rawTotal),
+                            s: hmsToS(row['SWIM']),
+                            t1: hmsToS(row['T1']),
+                            bk: hmsToS(row['BIKE']),
+                            t2: hmsToS(row['T2']),
+                            rn: hmsToS(row['RUN']),
+                            ro: parseNum(rawOverallRank),
+                            ra: parseNum(row['Division-R'])
+                        });
+                    });
+
+                    // 파일 생성 준비
+                    const keys = Object.keys(games);
+                    if (keys.length === 0) {
+                        alert("변환할 데이터가 없습니다. CSV 헤더(Game-date 등)를 확인해주세요.");
+                        document.getElementById('statusArea').classList.add('hidden');
+                        return;
+                    }
+
+                    keys.forEach(key => {
+                        const data = games[key];
+                        if (data.records.length > 0) {
+                            generatedFiles[data.fileName] = JSON.stringify(data.records, null, 2);
+                        }
+                    });
+
+                    document.getElementById('progressBar').style.width = '100%';
+                    document.getElementById('statusTitle').innerText = '변환 완료!';
+                    document.getElementById('statusText').innerText = `${keys.length}개 대회, 총 ${Object.keys(generatedFiles).length}개 파일 생성됨`;
+                    document.getElementById('fileCountBadge').innerText = `${Object.keys(generatedFiles).length} files`;
+                    document.getElementById('downloadAction').classList.remove('hidden');
+                },
+                error: (err) => {
+                    alert("CSV 파싱 오류: " + err.message);
+                }
+            });
+        }
+
+        function downloadAll() {
+            const zip = new JSZip();
+            Object.keys(generatedFiles).forEach(name => {
+                zip.file(name, generatedFiles[name]);
+            });
+            zip.generateAsync({type:"blob"}).then(c => saveAs(c, "converted_records.zip"));
+        }
+    </script>
+</body>
+</html>
