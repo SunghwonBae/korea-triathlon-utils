@@ -166,7 +166,7 @@ export default function MainIndex() {
       </section>
 
       <footer className="main-footer">
-        <p>2026 Korea Triathlon Utils.<br className="mobile-br"/> 🄯 Copyleft. Powered by 부천트라이 배성훤.</p>
+        <p>2026 Korea Triathlon Utils.<br className="mobile-br"/> 🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.</p>
       </footer>
 
       <style jsx>{`
@@ -277,7 +277,7 @@ export default function MainIndex() {
           text-align: center;
           padding: 40px 20px;
           color: #9ca3af;
-          font-size: 0.85rem;
+          font-size: 1rem;
         }
         @media (max-width: 1024px) {
           .menu-grid {
