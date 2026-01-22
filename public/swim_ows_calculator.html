@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>풀 vs 오픈워터 기록 변환기</title>
+    <link rel="stylesheet" href="bucheonTriStyle.css">
+    <script src="menu_full_handler.js" defer></script>
+    <script src="back_exit_handler.js" defer></script>
+    
+    <style>
+        :root {
+            --ows-ocean: #16a085;
+            --wetsuit-gold: #f39c12;
+            --tide-red: #e74c3c;
+            --track-bg: #dfe6e9;
+        }
+
+        .slider-container { margin-bottom: 30px; position: relative; padding: 0 10px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; color: #34495e; }
+        .slider-val { color: var(--ows-ocean); font-size: 1.1em; font-family: monospace; }
+
+        input[type=range] {
+            width: 100%; cursor: pointer; height: 10px; border-radius: 5px; 
+            background: var(--track-bg); -webkit-appearance: none; appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px;
+            background: #fff; border: 3px solid var(--ows-ocean); border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* 웻수트 토글 스위치 */
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-round { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider-round:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-round { background-color: var(--wetsuit-gold); }
+        input:checked + .slider-round:before { transform: translateX(30px); }
+
+        .summary-box { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 2px solid var(--ows-ocean); }
+        .sum-item span { display: block; font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px; }
+        .sum-item strong { display: block; font-size: 2.5em; color: var(--ows-ocean); }
+
+        .option-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .info-panel { background: #e8f6f3; border-left: 5px solid var(--ows-ocean); padding: 15px; border-radius: 8px; font-size: 0.85em; line-height: 1.6; color: #16a085; margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1 style="flex:1; margin-left:10px;">🌊 OWS 기록 변환기</h1>
+    </div>
+
+    <div class="info-panel">
+        수영장 기록을 기반으로 <strong>환경 변수(웻수트, 조류, 파도)</strong>를 적용한 실제 대회 예상 기록을 계산합니다.
+    </div>
+
+    <div class="controls" style="background:#fff; padding:25px 15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:20px;">
+        <div class="slider-container">
+            <div class="slider-label"><span>수영장 페이스 (100m 기준)</span><span class="slider-val" id="disp-base-pace">1분 50초</span></div>
+            <input type="range" id="in-base-pace" min="60" max="180" step="1" value="110">
+        </div>
+
+        <div class="toggle-container">
+            <span style="font-weight:bold; color:#34495e;">웻수트(Wetsuit) 착용</span>
+            <label class="switch">
+                <input type="checkbox" id="in-wetsuit" checked>
+                <span class="slider-round"></span>
+            </label>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>조류 영향 (역조 ← 0 → 순조)</span><span class="slider-val" id="disp-tide">0% (잔잔함)</span></div>
+            <input type="range" id="in-tide" min="-20" max="20" step="1" value="0">
+            <div style="display:flex; justify-content:space-between; font-size:0.75em; color:#95a5a6; margin-top:5px;">
+                <span>힘든 역조</span><span>중립</span><span>빠른 순조</span>
+            </div>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>대회 목표 거리 (m)</span><span class="slider-val"><span id="disp-dist">1500</span>m</span></div>
+            <input type="range" id="in-dist" min="500" max="3800" step="100" value="1500">
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <div class="sum-item">
+            <span id="target-title">올림픽 코스 예상 완주 기록</span>
+            <strong id="total-time">00:26:45</strong>
+            <div style="margin-top:10px; font-size:0.85em; color:#7f8c8d;">
+                예상 OWS 페이스: <span id="ows-pace" style="font-weight:bold; color:var(--ows-ocean);">1'47"</span> / 100m
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" style="background:#fff9eb; border-left-color:var(--wetsuit-gold); color:#946c00;">
+        <strong>💡 분석 리포트</strong><br>
+        <span id="analysis-text">웻수트로 인해 약 5%의 속도 향상이 예상됩니다. 조류가 없으므로 수영장과 유사한 환경입니다.</span>
+    </div>
+</div>
+
+<script>
+    const elBasePace = document.getElementById('in-base-pace');
+    const elWetsuit = document.getElementById('in-wetsuit');
+    const elTide = document.getElementById('in-tide');
+    const elDist = document.getElementById('in-dist');
+
+    function formatFullTime(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.round(seconds % 60);
+        return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function formatPace(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.round(seconds % 60);
+        return `${m}'${s.toString().padStart(2, '0')}"`;
+    }
+
+    function update() {
+        const basePace = parseInt(elBasePace.value);
+        const isWetsuit = elWetsuit.checked;
+        const tideEffect = parseInt(elTide.value); // -20% to +20%
+        const dist = parseInt(elDist.value);
+
+        // 1. 수영장 페이스 표시
+        document.getElementById('disp-base-pace').textContent = formatPace(basePace);
+        document.getElementById('disp-dist').textContent = dist;
+
+        // 2. 조류 텍스트 표시
+        let tideText = tideEffect === 0 ? "0% (잔잔함)" : (tideEffect > 0 ? `+${tideEffect}% (순조)` : `${tideEffect}% (역조)`);
+        document.getElementById('disp-tide').textContent = tideText;
+
+        // 3. 변환 로직
+        // - 웻수트 효과: 약 5~8% 단축 (초보자일수록 효과 큼, 여기선 평균 6% 적용)
+        // - 오픈워터 기본 저항: 수영장보다 약 5% 느려짐 (턴 없음, 사이팅 필요 등)
+        let owsPace = basePace;
+        
+        owsPace *= 1.05; // 기본 오픈워터 페널티
+        if (isWetsuit) owsPace *= 0.94; // 웻수트 보너스
+        
+        // 조류 반영 (속도(v)에 영향을 주므로 시간에 역산)
+        // 페이스(초/100m)이므로 조류가 +10%면 시간은 1/1.1 배가 됨
+        const tideFactor = 1 + (tideEffect / 100);
+        owsPace = owsPace / tideFactor;
+
+        // 결과 출력
+        const totalSeconds = (owsPace * dist) / 100;
+        document.getElementById('total-time').textContent = formatFullTime(totalSeconds);
+        document.getElementById('ows-pace').textContent = formatPace(owsPace);
+
+        // 4. 분석 텍스트
+        let analysis = "";
+        if (isWetsuit) analysis += "웻수트 부력으로 하체 가라앉음이 방지되어 기록이 단축됩니다. ";
+        else analysis += "수트 미착용으로 평소보다 체력 소모가 클 수 있습니다. ";
+
+        if (tideEffect > 5) analysis += "강한 순조의 도움을 받아 기록 단축이 예상됩니다.";
+        else if (tideEffect < -5) analysis += "역조 구간에서 무리한 피치보다는 일정한 스트로크 유지가 중요합니다.";
+        else analysis += "조류 영향이 적어 평소 페이스 유지가 수월합니다.";
+        
+        document.getElementById('analysis-text').textContent = analysis;
+    }
+
+    elBasePace.oninput = update;
+    elWetsuit.onchange = update;
+    elTide.oninput = update;
+    elDist.oninput = update;
+
+    // 초기 실행
+    update();
+</script>
+</body>
+</html>
