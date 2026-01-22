@@ -12,9 +12,8 @@
         :root {
             --swim-blue: #3498db;
             --css-gold: #f1c40f;
-            --anaerobic: #e74c3c;
-            --aerobic: #2ecc71;
             --track-bg: #dfe6e9;
+            --info-bg: #f8f9fa;
         }
 
         .slider-container { margin-bottom: 35px; position: relative; padding: 0 10px; }
@@ -32,9 +31,15 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
+        /* 공식 및 설명 패널 스타일 */
+        .formula-panel { background: #ffffff; border: 1px solid #e1e8ed; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .formula-box { font-family: 'Courier New', monospace; font-size: 1.1em; background: #34495e; color: #fff; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0; }
+        .meaning-box { text-align: left; font-size: 0.85em; line-height: 1.6; color: #576574; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px; }
+        .guide-text { color: #e67e22; font-weight: bold; margin-top: 5px; display: block; }
+
         .summary-box { display: grid; grid-template-columns: 1fr; gap: 10px; background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 2px solid var(--swim-blue); }
         .sum-item span { display: block; font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px; }
-        .sum-item strong { display: block; font-size: 2.2em; color: var(--swim-blue); }
+        .sum-item strong { display: block; font-size: 2.5em; color: var(--swim-blue); }
 
         .training-zones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
         .zone-card { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #ccc; }
@@ -44,14 +49,10 @@
         .z-sprint { border-left-color: #e74c3c; }
         .zone-card h4 { margin: 0 0 5px 0; font-size: 0.85em; color: #7f8c8d; }
         .zone-card div { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
-
-        .info-panel { background: #eef2f7; padding: 15px; border-radius: 10px; font-size: 0.85em; line-height: 1.6; color: #576574; margin-bottom: 25px; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.9em; text-align: center; background: white; border-radius: 12px; overflow: hidden; }
         th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; }
         td { padding: 12px; border-bottom: 1px solid #eee; }
-
-        .btn-calculate { background: var(--swim-blue); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -62,33 +63,37 @@
         <h1 style="flex:1; margin-left:10px;">🏊‍♂️ 수영 CSS 계산기</h1>
     </div>
 
-    <div class="info-panel">
-        <strong>CSS(Critical Swim Speed)란?</strong><br>
-        피로가 쌓이지 않고 장시간 유지할 수 있는 수영 페이스입니다. 400m와 200m 전력주 기록을 통해 계산하며, 철인 3종 수영 훈련의 핵심 지표입니다.
+    <div class="formula-panel">
+        <div style="font-weight: bold; color: #2c3e50;">[ CSS 계산 공식 ]</div>
+        <div class="formula-box">
+            CSS (m/sec) = (400 - 200) / (T400 - T200)
+        </div>
+        <div class="meaning-box">
+            <strong>CSS의 의미:</strong> Critical Swim Speed (CSS) 임계 수영 속도는 단순히 스피드를 측정하는 것이 아니라, 거리가 늘어남에 따라 페이스가 얼마나 떨어지는지를 분석하여 <strong>'피로 없이 지속 가능한 유산소 속도'</strong>를 찾아내는 지표입니다.<br>
+            <span style="color: #c0392b;">※ 400m와 200m의 기록 차이가 커질수록(즉, 200m는 매우 빠른데 400m가 느릴수록) 당신의 지속가능한 속도는 단거리 능력에 비해 낮게 평가됩니다.</span>
+            <span class="guide-text">💡 팁: 200m 기록은 400m 기록의 약 45~48% 수준이 적당합니다.</span>
+        </div>
     </div>
 
     <div class="controls" style="background:#fff; padding:25px 15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:20px;">
         <div class="slider-container">
-            <div class="slider-label"><span>400m 전력주 기록</span><span class="slider-val" id="disp-400">06:40</span></div>
-            <input type="range" id="in-400" min="240" max="720" step="1" value="400">
-            <div style="display:flex; justify-content:space-between; font-size:0.7em; color:#95a5a6; margin-top:5px;">
-                <span>4분</span><span>8분</span><span>12분</span>
-            </div>
+            <div class="slider-label"><span>400m 전력주 기록</span><span class="slider-val" id="disp-400">08:00</span></div>
+            <input type="range" id="in-400" min="240" max="720" step="1" value="480">
         </div>
 
         <div class="slider-container">
-            <div class="slider-label"><span>200m 전력주 기록</span><span class="slider-val" id="disp-200">03:10</span></div>
-            <input type="range" id="in-200" min="100" max="360" step="1" value="190">
-            <div style="display:flex; justify-content:space-between; font-size:0.7em; color:#95a5a6; margin-top:5px;">
-                <span>1분 40초</span><span>4분</span><span>6분</span>
-            </div>
+            <div class="slider-label"><span>200m 전력주 기록</span><span class="slider-val" id="disp-200">03:44</span></div>
+            <input type="range" id="in-200" min="100" max="360" step="1" value="224">
+        </div>
+        <div id="ratio-info" style="text-align: right; font-size: 0.8em; color: #7f8c8d; margin-top: -20px;">
+            기록 비율: 46.7% (적정)
         </div>
     </div>
 
     <div class="summary-box">
         <div class="sum-item">
-            <span>당신의 예상 CSS (100m 페이스)</span>
-            <strong id="css-result">1'45"</strong>
+            <span>나의 CSS 페이스 (100m 기준)</span>
+            <strong id="css-result">2'08"</strong>
         </div>
     </div>
 
@@ -96,23 +101,23 @@
     <div class="training-zones">
         <div class="zone-card z-endurance">
             <h4>지구력 (CSS+10s)</h4>
-            <div id="z1-pace">1'55"</div>
+            <div id="z1-pace">-</div>
         </div>
         <div class="zone-card z-tempo">
             <h4>템포 (CSS+5s)</h4>
-            <div id="z2-pace">1'50"</div>
+            <div id="z2-pace">-</div>
         </div>
         <div class="zone-card z-css">
             <h4>역치 (CSS)</h4>
-            <div id="z3-pace">1'45"</div>
+            <div id="z3-pace">-</div>
         </div>
         <div class="zone-card z-sprint">
             <h4>스프린트 (CSS-5s)</h4>
-            <div id="z4-pace">1'40"</div>
+            <div id="z4-pace">-</div>
         </div>
     </div>
 
-    <h3 style="margin: 25px 0 15px 5px; color: #2c3e50;">⏱️ 목표 거리별 예상 기록</h3>
+    <h3 style="margin: 25px 0 15px 5px; color: #2c3e50;">⏱️ 목표 거리별 예상 기록 (오픈워터)</h3>
     <div class="table-container" style="margin-bottom: 50px;">
         <table>
             <thead>
@@ -123,7 +128,7 @@
                 </tr>
             </thead>
             <tbody id="predict-table">
-                </tbody>
+            </tbody>
         </table>
     </div>
 </div>
@@ -134,8 +139,10 @@
     const disp400 = document.getElementById('disp-400');
     const disp200 = document.getElementById('disp-200');
     const cssResult = document.getElementById('css-result');
+    const ratioInfo = document.getElementById('ratio-info');
 
     function formatTime(seconds) {
+        if (seconds <= 0) return "--";
         const m = Math.floor(seconds / 60);
         const s = Math.round(seconds % 60);
         return `${m}'${s.toString().padStart(2, '0')}"`;
@@ -156,12 +163,18 @@
         disp400.textContent = formatFullTime(t400);
         disp200.textContent = formatFullTime(t200);
 
-        // CSS 공식: (400m 기록 - 200m 기록) / 2
-        // 이것은 100m당 페이스를 의미함
+        // 비율 계산 및 표시
+        const ratio = (t200 / t400 * 100).toFixed(1);
+        let ratioStatus = (ratio >= 44 && ratio <= 49) ? " (적정)" : (ratio < 44 ? " (스프린트형)" : " (지구력형)");
+        ratioInfo.textContent = `기록 비율: ${ratio}%${ratioStatus}`;
+
+        // CSS 공식 적용: 100m 페이스(초) = (t400 - t200) / 2
         let cssPace = (t400 - t200) / 2;
-        
-        // 최소 방어 로직 (계산상 오류 방지)
-        if (cssPace < 30) cssPace = 30;
+
+        if (t200 >= t400) {
+            cssResult.textContent = "측정 불가";
+            return;
+        }
 
         cssResult.textContent = formatTime(cssPace);
 
@@ -173,8 +186,6 @@
 
         // 거리별 예측 테이블
         const distances = [
-            { name: '500m', dist: 5, note: '엔듀런스' },
-            { name: '750m', dist: 7.5, note: '스프린트 코스' },
             { name: '1,500m', dist: 15, note: '올림픽 코스' },
             { name: '1,900m', dist: 19, note: '하프 코스' },
             { name: '3,800m', dist: 38, note: '킹코스 (Full)' }
@@ -184,7 +195,7 @@
         tbody.innerHTML = '';
 
         distances.forEach(item => {
-            // 오픈워터 보정 계수 약 1.05배 적용 (실내 기록 대비)
+            // 오픈워터 보정 계수 약 1.05배 적용
             const predSec = cssPace * item.dist * 1.05;
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -198,8 +209,6 @@
 
     el400.oninput = update;
     el200.oninput = update;
-
-    // 초기 실행
     update();
 </script>
 </body>

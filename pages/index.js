@@ -57,6 +57,10 @@ export default function MainIndex() {
     { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/running_calculator.html" },
     { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/runpace_calculator.html" },
     { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/run_mileage_calculator.html" },
+    { icon: "🏊", title: "수영 CSS 계산기", desc: "지속 가능한 수영 속도 분석", url: "/swim_css_calculator.html" },
+    { icon: "🏊", title: "수영 SWOLF 분석기", desc: "효율적인 수영을 위한 SWOLF", url: "/swim_swolf_calculator.html" },
+    { icon: "🚨", title: "수영 컷오프 계산기", desc: "대회 컷오프 시간 계산", url: "/swim_cutoff_calculator.html" },
+    { icon: "🌊", title: "수영 오픈워터 변환기", desc: "오픈워터 수영 기록 변환", url: "/swim_ows_calculator.html" },
   ];
 
   const [displayItems, setDisplayItems] = useState(menuItems);
