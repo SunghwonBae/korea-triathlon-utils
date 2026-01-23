@@ -167,6 +167,7 @@ export default function MainIndex() {
 
       <footer className="main-footer">
         <p>2026 Korea Triathlon Utils.<br className="mobile-br"/> 🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.</p>
+        <p>특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion">https://mhrk.campaignus.me/rebellion</a></p>
       </footer>
 
       <style jsx>{`
