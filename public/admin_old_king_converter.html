@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>IM 데이터 JSON 변환기 (수정본)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h2>아이언맨 데이터 엑셀 -> JSON 변환기 (기록 복구 버전)</h2>
+    <p>파일을 선택하면 [IM남], [IM여] 시트의 데이터를 정교하게 파싱합니다.</p>
+    <input type="file" id="excelFile" accept=".xlsx" />
+    <div id="status"></div>
+
+    <script>
+        // 시간 문자열 파싱 로직 강화
+        function timeToSeconds(val) {
+            if (val === undefined || val === null || val === "") return 0;
+            
+            // 숫자로 들어오는 경우 처리 (엑셀 날짜 형식 등)
+            if (typeof val === 'number') {
+                // 엑셀에서 시간은 1일(24시간)을 1로 표현하므로 초로 환산
+                return Math.round(val * 86400);
+            }
+
+            let timeStr = String(val).trim().replace(/\s/g, ''); // 공백 제거
+            if (!timeStr || timeStr === '0' || timeStr === '-') return 0;
+
+            const parts = timeStr.split(':').map(p => parseInt(p, 10) || 0);
+            
+            if (parts.length === 3) { // HH:MM:SS
+                return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            } else if (parts.length === 2) { // MM:SS 또는 H:MM
+                // 데이터 맥락상 2개인 경우 분:초 보다는 시:분일 가능성이 높으나
+                // 여기서는 시:분으로 우선 처리 (데이터 확인 필요)
+                return parts[0] * 3600 + parts[1] * 60;
+            }
+            return 0;
+        }
+
+        const mapping = {
+            "완주횟수": "fn", "완주순": "fi", "남/여": "g", "선수명": "n", "그룹": "d",
+            "클럽": "c", "Bib": "b", "Overall- R": "or", "Domestic-R": "dr",
+            "Gender-R": "gr", "Division-R": "divr", "개최일": "rd", "대회명(약칭)": "rn",
+            "TOTAL": "to", "SWIM": "sw", "T1": "t1", "BIKE": "bi", "T2": "t2", "RUN": "ru"
+        };
+
+        const timeColumns = ["to", "sw", "t1", "bi", "t2", "ru"];
+
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            document.getElementById('status').innerText = "데이터 분석 중...";
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array', cellDates: false});
+                const resultData = [];
+
+                ["IM남", "IM여"].forEach(sheetName => {
+                    const sheet = workbook.Sheets[sheetName];
+                    if (!sheet) return;
+
+                    // 헤더가 2번째 줄에 있으므로 range: 1
+                    // defval: "" 을 주어 빈 셀도 포함되도록 함
+                    const rows = XLSX.utils.sheet_to_json(sheet, {range: 1, defval: ""});
+
+                    rows.forEach(row => {
+                        // 선수명이 없으면 무시
+                        if (!row["선수명"]) return;
+
+                        let newObj = {};
+                        for (let key in mapping) {
+                            let value = row[key];
+                            let newKey = mapping[key];
+
+                            if (timeColumns.includes(newKey)) {
+                                newObj[newKey] = timeToSeconds(value);
+                            } else {
+                                newObj[newKey] = value;
+                            }
+                        }
+                        resultData.push(newObj);
+                    });
+                });
+
+                if (resultData.length > 0) {
+                    saveJSON(resultData, "ironman_data_fixed.json");
+                    document.getElementById('status').innerText = `성공! 총 ${resultData.length}건을 저장했습니다.`;
+                } else {
+                    document.getElementById('status').innerText = "데이터를 찾지 못했습니다. 시트명과 헤더를 확인하세요.";
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function saveJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>
