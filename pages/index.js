@@ -48,6 +48,7 @@ export default function MainIndex() {
     { icon: "💾", title: "T-Memory", desc: "기록 저장 및 분석", url: "/triathlon_memory.html" },
     { icon: "🗂️", title: "T-Memory Report", desc: "기록 보고서 생성", url: "/memory_report.html" },
     { icon: "📈", title: "대회 통계 비교", desc: "여러 대회 기록 비교 분석", url: "/report_all.html" },
+    { icon: "👑", title: "킹코스 완주 기록", desc: "2019년까지 킹완주자 기록", url: "/report_old_king.html" },
     { icon: "📊", title: "사이클 구간평속 분석", desc: "사이클 구간별속도 분석", url: "/cyclinganalyzer" },
     { icon: "⚖️", title: "킹코스 완주시간", desc: "철인3종 예상 기록 계산", url: "/ironman_calculator.html" },
     { icon: "🍌", title: "보급 계산기", desc: "경기 중 필요한 에너지 보급량", url: "/gelwater_calculator.html" },
