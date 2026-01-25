@@ -90,8 +90,7 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         .chart-expanded {
-            min-width: 1100px;
-            height: 1000px;
+            width: 100%;
             cursor: zoom-out;
         }
 
@@ -212,8 +211,11 @@
             <div id="bikeRunScatterChart" class="chart-box chart-minimized"></div>
         </div>
         <div class="chart-wrapper">
-            <h3 class="chart-title" title="클릭하여 확대/축소">바꿈터(T1+T2) 500위 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-            <div id="transitionRankChart" class="chart-box chart-minimized"></div>
+            <h3 class="chart-title" title="클릭하여 확대/축소">바꿈터(T1+T2) 200위 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+            <div id="transitionRankChart" class="chart-box chart-minimized" style="margin-bottom: 1px !important;"></div>
+            <div style="width: 100%; text-align: right; padding-right: 5px;">
+                <label style="font-size: 11px; color: #555; cursor: pointer;"><input type="checkbox" id="toggleSmall100" style="vertical-align: middle;"> 100위</label>
+            </div>
         </div>
         <div class="chart-wrapper">
             <h3 class="chart-title" title="클릭하여 확대/축소">대회별 난이도 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
@@ -232,7 +234,10 @@
         </div>
         <div class="chart-wrapper">
             <h3 class="chart-title" title="클릭하여 확대/축소">10회이상 완주 (평균기록) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-            <div id="legendaryFinishersChart" class="chart-box chart-minimized"></div>
+            <div id="legendaryFinishersChart" class="chart-box chart-minimized" style="margin-bottom: 1px !important;"></div>
+            <div style="width: 100%; text-align: right; padding-right: 5px;">
+                <label style="font-size: 11px; color: #555; cursor: pointer;"><input type="checkbox" id="toggleSmall15" style="vertical-align: middle;"> 15회이상</label>
+            </div>
         </div>
         </div>
     </div>
@@ -597,6 +602,7 @@
                     adjustChartHeight('transitionRankChart', newData.length, 20);
                     transitionRankOptions = { ...transitionRankOptions, data: newData };
                     AgChart.update(transitionRankChart, transitionRankOptions);
+                    updateTransitionRankChart(filteredData);
                 }
                 if (raceDifficultyChart && raceDifficultyOptions && AgChart) {
                     updateRaceDifficultyChart(filteredData);
@@ -610,7 +616,15 @@
                 if (sub10ListChart && sub10ListOptions && AgChart) {
                     const newData = processSub10ListData(filteredData);
                     adjustChartHeight('sub10ListChart', newData.length);
-                    sub10ListOptions = { ...sub10ListOptions, data: newData };
+                    sub10ListOptions = { 
+                        ...sub10ListOptions, 
+                        data: newData,
+                        title: {
+                            text: `총 ${newData.length}명`,
+                            fontSize: 13,
+                            color: '#666'
+                        }
+                    };
                     AgChart.update(sub10ListChart, sub10ListOptions);
                 }
                 if (legendaryFinishersChart && legendaryFinishersOptions && AgChart) {
@@ -818,7 +832,15 @@
                 updateRaceDifficultyChart(currentFilteredData);
             });
 
+            // 100위 토글 이벤트
+            document.getElementById('toggleSmall100').addEventListener('change', function() {
+                updateTransitionRankChart(currentFilteredData);
+            });
 
+            // 15회 이상 토글 이벤트
+            document.getElementById('toggleSmall15').addEventListener('change', function() {
+                updateLegendaryFinishersChart(currentFilteredData);
+            });
         });
 
 
@@ -837,7 +859,15 @@
                     type: 'bar',
                     xKey: 'range',
                     yKey: 'count',
-                    fill: '#5470c6',
+                    formatter: (params) => {
+                        const timeStr = params.datum.range;
+                        const [h, m] = timeStr.split(':').map(Number);
+                        const timeInHours = h + m / 60;
+                        if (timeInHours < 10) return { fill: '#2ecc71' }; // 10시간 미만
+                        if (timeInHours < 12) return { fill: '#3498db' }; // 12시간 미만
+                        if (timeInHours < 15) return { fill: '#f1c40f' }; // 15시간 미만
+                        return { fill: '#e74c3c' }; // 15시간 이상
+                    },
                     label: { enabled: false },
                     tooltip: {
                         renderer: (params) => ({
@@ -869,7 +899,13 @@
                     type: 'bar',
                     xKey: 'group',
                     yKey: 'avgTime',
-                    fill: '#91cc75',
+                    formatter: (params) => {
+                        const g = params.datum.group;
+                        if (g.startsWith('M')) return { fill: '#3498db' }; // Male
+                        if (g.startsWith('F')) return { fill: '#e74c3c' }; // Female
+                        if (g.startsWith('PRO')) return { fill: '#f1c40f' }; // Pro
+                        return { fill: '#95a5a6' }; // Others
+                    },
                     label: {
                         enabled: true,
                         color: '#333',
@@ -912,8 +948,8 @@
                     type: 'treemap',
                     labelKey: 'name',
                     sizeKey: 'count',
-                    colorKey: 'avgTime',
-                    colorRange: ['#003f5c', '#b3e5fc'], // Dark (Fast) -> Light (Slow)
+                    colorKey: 'colorVal',
+                    colorRange: ['#e3f2fd', '#0d47a1'],
                     tooltip: {
                         renderer: (params) => ({
                             title: params.datum.name,
@@ -1042,7 +1078,9 @@
             };
 
             // 7. 바꿈터(T1+T2) 소요 시간 순위 (Bar Chart)
-            const transitionData = processTransitionData(rowData);
+            const toggleT = document.getElementById('toggleSmall100');
+            const limitT = (toggleT && toggleT.checked) ? 100 : 200;
+            const transitionData = processTransitionData(rowData, limitT);
             adjustChartHeight('transitionRankChart', transitionData.length, 20);
             transitionRankOptions = {
                 container: document.getElementById('transitionRankChart'),
@@ -1051,7 +1089,14 @@
                     type: 'bar',
                     xKey: 'name',
                     yKey: 'total',
-                    fill: '#e67e22',
+                    formatter: (params) => {
+                        const t = params.datum.total;
+                        if (t <= 120) return { fill: '#2ecc71' }; // 2분 이하
+                        if (t <= 180) return { fill: '#3498db' }; // 3분 이하
+                        if (t <= 240) return { fill: '#9b59b6' }; // 4분 이하
+                        if (t <= 300) return { fill: '#f1c40f' }; // 5분 이하
+                        return { fill: '#e74c3c' }; // 5분 초과
+                    },
                     tooltip: {
                         renderer: (params) => ({
                             title: params.datum.name,
@@ -1080,8 +1125,15 @@
                     xKey: 'raceName',
                     yKey: 'median',
                     yName: 'Median Time',
-                    fill: '#e74c3c',
-                    stroke: '#c0392b',
+                    formatter: (params) => {
+                        const h = params.datum.median / 3600;
+                        if (h <= 13) return { fill: '#2ecc71' }; // 13시간 이하
+                        if (h <= 14) return { fill: '#3498db' }; // 14시간 이하
+                        if (h <= 15) return { fill: '#f1c40f' }; // 15시간 이하
+                        if (h <= 16) return { fill: '#e67e22' }; // 16시간 이하
+                        if (h <= 17) return { fill: '#e74c3c' }; // 17시간 이하
+                        return { fill: '#8e44ad' }; // 17시간 초과
+                    },
                     tooltip: {
                         renderer: (params) => ({
                             title: params.datum.raceName,
@@ -1153,6 +1205,11 @@
             sub10ListOptions = {
                 container: document.getElementById('sub10ListChart'),
                 data: sub10ListData,
+                title: {
+                    text: `총 ${sub10ListData.length}건`,
+                    fontSize: 13,
+                    color: '#666'
+                },
                 series: [
                     {
                         type: 'bar',
@@ -1198,6 +1255,15 @@
                         fill: '#e67e22',
                         stacked: true,
                         tooltip: { renderer: sub10ListTooltipRenderer }
+                    },
+                    {
+                        type: 'bar',
+                        xKey: 'label',
+                        yKey: 'unknown_t',
+                        yName: 't1+t2',
+                        fill: '#95a5a6',
+                        stacked: true,
+                        tooltip: { renderer: sub10ListTooltipRenderer }
                     }
                 ],
                 axes: [
@@ -1239,11 +1305,17 @@
                     const wrapper = this.closest('.chart-wrapper');
                     const box = wrapper ? wrapper.querySelector('.chart-box') : null;
                     if (box) {
+                        if (wrapper) wrapper.classList.toggle('w-full');
+
                         box.classList.toggle('chart-minimized');
                         box.classList.toggle('chart-expanded');
                         
                         if (box.classList.contains('chart-expanded')) {
-                            const h = box.dataset.calculatedHeight || 1000;
+                            let h = box.dataset.calculatedHeight;
+                            if (!h) {
+                                const winW = window.innerWidth;
+                                h = winW < 768 ? winW * 1.2 : 800;
+                            }
                             box.style.height = `${h}px`;
                         } else {
                             box.style.height = '';
@@ -1306,6 +1378,9 @@
             const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
             if (!legendaryFinishersOptions || !AgChart) return;
 
+            const toggle = document.getElementById('toggleSmall15');
+            const minCount = (toggle && toggle.checked) ? 15 : 10;
+
             const finishGroups = {
                 g10: { label: '10-14회', color: '#74b9ff' },
                 g15: { label: '15-19회', color: '#0984e3' },
@@ -1314,7 +1389,7 @@
                 g30: { label: '30회+', color: '#b71540' }
             };
 
-            const legendaryData = processLegendaryFinishersData(data);
+            const legendaryData = processLegendaryFinishersData(data, minCount);
             
             adjustChartHeight('legendaryFinishersChart', legendaryData.length);
 
@@ -1349,7 +1424,16 @@
                 }
             }));
 
-            legendaryFinishersOptions = { ...legendaryFinishersOptions, data: transformedData, series: series };
+            legendaryFinishersOptions = { 
+                ...legendaryFinishersOptions, 
+                data: transformedData, 
+                series: series,
+                title: {
+                    text: `총 ${legendaryData.length}명`,
+                    fontSize: 13,
+                    color: '#666'
+                }
+            };
             
             if (legendaryFinishersChart) {
                 AgChart.update(legendaryFinishersChart, legendaryFinishersOptions);
@@ -1357,7 +1441,7 @@
         }
 
         // 데이터 집계 로직: 10회 이상 완주자
-        function processLegendaryFinishersData(data) {
+        function processLegendaryFinishersData(data, minCount = 10) {
             const athletes = {};
             data.forEach(d => {
                 if (!d.n) return;
@@ -1381,7 +1465,7 @@
             return Object.values(athletes)
                 .map(athlete => {
                     const count = athlete.records.length;
-                    if (count < 10) return null;
+                    if (count < minCount) return null;
 
                     const validRecords = athlete.records.filter(r => r.to > 0);
                     if (validRecords.length === 0) return null;
@@ -1419,6 +1503,20 @@
             AgChart.update(raceDifficultyChart, raceDifficultyOptions);
         }
 
+        // 바꿈터 순위 차트 업데이트 함수 (토글 반영)
+        function updateTransitionRankChart(data) {
+            const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+            if (!transitionRankChart || !transitionRankOptions || !AgChart) return;
+
+            const toggle = document.getElementById('toggleSmall100');
+            const limit = (toggle && toggle.checked) ? 100 : 200;
+            const chartData = processTransitionData(data, limit);
+            
+            adjustChartHeight('transitionRankChart', chartData.length, 20);
+            transitionRankOptions = { ...transitionRankOptions, data: chartData };
+            AgChart.update(transitionRankChart, transitionRankOptions);
+        }
+
         // 데이터 집계 로직: 시간대별 분포
         function processDistributionData(data) {
             const bins = {};
@@ -1454,7 +1552,12 @@
             
             const children = Object.values(clubs)
                 .filter(c => c.count > 0)
-                .map(c => ({ name: c.name, count: c.count, avgTime: Math.floor(c.sum / c.count) }));
+                .map(c => ({ 
+                    name: c.name, 
+                    count: c.count, 
+                    colorVal: c.count * 3, 
+                    avgTime: Math.floor(c.sum / c.count) 
+                }));
             
             return { name: 'Root', children: children };
         }
@@ -1496,7 +1599,7 @@
         }
 
         // 데이터 집계 로직: 바꿈터 순위
-        function processTransitionData(data) {
+        function processTransitionData(data, limit = 200) {
             return data
                 .filter(d => d.t1 > 0 && d.t2 > 0)
                 .map(d => {
@@ -1515,7 +1618,7 @@
                     };
                 })
                 .sort((a, b) => a.total - b.total)
-                .slice(0, 500);
+                .slice(0, limit);
         }
 
         // 데이터 집계 로직: 대회별 난이도 (Box Plot)
@@ -1635,7 +1738,8 @@
         // 데이터 집계 로직: Sub-10 명예의 전당
         function processSub10ListData(data) {
             return data
-                .filter(d => d.to && d.to < 36000 && d.to > 0) // Sub 10 hours
+                .filter(d => d.to && d.to < 36000 && d.to > 0 && d.sw > 0) // Sub 10 hours
+                .filter(d => d.to && d.to < 36000 && d.to > 0 && d.sw > 1800) // Sub 10 hours
                 .sort((a, b) => a.to - b.to)
                 .map(d => {
                     let year = "";
@@ -1647,6 +1751,18 @@
                              else if (p0.length === 2) year = (p0.startsWith('9') ? '19' : '20') + p0;
                         }
                     }
+
+                    let t1 = d.t1 || 0;
+                    let t2 = d.t2 || 0;
+                    let unknown_t = 0;
+
+                    if (t1 === 0 && t2 === 0) {
+                        const sumParts = (d.sw || 0) + (d.bi || 0) + (d.ru || 0);
+                        if (d.to > sumParts) {
+                            unknown_t = d.to - sumParts;
+                        }
+                    }
+
                     return {
                         label: `${d.n} (${d.rn}-${year})`,
                         n: d.n,
@@ -1654,10 +1770,11 @@
                         year: year,
                         to: d.to,
                         sw: d.sw,
-                        t1: d.t1,
+                        t1: t1,
                         bi: d.bi,
-                        t2: d.t2,
-                        ru: d.ru
+                        t2: t2,
+                        ru: d.ru,
+                        unknown_t: unknown_t
                     };
                 });
         }
@@ -1670,11 +1787,17 @@
                 const s = Math.floor(sec % 60);
                 return `${m}:${s.toString().padStart(2, '0')}`;
             };
+            if (params.yKey === 'unknown_t') {
+                return {
+                    title: d.label,
+                    content: `t1+t2 : ${formatMinSec(d.unknown_t)}`
+                };
+            }
             return {
                 title: d.label,
                 content: `
                     total : ${formatSecondsFull(d.to)}<br>
-                    swim : ${formatSecondsFull(d.s)}<br>
+                    swim : ${formatSecondsFull(d.sw)}<br>
                     t1: ${formatMinSec(d.t1)}<br>
                     bike : ${formatSecondsFull(d.bi)}<br>
                     t2: ${formatMinSec(d.t2)}<br>
