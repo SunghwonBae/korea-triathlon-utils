@@ -3,117 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>철인3종 통합 리포트 V2 (대회 비교)</title>
+    <title>철인3종 대회 비교 분석 V2</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ag-charts-community@9.3.2/dist/ag-charts-community.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-charts-community@8.2.1/dist/ag-charts-community.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; }
-        .ag-theme-quartz { height: 500px; width: 100%; border-radius: 12px; overflow: hidden; }
-        .card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
-        .race-chip { transition: all 0.2s; cursor: pointer; border: 1px solid #e2e8f0; }
-        .race-chip:hover { border-color: #3b82f6; background: #eff6ff; }
-        .race-chip input:checked + label { color: #2563eb; font-weight: bold; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .ag-theme-quartz { height: 600px; width: 100%; border-radius: 0.75rem; overflow: hidden; }
+        .race-chk-item { transition: all 0.2s; border: 1px solid #f1f5f9; }
+        .race-chk-item:hover { background-color: #eff6ff; border-color: #bfdbfe; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 text-white p-6 rounded-2xl shadow-xl gap-4">
+        <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-6 rounded-2xl gap-4 shadow-lg">
             <div>
-                <h1 class="text-2xl font-bold italic tracking-tight uppercase">Triathlon <span class="text-blue-400">Compare V2</span></h1>
-                <p class="text-slate-400 text-sm mt-1">통합 데이터 기반 무제한 대회 비교 시스템</p>
+                <h1 class="text-2xl font-bold italic uppercase tracking-tight">Triathlon <span class="text-blue-400">Compare V2</span></h1>
+                <p class="text-slate-400 text-sm">대회별 기록 비교 및 상세 데이터 통합 리포트</p>
             </div>
             <div class="relative w-full md:w-80">
-                <input type="text" id="quickFilter" placeholder="이름, 초성, 발음, 클럽 검색..." 
-                       class="w-full bg-slate-800 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-white">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="quickFilter" placeholder="성명, 클럽, 대회명 검색..." 
+                       class="w-full bg-slate-800 border-none rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
         </header>
 
         <div class="card space-y-4">
             <div class="flex items-center gap-4 border-b pb-4">
-                <span class="font-bold text-slate-700">1. 코스 타입:</span>
-                <select id="typeFilter" class="bg-slate-100 p-2 px-4 rounded-lg text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                <span class="font-bold text-slate-700 text-sm"><i class="fas fa-filter mr-1 text-blue-500"></i> 코스 타입:</span>
+                <select id="typeFilter" class="bg-slate-100 p-2 px-4 rounded-lg text-sm font-bold outline-none border-r-8 border-transparent">
                     </select>
-                <span class="text-xs text-slate-400">※ 타입을 선택하면 하단에 대회가 나옵니다.</span>
+                <div class="flex-1 text-right">
+                    <span id="selectionCount" class="text-sm font-bold text-blue-600 mr-4">선택된 대회: 0개</span>
+                    <button onclick="updateAnalysis()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95">
+                        <i class="fas fa-chart-bar mr-2"></i>분석 및 비교 실행
+                    </button>
+                </div>
             </div>
-            <div>
-                <span class="font-bold text-slate-700 block mb-3">2. 비교 대회 선택 (다중 선택 가능):</span>
-                <div id="raceList" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-48 overflow-y-auto p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                    </div>
-            </div>
-            <div class="flex justify-between items-center pt-2">
-                <span id="selectionCount" class="text-sm text-blue-600 font-bold">선택된 대회: 0개</span>
-                <button onclick="updateComparison()" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition-all shadow-lg transform active:scale-95">
-                    📊 선택 대회 분석 및 비교 실행
-                </button>
-            </div>
+            
+            <div id="raceList" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-60 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-inner">
+                </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="card">
-                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">⏱️ 종목별 평균 기록 (초)</h3>
                 <div id="compareChart" style="height: 400px;"></div>
             </div>
             <div class="card">
-                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">👨‍💻 대회별 완주자 분포</h3>
                 <div id="countChart" style="height: 400px;"></div>
             </div>
         </div>
 
         <div class="card">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-slate-700 flex items-center gap-2">🏁 상세 기록 마스터 데이터 <span id="recordCount" class="text-xs font-normal bg-slate-100 px-2 py-1 rounded text-slate-500">0 records</span></h3>
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-list text-blue-500"></i> 상세 레코드
+                </h3>
+                <span id="gridInfo" class="text-xs font-mono text-slate-500"></span>
             </div>
-            <div id="myGrid" class="ag-theme-quartz"></div>
+            <div id="myGrid" class="ag-theme-quartz shadow-sm"></div>
         </div>
     </div>
 
     <script>
-        // --- [1] 한글 검색 인덱싱 (getKoreanRegex 로직 이식) ---
-        const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-        const ROMAN_MAP = {'ㄱ':'g','ㄴ':'n','ㄷ':'d','ㄹ':'r','ㅁ':'m','ㅂ':'b','ㅅ':'s','ㅇ':'','ㅈ':'j','ㅊ':'ch','ㅋ':'k','ㅌ':'t','ㅍ':'p','ㅎ':'h','ㅏ':'a','ㅑ':'ya','ㅓ':'eo','ㅕ':'yeo','ㅗ':'o','ㅛ':'yo','ㅜ':'u','ㅠ':'yu','ㅡ':'eu','ㅣ':'i'};
-
-        function generateSearchKey(text) {
-            if (!text) return "";
-            let cho = "", rom = "";
-            for (let i = 0; i < text.length; i++) {
-                const code = text.charCodeAt(i) - 44032;
-                if (code >= 0 && code <= 11171) {
-                    const cIdx = Math.floor(code / 588);
-                    cho += CHOSUNG[cIdx]; rom += ROMAN_MAP[CHOSUNG[cIdx]] || "";
-                } else { cho += text[i]; rom += text[i]; }
-            }
-            return `${text} ${cho} ${rom}`.toLowerCase();
-        }
+        let allRecords = [], allMeta = [], gridApi, chart1, chart2;
 
         const formatS = (s) => {
-            if(!s || isNaN(s)) return "-";
+            if(!s || isNaN(s) || s === 0) return "-";
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
             const sec = s % 60;
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         };
 
-        // --- [2] 전역 변수 및 초기화 ---
-        let allRecords = [], allMeta = [], gridApi;
-        let chart1, chart2;
-
         async function init() {
             try {
-                const [rRes, mRes] = await Promise.all([fetch('/data/all_records_v2.json'), fetch('/data/race_meta_v2.json')]);
+                const [rRes, mRes] = await Promise.all([
+                    fetch('/data/all_records_v2.json'), 
+                    fetch('/data/race_meta_v2.json')
+                ]);
                 allRecords = await rRes.json();
                 allMeta = await mRes.json();
 
-                // 검색 전용 필드(sk) 런타임 생성
-                allRecords.forEach(r => {
-                    r.sk = `${generateSearchKey(r.n)} ${r.rn} ${r.c || ''} ${r.y}`.replace(/\s+/g, ' ');
-                });
-
-                // 코스 타입 필터 생성
+                // 1. 타입 필터링 설정
                 const types = [...new Set(allMeta.map(m => m.type))];
                 const typeSelect = document.getElementById('typeFilter');
                 types.forEach(t => {
@@ -121,47 +99,42 @@
                     opt.value = t; opt.innerText = t;
                     typeSelect.appendChild(opt);
                 });
-
-                typeSelect.addEventListener('change', (e) => renderRaceCheckboxes(e.target.value));
+                typeSelect.onchange = (e) => renderRaceCheckboxes(e.target.value);
                 renderRaceCheckboxes(types[0]);
 
-                // AG Grid 설정 (모든 컬럼 누락 없이 포함)
+                // 2. AG Grid 초기화 (모든 컬럼 누락 없이 배치)
                 const gridOptions = {
                     columnDefs: [
-                        { field: "n", headerName: "성명", width: 110, pinned: 'left' },
-                        { field: "y", headerName: "연도", width: 85 },
-                        { field: "rn", headerName: "대회ID", width: 180 },
-                        { field: "rt", headerName: "타입", width: 100 },
-                        { field: "t", headerName: "기록", width: 110, valueFormatter: p => formatS(p.value), cellStyle: { fontWeight: 'bold', color: '#1d4ed8' } },
-                        { field: "s", headerName: "수영", width: 100, valueFormatter: p => formatS(p.value) },
-                        { field: "t1", headerName: "T1", width: 85, valueFormatter: p => formatS(p.value) },
-                        { field: "bk", headerName: "바이크", width: 100, valueFormatter: p => formatS(p.value) },
-                        { field: "t2", headerName: "T2", width: 85, valueFormatter: p => formatS(p.value) },
-                        { field: "r", headerName: "런", width: 100, valueFormatter: p => formatS(p.value) },
-                        { field: "b", headerName: "배번", width: 90 },
-                        { field: "d", headerName: "연대/부문", width: 110 },
-                        { field: "c", headerName: "클럽/소속", width: 150 },
-                        { field: "q", headerName: "자격", width: 80 },
-                        { field: "sk", hide: true } // 검색용 숨김 필드
+                        { field: "n", headerName: "성명", width: 100, pinned: 'left', filter: true },
+                        { field: "y", headerName: "연도", width: 80 },
+                        { field: "rn", headerName: "대회ID", width: 160 },
+                        { field: "t", headerName: "기록", width: 110, valueFormatter: p => formatS(p.value), cellStyle: {fontWeight:'bold', color:'#1d4ed8'} },
+                        { field: "s", headerName: "수영", width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "t1", headerName: "T1", width: 80, valueFormatter: p => formatS(p.value) },
+                        { field: "bk", headerName: "바이크", width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "t2", headerName: "T2", width: 80, valueFormatter: p => formatS(p.value) },
+                        { field: "r", headerName: "런", width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "b", headerName: "배번", width: 85 },
+                        { field: "d", headerName: "부문", width: 110 },
+                        { field: "c", headerName: "클럽", width: 150 },
+                        { field: "q", headerName: "자격", width: 80 }
                     ],
-                    defaultColDef: { sortable: true, filter: true, resizable: true },
+                    defaultColDef: { sortable: true, filter: 'agTextColumnFilter', resizable: true },
                     pagination: true,
                     paginationPageSize: 20,
                     onGridReady: (params) => {
                         gridApi = params.api;
-                        updateComparison(); // 초기 분석 실행
+                        updateAnalysis(); // 초기 로드
                     }
                 };
-                agGrid.createGrid(document.querySelector('#myGrid'), gridOptions);
+                gridApi = agGrid.createGrid(document.querySelector('#myGrid'), gridOptions);
 
-                // 검색창 연결
-                document.getElementById('quickFilter').addEventListener('input', e => {
+                // 검색 필터 연동
+                document.getElementById('quickFilter').oninput = (e) => {
                     gridApi.setGridOption('quickFilterText', e.target.value);
-                });
+                };
 
-            } catch (err) {
-                console.error("Initialization failed:", err);
-            }
+            } catch (err) { console.error("데이터 로드 실패:", err); }
         }
 
         function renderRaceCheckboxes(type) {
@@ -171,41 +144,46 @@
             
             filteredMeta.forEach((m, idx) => {
                 const div = document.createElement('div');
-                div.className = "race-chip flex items-center gap-2 p-2 rounded-lg bg-white";
+                div.className = "race-chk-item flex items-center gap-2 p-2 rounded-lg cursor-pointer";
                 div.innerHTML = `
-                    <input type="checkbox" id="chk_${m.id}" value="${m.id}" class="race-chk w-4 h-4 cursor-pointer" ${idx < 3 ? 'checked' : ''} onchange="updateCountLabel()">
-                    <label for="chk_${m.id}" class="text-[11px] cursor-pointer truncate flex-1">${m.name || m.id}</label>
+                    <input type="checkbox" id="chk_${m.id}" value="${m.id}" class="race-chk w-4 h-4 cursor-pointer" ${idx < 3 ? 'checked' : ''} onchange="updateSelectedCountLabel()">
+                    <label for="chk_${m.id}" class="text-[11px] font-medium truncate cursor-pointer flex-1 text-slate-600">${m.name || m.id}</label>
                 `;
+                div.onclick = (e) => {
+                    if(e.target.tagName !== 'INPUT') {
+                        const chk = div.querySelector('input');
+                        chk.checked = !chk.checked;
+                        updateSelectedCountLabel();
+                    }
+                };
                 listDiv.appendChild(div);
             });
-            updateCountLabel();
+            updateSelectedCountLabel();
         }
 
-        function updateCountLabel() {
+        function updateSelectedCountLabel() {
             const cnt = document.querySelectorAll('.race-chk:checked').length;
             document.getElementById('selectionCount').innerText = `선택된 대회: ${cnt}개`;
         }
 
-        function updateComparison() {
+        function updateAnalysis() {
             const selectedRids = Array.from(document.querySelectorAll('.race-chk:checked')).map(cb => cb.value);
-            if(selectedRids.length === 0) return alert("비교할 대회를 하나 이상 선택하세요.");
+            if(selectedRids.length === 0) return alert("대회를 최소 하나 이상 선택해주세요.");
 
             const filteredData = allRecords.filter(r => selectedRids.includes(r.rn));
             gridApi.setGridOption('rowData', filteredData);
-            document.getElementById('recordCount').innerText = `${filteredData.length.toLocaleString()} records`;
+            document.getElementById('gridInfo').innerText = `TOTAL: ${filteredData.length.toLocaleString()} records`;
 
-            // 차트 통계 가공
+            // 차트 데이터 생성 (제한 없이 모든 선택 대회 포함)
             const chartData = selectedRids.map(rid => {
                 const raceRecords = filteredData.filter(r => r.rn === rid);
                 if(raceRecords.length === 0) return null;
-                
                 const meta = allMeta.find(m => m.id === rid);
                 const avg = (key) => Math.floor(raceRecords.reduce((s, c) => s + (c[key] || 0), 0) / raceRecords.length);
-
+                
                 return {
-                    race: (meta?.name || rid).replace('아이언맨', '').trim(),
-                    swim: avg('s'), bike: avg('bk'), run: avg('r'),
-                    count: raceRecords.length
+                    race: (meta?.name || rid).replace('아이언맨', '').substring(0,12),
+                    swim: avg('s'), bike: avg('bk'), run: avg('r'), count: raceRecords.length
                 };
             }).filter(d => d !== null);
 
@@ -213,43 +191,29 @@
         }
 
         function renderCharts(data) {
-            // [중요] agCharts.AgChart.create 사용 (report_old_king.html과 동일 규격)
-            
-            const compareOptions = {
-                container: document.getElementById('compareChart'),
-                data: data,
-                series: [
-                    { type: 'bar', xKey: 'race', yKey: 'swim', yName: '수영 평균', stacked: false, fill: '#60a5fa' },
-                    { type: 'bar', xKey: 'race', yKey: 'bike', yName: '바이크 평균', stacked: false, fill: '#34d399' },
-                    { type: 'bar', xKey: 'race', yKey: 'run', yName: '런 평균', stacked: false, fill: '#f87171' }
-                ],
-                axes: [
-                    { type: 'category', position: 'bottom' },
-                    { type: 'number', position: 'left', title: { text: '기록 (초)' } }
-                ],
-                legend: { position: 'top' }
-            };
-
-            const countOptions = {
-                container: document.getElementById('countChart'),
-                data: data,
-                series: [{ type: 'bar', xKey: 'race', yKey: 'count', yName: '참가자수', fill: '#475569' }],
-                axes: [
-                    { type: 'category', position: 'bottom' },
-                    { type: 'number', position: 'left' }
-                ]
-            };
-
-            // 기존 인스턴스가 있으면 파괴 후 재생성 (v9 대응)
+            // [중요] AgChart.create 방식 준수 (글로벌 객체 호출)
             if (chart1) chart1.destroy();
             if (chart2) chart2.destroy();
 
-            try {
-                chart1 = agCharts.AgChart.create(compareOptions);
-                chart2 = agCharts.AgChart.create(countOptions);
-            } catch (e) {
-                console.error("AG Charts Creation Error:", e);
-            }
+            chart1 = AgChart.create({
+                container: document.getElementById('compareChart'),
+                title: { text: '대회별 평균 기록 비교 (Stacked)', fontSize: 16, fontWeight: 'bold' },
+                data: data,
+                series: [
+                    { type: 'bar', xKey: 'race', yKey: 'swim', yName: '수영', stacked: true, fill: '#60a5fa' },
+                    { type: 'bar', xKey: 'race', yKey: 'bike', yName: '바이크', stacked: true, fill: '#34d399' },
+                    { type: 'bar', xKey: 'race', yKey: 'run', yName: '런', stacked: true, fill: '#f87171' }
+                ],
+                legend: { position: 'bottom' }
+            });
+
+            chart2 = AgChart.create({
+                container: document.getElementById('countChart'),
+                title: { text: '대회별 완주자 수', fontSize: 16, fontWeight: 'bold' },
+                data: data,
+                series: [{ type: 'column', xKey: 'race', yKey: 'count', yName: '완주자수', fill: '#475569' }],
+                legend: { enabled: false }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', init);
