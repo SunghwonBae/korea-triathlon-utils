@@ -184,7 +184,7 @@
                 const avg = (key) => Math.floor(raceRecords.reduce((s, c) => s + (c[key] || 0), 0) / raceRecords.length);
                 
                 return {
-                    race: (meta?.name || rid).replace('아이언맨', '').substring(0,12),
+                    race: (meta?.name || rid),
                     swim: avg('s'), bike: avg('bk'), run: avg('r'), count: raceRecords.length
                 };
             }).filter(d => d !== null);
