@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>아이언맨 OCR - 텍스트 누적 및 크롭 도구</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 20px; background-color: #f0f2f5; margin: 0; }
+        .main-layout { display: flex; gap: 15px; max-width: 1600px; margin: 0 auto; height: 95vh; }
+        .file-sidebar { width: 200px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-direction: column; }
+        .thumb-item { width: 100%; height: 80px; object-fit: cover; margin-bottom: 8px; cursor: pointer; border: 3px solid transparent; }
+        .thumb-item.active { border-color: #e74c3c; }
+        .editor-section { flex: 1.5; background: white; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; min-width: 500px; }
+        .crop-wrapper { flex: 1; background: #333; overflow: hidden; border-radius: 4px; position: relative; }
+        #imageToCrop { max-width: 100%; display: block; }
+        .result-section { flex: 2; display: flex; flex-direction: column; gap: 10px; }
+        .text-area-group { flex: 1; display: flex; flex-direction: column; }
+        textarea { width: 100%; flex: 1; font-family: 'Consolas', monospace; font-size: 13px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: none; line-height: 1.4; }
+        #debugOutput { background: #fff; border-top: 4px solid #34495e; }
+        #jsonOutput { background: #fff; border-top: 4px solid #e74c3c; }
+        .btn { padding: 12px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; color: white; margin-top: 5px; }
+        .btn-red { background: #e74c3c; }
+        .btn-blue { background: #3498db; }
+        .btn-dark { background: #34495e; }
+        #status { color: #e67e22; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <div class="file-sidebar">
+        <h4 style="margin:0 0 10px 0;">이미지 목록</h4>
+        <input type="file" id="imageInput" accept="image/*" multiple style="width:100%; margin-bottom:10px; font-size:12px;">
+        <div id="thumbContainer" style="overflow-y:auto; flex:1;"></div>
+    </div>
+
+    <div class="editor-section">
+        <div id="status">이미지를 업로드하세요.</div>
+        <div class="crop-wrapper">
+            <img id="imageToCrop">
+        </div>
+        <button id="analyzeBtn" class="btn btn-red">선택 영역 분석 및 추가</button>
+    </div>
+
+    <div class="result-section">
+        <div class="text-area-group">
+            <label style="font-weight:bold;">1. 추출된 텍스트 누적 (자유롭게 편집 가능)</label>
+            <textarea id="debugOutput" placeholder="분석할 때마다 텍스트가 아래로 쌓입니다."></textarea>
+            <button id="reParseBtn" class="btn btn-dark" style="padding:8px;">텍스트 수정 후 JSON 반영</button>
+        </div>
+
+        <div class="text-area-group">
+            <label style="font-weight:bold;">2. 누적 JSON 결과</label>
+            <textarea id="jsonOutput" placeholder="최종 JSON 데이터가 표시됩니다."></textarea>
+            <div style="display:flex; gap:5px;">
+                <button id="downloadBtn" class="btn btn-blue" style="flex:2;">통합 JSON 다운로드</button>
+                <button onclick="if(confirm('모든 데이터를 초기화할까요?')) { debugOutput.value=''; allRecords=[]; updateJsonDisplay(); }" class="btn" style="background:#95a5a6; flex:1;">전체 초기화</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cropper;
+    let allRecords = [];
+    const imageInput = document.getElementById('imageInput');
+    const thumbContainer = document.getElementById('thumbContainer');
+    const imageToCrop = document.getElementById('imageToCrop');
+    const status = document.getElementById('status');
+    const debugOutput = document.getElementById('debugOutput');
+    const jsonOutput = document.getElementById('jsonOutput');
+
+    imageInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        thumbContainer.innerHTML = "";
+        files.forEach((file, idx) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = document.createElement('img');
+                img.src = ev.target.result;
+                img.className = 'thumb-item';
+                img.onclick = () => loadToCropper(ev.target.result, img);
+                thumbContainer.appendChild(img);
+                if(idx === 0) loadToCropper(ev.target.result, img);
+            };
+            reader.readAsDataURL(file);
+        });
+        status.innerText = `${files.length}장 로드됨. 영역 선택 후 분석하세요.`;
+    });
+
+    function loadToCropper(src, thumbElement) {
+        document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+        thumbElement.classList.add('active');
+        if (cropper) cropper.destroy();
+        imageToCrop.src = src;
+        cropper = new Cropper(imageToCrop, { viewMode: 1, autoCropArea: 0.8, background: false });
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', async () => {
+        if (!cropper) return;
+        status.innerText = "OCR 분석 중...";
+        const croppedCanvas = cropper.getCroppedCanvas();
+        const base64 = croppedCanvas.toDataURL('image/png');
+
+        const worker = await Tesseract.createWorker('eng+kor');
+        const ret = await worker.recognize(base64);
+        await worker.terminate();
+
+        const newText = ret.data.text.trim();
+        if (debugOutput.value.trim() !== "") {
+            debugOutput.value += "\n\n" + newText; 
+        } else {
+            debugOutput.value = newText;
+        }
+
+        runFullParsing();
+    });
+
+    document.getElementById('reParseBtn').addEventListener('click', () => {
+        runFullParsing();
+    });
+
+    function runFullParsing() {
+        const text = debugOutput.value;
+        const blocks = text.split(/\n\s*\n/).filter(b => b.trim().length > 0);
+        const records = [];
+
+        const ageRegex = /([MF]\d{2}-\d{2}|[MF]\d{2})/i;
+        const bibRegex = /Bib\s*(\d+)/i;
+        const timeRegex = /(?:Finish Time:|Time:)?\s*(\d{1,2}:\d{2}:\d{2})/i;
+
+        blocks.forEach(block => {
+            const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let record = { n: "", d: "", b: "", t_str: "", c: "" };
+            let timeFound = false;
+
+            lines.forEach((line, index) => {
+                const cleanLine = line.replace(/[@.=,®]/g, '').trim();
+                if (index === 0) { record.n = cleanLine; return; }
+                
+                const ageM = line.match(ageRegex);
+                const bibM = line.match(bibRegex);
+                if (ageM) record.d = ageM[1].toUpperCase();
+                if (bibM) record.b = bibM[1];
+
+                const timeM = line.match(timeRegex);
+                if (timeM) {
+                    record.t_str = timeM[1];
+                    timeFound = true;
+                    return;
+                }
+                if (timeFound) {
+                    record.c = record.c ? (record.c + " " + cleanLine) : cleanLine;
+                }
+            });
+
+            if (record.n && record.t_str) records.push(record);
+        });
+
+        allRecords = records;
+        updateJsonDisplay();
+        status.innerText = `현재 총 ${allRecords.length}명 추출됨`;
+    }
+
+    function updateJsonDisplay() {
+        jsonOutput.value = JSON.stringify({ records: allRecords }, null, 2);
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        const blob = new Blob([jsonOutput.value], {type: "application/json"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `ironman_accumulated.json`;
+        link.click();
+    });
+</script>
+</body>
+</html>
