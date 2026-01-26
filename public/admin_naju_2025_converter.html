@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>나주 2025 데이터 변환기 (수정본)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        h2 { color: #333; }
+        .container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 800px; }
+        #status { margin-top: 15px; font-weight: bold; color: blue; white-space: pre-wrap; background: #f4f4f4; padding: 10px; border-radius: 4px; font-size: 0.85em; }
+        .info { font-size: 0.9em; color: #666; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>나주 2025 데이터 변환기 (Header 인식 수정)</h2>
+        <p class="info">
+            나주 엑셀 파일은 상단에 빈 줄이 있어 4번째 줄(Index 3)부터 데이터를 읽도록 수정했습니다.
+        </p>
+        
+        <input type="file" id="excelFile" accept=".xlsx" />
+        <br>
+        <div id="status">파일을 대기 중...</div>
+    </div>
+
+    <script>
+        document.getElementById('excelFile').addEventListener('change', handleFile, false);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array', cellDates: true}); // 날짜 객체로 읽기
+                processWorkbook(workbook);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processWorkbook(workbook) {
+            const targetSheets = ['남_순위', '여_순위'];
+            let allRecords = [];
+            let log = "";
+
+            targetSheets.forEach(sheetName => {
+                const sheet = workbook.Sheets[sheetName];
+                if (!sheet) {
+                    log += `[-] '${sheetName}' 시트 없음\n`;
+                    return;
+                }
+
+                // 핵심 수정: 나주 파일은 헤더가 4번째 줄에 있음 (range: 3)
+                const sheetData = XLSX.utils.sheet_to_json(sheet, { range: 3 });
+                log += `[*] '${sheetName}' 시트: ${sheetData.length}행 읽음\n`;
+
+                if (sheetData.length > 0) {
+                    // 첫 번째 행의 키(컬럼명)를 로그에 찍어 확인
+                    log += `    샘플 컬럼: ${Object.keys(sheetData[0]).join(', ')}\n`;
+                }
+
+                sheetData.forEach((row, idx) => {
+                    // 이름 컬럼명 대응 (공백 포함 여부 등)
+                    const name = row['이름'] || row['성명'];
+                    const bib = row['배번호'] || row['배 번호'];
+
+                    if (!name) {
+                        if (idx === 0) log += `    [경고] '${sheetName}' 첫 행에 '이름' 데이터가 없습니다.\n`;
+                        return;
+                    }
+
+                    try {
+                        const record = mapRowToRecord(row);
+                        allRecords.push(record);
+                    } catch (err) {
+                        console.error("Mapping error", err);
+                    }
+                });
+            });
+
+            if (allRecords.length > 0) {
+                saveJSON(allRecords, "나주영산강_2025.json");
+                document.getElementById('status').innerText = log + `\n✅ 완료! 총 ${allRecords.length}건 변환 및 다운로드됨.`;
+            } else {
+                document.getElementById('status').innerText = log + "\n❌ 오류: 유효한 데이터를 추출하지 못했습니다. 상단 로그의 '샘플 컬럼'을 확인하세요.";
+            }
+        }
+
+        function parseTime(val) {
+            if (!val || val === '-' || val === '0') return null;
+            if (val instanceof Date) return val;
+            const d = new Date(val);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function getDiffSeconds(startVal, endVal) {
+            const start = parseTime(startVal);
+            const end = parseTime(endVal);
+            if (!start || !end) return 0;
+            const diff = Math.round((end - start) / 1000);
+            return diff > 0 ? diff : 0;
+        }
+
+        function mapRowToRecord(row) {
+            let obj = {
+                n: String(row['이름'] || "").trim(),
+                b: row['배번호'],
+                c: row['단체명'] || "",
+                d: row['카테고리'] || "",
+                rn: "나주_2025",
+                y: "2025",
+                rt: "Full"
+            };
+
+            // 구간 기록 계산
+            obj.s = getDiffSeconds(row['Start'], row['SWIM_Finish']);
+            obj.t1 = getDiffSeconds(row['SWIM_Finish'], row['BIKE_Start']);
+            obj.bk = getDiffSeconds(row['BIKE_Start'], row['BIKE_Finish']);
+            obj.t2 = getDiffSeconds(row['BIKE_Finish'], row['RUN_Start']);
+            obj.r = getDiffSeconds(row['RUN_Start'], row['Finish']);
+            obj.t = getDiffSeconds(row['Start'], row['Finish']);
+
+            // CP 데이터 축약 저장
+            for (let key in row) {
+                let val = row[key];
+                if (!val || val === '-') continue;
+                
+                // 타임스탬프 형식 정리 (ISO 또는 시간만 추출)
+                let timeStr = val instanceof Date ? val.toLocaleTimeString('it-IT') : String(val);
+
+                if (key === 'Start') obj.t_st = timeStr;
+                else if (key === 'Finish') obj.t_fn = timeStr;
+                else if (key.startsWith('SWIM_CP')) obj['sc' + key.replace('SWIM_CP', '')] = timeStr;
+                else if (key.startsWith('BIKE_CP')) obj['bc' + key.replace('BIKE_CP', '')] = timeStr;
+                else if (key.startsWith('RUN_CP')) obj['rc' + key.replace('RUN_CP', '')] = timeStr;
+            }
+
+            return obj;
+        }
+
+        function saveJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>
