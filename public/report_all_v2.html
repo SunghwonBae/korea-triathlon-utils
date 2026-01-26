@@ -116,8 +116,8 @@
         async function init() {
             try {
                 const [recordsRes, metaRes] = await Promise.all([
-                    fetch('all_records_v2.json'),
-                    fetch('race_meta_v2.json')
+                    fetch('/data/all_records_v2.json'),
+                    fetch('/data/race_meta_v2.json')
                 ]);
                 
                 let records = await recordsRes.json();
