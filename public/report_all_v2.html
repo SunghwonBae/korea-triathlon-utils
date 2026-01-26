@@ -181,7 +181,10 @@
                 const raceRecords = filteredData.filter(r => r.rn === rid);
                 if(raceRecords.length === 0) return null;
                 const meta = allMeta.find(m => m.id === rid);
-                const avg = (key) => Math.floor(raceRecords.reduce((s, c) => s + (c[key] || 0), 0) / raceRecords.length);
+                const avg = (key) => {
+                    const valid = raceRecords.filter(r => r[key] > 0);
+                    return valid.length ? Math.floor(valid.reduce((s, c) => s + c[key], 0) / valid.length) : 0;
+                };
                 
                 return {
                     race: (meta?.name || rid),
