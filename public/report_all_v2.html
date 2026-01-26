@@ -72,6 +72,8 @@
     </div>
 
     <script>
+        const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+        
         let allRecords = [], allMeta = [], gridApi, chart1, chart2;
 
         const formatS = (s) => {
