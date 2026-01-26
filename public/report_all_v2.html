@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>철인3종 통합 리포트 V2 (AG Grid & Charts)</title>
+    <title>철인3종 통합 리포트 V2 (대회 비교 분석)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ag-charts-community/dist/ag-charts-community.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-charts-community@9.3.2/dist/ag-charts-community.min.js"></script>
     
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; }
-        .ag-theme-quartz { --ag-border-radius: 12px; height: 500px; width: 100%; }
-        .chart-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .ag-theme-quartz { height: 500px; width: 100%; border-radius: 12px; overflow: hidden; }
+        .card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+        .checkbox-item:checked + label { color: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -21,67 +22,77 @@
     <div class="max-w-7xl mx-auto space-y-6">
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 text-white p-6 rounded-2xl shadow-xl gap-4">
             <div>
-                <h1 class="text-2xl font-bold italic tracking-tight">KOREA TRIATHLON <span class="text-blue-400">ANALYTICS V2</span></h1>
-                <p class="text-slate-400 text-sm mt-1">통합 데이터 기반 정밀 분석 시스템</p>
+                <h1 class="text-2xl font-bold italic tracking-tight">TRIATHLON <span class="text-blue-400">COMPARISON V2</span></h1>
+                <p class="text-slate-400 text-sm mt-1">대회별 평균 데이터 및 기록 비교 시스템</p>
             </div>
             <div class="relative w-full md:w-80">
-                <input type="text" id="quickFilter" placeholder="이름, 초성, 발음, 대회명 검색..." 
+                <input type="text" id="quickFilter" placeholder="이름, 초성, 발음 검색..." 
                        class="w-full bg-slate-800 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-white">
             </div>
         </header>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="statCards">
+        <div class="card space-y-4">
+            <div class="flex items-center gap-4 border-b pb-4">
+                <span class="font-bold text-slate-700">1. 코스 타입 선택:</span>
+                <select id="typeFilter" class="bg-slate-100 p-2 rounded-lg text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                    </select>
             </div>
-
-        <div class="chart-card">
-            <div id="myGrid" class="ag-theme-quartz"></div>
+            <div>
+                <span class="font-bold text-slate-700 block mb-2">2. 비교할 대회 선택 (중복 가능):</span>
+                <div id="raceList" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg">
+                    </div>
+            </div>
+            <div class="flex justify-end">
+                <button onclick="updateComparison()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg">
+                    선택 대회 분석 실행
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="chart-card">
-                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    <span class="w-1 h-4 bg-blue-500 rounded"></span> 연도별 참가자 추이
-                </h3>
-                <div id="yearTrendChart" style="height: 350px;"></div>
+            <div class="card">
+                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">⏱️ 종목별 평균 기록 비교 (초)</h3>
+                <div id="compareChart" style="height: 400px;"></div>
             </div>
-            <div class="chart-card">
-                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    <span class="w-1 h-4 bg-purple-500 rounded"></span> 코스 타입별 평균 기록 (시간)
-                </h3>
-                <div id="typeAvgChart" style="height: 350px;"></div>
+            <div class="card">
+                <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">📊 대회별 참가자 수</h3>
+                <div id="countChart" style="height: 400px;"></div>
             </div>
+        </div>
+
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-700">🏁 상세 기록 레코드 (Full Data)</h3>
+                <span id="rowCount" class="text-xs text-slate-500"></span>
+            </div>
+            <div id="myGrid" class="ag-theme-quartz"></div>
         </div>
     </div>
 
     <script>
-        // --- [1] 한국어 검색 지원 유틸리티 (기존 getKoreanRegex 로직 이식) ---
+        // --- [1] 한글 검색 유틸리티 (getKoreanRegex 로직 기반) ---
         const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
         const ROMAN_MAP = {
             'ㄱ':'g','ㄴ':'n','ㄷ':'d','ㄹ':'r','ㅁ':'m','ㅂ':'b','ㅅ':'s','ㅇ':'','ㅈ':'j','ㅊ':'ch','ㅋ':'k','ㅌ':'t','ㅍ':'p','ㅎ':'h',
             'ㅏ':'a','ㅑ':'ya','ㅓ':'eo','ㅕ':'yeo','ㅗ':'o','ㅛ':'yo','ㅜ':'u','ㅠ':'yu','ㅡ':'eu','ㅣ':'i','ㅐ':'ae','ㅔ':'e'
         };
 
-        function getSearchMetadata(text) {
+        function getSearchIndex(text) {
             if (!text) return "";
-            let chosung = "";
-            let roman = "";
-            
+            let ch = "", ro = "";
             for (let i = 0; i < text.length; i++) {
                 const code = text.charCodeAt(i) - 44032;
                 if (code >= 0 && code <= 11171) {
                     const cIdx = Math.floor(code / 588);
-                    chosung += CHOSUNG[cIdx];
-                    // 발음 근사치 (간소화 버전)
-                    roman += ROMAN_MAP[CHOSUNG[cIdx]] || "";
+                    ch += CHOSUNG[cIdx];
+                    ro += ROMAN_MAP[CHOSUNG[cIdx]] || "";
                 } else {
-                    chosung += text[i];
-                    roman += text[i];
+                    ch += text[i]; ro += text[i];
                 }
             }
-            return `${chosung} ${roman}`.toLowerCase();
+            return `${text} ${ch} ${ro}`.toLowerCase();
         }
 
-        // --- [2] 시간 변환 유틸리티 ---
         const sToHms = (s) => {
             if(!s || isNaN(s)) return "-";
             const h = Math.floor(s / 3600);
@@ -90,112 +101,146 @@
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         };
 
-        // --- [3] AG Grid 설정 ---
-        let gridApi;
-        const gridOptions = {
-            columnDefs: [
-                { field: "n", headerName: "성명", width: 120, pinned: 'left', checkboxSelection: false },
-                { field: "y", headerName: "연도", width: 90, filter: 'agNumberColumnFilter' },
-                { field: "rt", headerName: "타입", width: 110 },
-                { field: "rn", headerName: "대회ID", flex: 1 },
-                { field: "t", headerName: "기록", width: 120, valueFormatter: p => sToHms(p.value), cellClass: 'font-mono font-bold text-blue-600' },
-                { field: "s", headerName: "수영", width: 100, valueFormatter: p => sToHms(p.value) },
-                { field: "bk", headerName: "바이크", width: 100, valueFormatter: p => sToHms(p.value) },
-                { field: "r", headerName: "런", width: 100, valueFormatter: p => sToHms(p.value) },
-                { field: "c", headerName: "클럽/소속", width: 150 },
-                // 검색 전용 숨김 필드
-                { field: "sk", hide: true }
-            ],
-            defaultColDef: { sortable: true, filter: true, resizable: true },
-            pagination: true,
-            paginationPageSize: 20,
-            onGridReady: (params) => { gridApi = params.api; }
-        };
+        // --- [2] 데이터 로드 및 초기화 ---
+        let allRecords = [], allMeta = [], gridApi;
+        let compareChartInstance, countChartInstance;
 
-        // --- [4] 메인 실행 로직 ---
         async function init() {
             try {
-                const [recordsRes, metaRes] = await Promise.all([
-                    fetch('/data/all_records_v2.json'),
-                    fetch('/data/race_meta_v2.json')
-                ]);
-                
-                let records = await recordsRes.json();
-                const meta = await metaRes.json();
+                const [rRes, mRes] = await Promise.all([fetch('/data/all_records_v2.json'), fetch('/data/race_meta_v2.json')]);
+                allRecords = await rRes.json();
+                allMeta = await mRes.json();
 
-                // 런타임에 검색용 인덱스(sk) 생성
-                records.forEach(r => {
-                    const metaData = getSearchMetadata(r.n);
-                    r.sk = `${r.n} ${metaData} ${r.rn} ${r.c || ''}`.replace(/\s+/g, ' ').toLowerCase();
+                // 검색 인덱스 생성
+                allRecords.forEach(r => {
+                    r.sk = `${getSearchIndex(r.n)} ${r.rn} ${r.c || ''}`.replace(/\s+/g, ' ');
                 });
 
-                // 통계 카드 업데이트
-                updateStatCards(records, meta);
-
-                // 그리드 데이터 주입
-                const gridDiv = document.querySelector('#myGrid');
-                gridApi = agGrid.createGrid(gridDiv, gridOptions);
-                gridApi.setGridOption('rowData', records);
-
-                // 차트 렌더링
-                renderCharts(records);
-
-                // 검색창 연결
-                document.getElementById('quickFilter').addEventListener('input', (e) => {
-                    gridApi.setGridOption('quickFilterText', e.target.value);
+                // 타입 필터 생성
+                const types = [...new Set(allMeta.map(m => m.type))];
+                const typeSel = document.getElementById('typeFilter');
+                types.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t; opt.innerText = t;
+                    typeSel.appendChild(opt);
                 });
 
-            } catch (err) {
-                console.error("Data Load Error:", err);
-            }
+                typeSel.addEventListener('change', (e) => renderRaceList(e.target.value));
+                renderRaceList(types[0]); // 초기 리스트
+
+                // 그리드 초기화 (모든 컬럼 포함)
+                const gridOptions = {
+                    columnDefs: [
+                        { field: "n", headerName: "성명", width: 110, pinned: 'left' },
+                        { field: "y", headerName: "연도", width: 80 },
+                        { field: "rt", headerName: "타입", width: 100 },
+                        { field: "rn", headerName: "대회ID", width: 180 },
+                        { field: "t", headerName: "기록", width: 110, valueFormatter: p => sToHms(p.value), cellClass: 'font-bold text-blue-600' },
+                        { field: "s", headerName: "수영", width: 100, valueFormatter: p => sToHms(p.value) },
+                        { field: "t1", headerName: "T1", width: 80, valueFormatter: p => sToHms(p.value) },
+                        { field: "bk", headerName: "바이크", width: 100, valueFormatter: p => sToHms(p.value) },
+                        { field: "t2", headerName: "T2", width: 80, valueFormatter: p => sToHms(p.value) },
+                        { field: "r", headerName: "런", width: 100, valueFormatter: p => sToHms(p.value) },
+                        { field: "b", headerName: "배번", width: 90 },
+                        { field: "d", headerName: "연대", width: 100 },
+                        { field: "c", headerName: "클럽", width: 150 },
+                        { field: "q", headerName: "자격", width: 80 },
+                        { field: "sk", hide: true }
+                    ],
+                    defaultColDef: { sortable: true, filter: true, resizable: true },
+                    pagination: true,
+                    paginationPageSize: 20,
+                    onGridReady: (params) => {
+                        gridApi = params.api;
+                        updateComparison(); // 초기 렌더링
+                    }
+                };
+                agGrid.createGrid(document.querySelector('#myGrid'), gridOptions);
+
+                document.getElementById('quickFilter').addEventListener('input', e => gridApi.setGridOption('quickFilterText', e.target.value));
+
+            } catch (err) { console.error("Init Error:", err); }
         }
 
-        function updateStatCards(records, meta) {
-            const avgTime = records.reduce((acc, r) => acc + r.t, 0) / records.length;
-            const stats = [
-                { label: "전체 완주 기록", val: records.length.toLocaleString() + "건", color: "text-blue-600" },
-                { label: "누적 대회 수", val: meta.length + "개", color: "text-green-600" },
-                { label: "평균 완주 시간", val: sToHms(Math.floor(avgTime)), color: "text-orange-600" },
-                { label: "최신 데이터", val: "2025-01-26", color: "text-slate-600" }
-            ];
+        // 타입별 대회 체크박스 리스트 생성
+        function renderRaceList(type) {
+            const listDiv = document.getElementById('raceList');
+            listDiv.innerHTML = "";
+            const filteredMeta = allMeta.filter(m => m.type === type).sort((a,b) => b.year - a.year);
             
-            document.getElementById('statCards').innerHTML = stats.map(s => `
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-slate-500 text-xs font-bold mb-1 uppercase tracking-wider">${s.label}</p>
-                    <p class="text-xl font-black ${s.color}">${s.val}</p>
-                </div>
-            `).join('');
+            filteredMeta.forEach((m, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-2 text-xs p-1";
+                div.innerHTML = `
+                    <input type="checkbox" id="chk_${m.id}" value="${m.id}" class="race-chk cursor-pointer" ${idx < 3 ? 'checked' : ''}>
+                    <label for="chk_${m.id}" class="cursor-pointer truncate">${m.name || m.id}</label>
+                `;
+                listDiv.appendChild(div);
+            });
         }
 
-        function renderCharts(records) {
-            // 차트 1: 연도별 추이
-            const yearData = Object.entries(records.reduce((acc, r) => {
-                acc[r.y] = (acc[r.y] || 0) + 1;
-                return acc;
-            }, {})).map(([y, c]) => ({ year: y, count: c })).sort((a,b) => a.year - b.year);
+        // 비교 데이터 업데이트
+        function updateComparison() {
+            const selectedRaces = Array.from(document.querySelectorAll('.race-chk:checked')).map(cb => cb.value);
+            if(selectedRaces.length === 0) return alert("대회를 최소 하나 선택해주세요.");
 
-            agCharts.AgCharts.create({
-                container: document.getElementById('yearTrendChart'),
-                data: yearData,
-                series: [{ type: 'line', xKey: 'year', yKey: 'count', stroke: '#3b82f6', marker: { size: 8 } }],
-            });
+            const filteredRecords = allRecords.filter(r => selectedRaces.includes(r.rn));
+            gridApi.setGridOption('rowData', filteredRecords);
+            document.getElementById('rowCount').innerText = `검색 결과: ${filteredRecords.length.toLocaleString()}건`;
 
-            // 차트 2: 타입별 평균 시간
-            const typeData = Object.entries(records.reduce((acc, r) => {
-                if(!acc[r.rt]) acc[r.rt] = { sum: 0, cnt: 0 };
-                acc[r.rt].sum += r.t;
-                acc[r.rt].cnt++;
-                return acc;
-            }, {})).map(([type, d]) => ({ 
-                type: type, 
-                avg: Math.round(d.sum / d.cnt / 3600 * 10) / 10 
-            }));
+            // 차트 데이터 가공
+            const chartData = selectedRaces.map(rid => {
+                const raceRecs = filteredRecords.filter(r => r.rn === rid);
+                const meta = allMeta.find(m => m.id === rid);
+                const count = raceRecs.length;
+                if(count === 0) return null;
 
-            agCharts.AgCharts.create({
-                container: document.getElementById('typeAvgChart'),
-                data: typeData,
-                series: [{ type: 'bar', xKey: 'type', yKey: 'avg', fill: '#8b5cf6' }],
-            });
+                const avg = key => Math.floor(raceRecs.reduce((acc, cur) => acc + (cur[key] || 0), 0) / count);
+
+                return {
+                    race: meta ? (meta.name || rid).replace('아이언맨', '').trim() : rid,
+                    total: avg('t'), swim: avg('s'), bike: avg('bk'), run: avg('r'),
+                    count: count
+                };
+            }).filter(d => d !== null);
+
+            renderCharts(chartData);
+        }
+
+        function renderCharts(data) {
+            // 차트 1: 종목별 평균 비교 (Grouped Bar)
+            const compareOptions = {
+                container: document.getElementById('compareChart'),
+                data: data,
+                series: [
+                    { type: 'bar', xKey: 'race', yKey: 'swim', yName: '수영 평균', stacked: false },
+                    { type: 'bar', xKey: 'race', yKey: 'bike', yName: '바이크 평균', stacked: false },
+                    { type: 'bar', xKey: 'race', yKey: 'run', yName: '런 평균', stacked: false }
+                ],
+                axes: [
+                    { type: 'category', position: 'bottom' },
+                    { type: 'number', position: 'left', title: { text: '소요 시간 (초)' } }
+                ],
+                legend: { position: 'top' }
+            };
+
+            // 차트 2: 참가자 수 비교
+            const countOptions = {
+                container: document.getElementById('countChart'),
+                data: data,
+                series: [{ type: 'bar', xKey: 'race', yKey: 'count', yName: '참가자 수', fill: '#10b981' }],
+                axes: [
+                    { type: 'category', position: 'bottom' },
+                    { type: 'number', position: 'left' }
+                ]
+            };
+
+            // 기존 차트 파괴 후 재생성 (v9 대응)
+            if (compareChartInstance) compareChartInstance.destroy();
+            if (countChartInstance) countChartInstance.destroy();
+            
+            compareChartInstance = agCharts.AgChart.create(compareOptions);
+            countChartInstance = agCharts.AgChart.create(countOptions);
         }
 
         document.addEventListener('DOMContentLoaded', init);
