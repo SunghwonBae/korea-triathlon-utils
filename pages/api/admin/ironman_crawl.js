@@ -5,30 +5,54 @@ import https from 'https';
 export default async function handler(req, res) {
   const config = {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
     },
     httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    timeout: 20000 // 상세 페이지 접속을 위해 타임아웃을 넉넉히 설정
+    timeout: 30000 
   };
 
   try {
     const targetUrl = 'https://www.coachcox.co.uk/imstats/im/';
-    console.log(`[시작] CoachCox 메인 페이지 수집 중...`);
+    console.log(`[디버그] 1. 대상 URL 접속 시도: ${targetUrl}`);
 
     const response = await axios.get(targetUrl, config);
+    
+    console.log(`[디버그] 2. 응답 상태 코드: ${response.status}`);
+    
+    if (!response.data || response.data.length < 100) {
+        console.log(`[디버그] 응답 데이터가 너무 짧습니다. 차단 가능성 있음.`);
+        console.log(`[디버그] 응답 서두: ${response.data.substring(0, 500)}`);
+        return res.status(500).json({ error: "Empty or blocked response" });
+    }
+
     const $ = cheerio.load(response.data);
+    
+    // 구조 확인을 위한 디버그: 특정 클래스가 존재하는지 체크
+    const infoBoxCount = $('.ims-infobox').length;
+    console.log(`[디버그] 3. 발견된 .ims-infobox 개수: ${infoBoxCount}`);
+
+    // 만약 ims-infobox가 없다면 다른 선택자 시도 (구조 변경 대비)
+    if (infoBoxCount === 0) {
+        console.log(`[디버그] .ims-infobox를 찾지 못했습니다. 대안 선택자 검색 중...`);
+        // 페이지 내의 모든 링크 개수 등 출력
+        console.log(`[디버그] 총 a 태그 개수: ${$('a').length}`);
+    }
 
     const raceResults = [];
     const raceBlocks = $('.ims-infobox');
 
-    // 1단계: 메인 페이지에서 대회명과 시리즈 URL 수집
-    for (const el of raceBlocks) {
+    // 0개일 경우를 대비해 샘플 로그 출력
+    for (let i = 0; i < raceBlocks.length; i++) {
+        const el = raceBlocks[i];
         const name = $(el).find('.ims-infobox-title').text().trim();
         let seriesUrl = null;
         let seriesId = null;
 
         $(el).find('a').each((_, a) => {
-            if ($(a).text().trim() === "Overview") {
+            const txt = $(a).text().trim();
+            if (txt === "Overview") {
                 seriesUrl = $(a).attr('href');
                 const match = seriesUrl?.match(/series\/(\d+)\//);
                 if (match) seriesId = match[1];
@@ -36,22 +60,21 @@ export default async function handler(req, res) {
             }
         });
 
+        console.log(`[디버그] - 대회 발견: ${name} (ID: ${seriesId})`);
+
         if (name && seriesUrl) {
-            console.log(`[분석 중] ${name} 상세 페이지 접속...`);
-            
             try {
-                // 2단계: 각 시리즈 페이지로 접속하여 연도별 결과 URL 추출
-                const detailResponse = await axios.get(seriesUrl, config);
-                const $detail = cheerio.load(detailResponse.data);
+                // 상세 페이지 크롤링 (연도별 결과)
+                console.log(`[디버그]   -> 상세 페이지 접속: ${seriesUrl}`);
+                const detailRes = await axios.get(seriesUrl, config);
+                const $detail = cheerio.load(detailRes.data);
                 const yearsArray = [];
 
-                // "YYYY Results" 텍스트를 가진 링크 검색
                 $detail('a').each((_, a) => {
-                    const linkText = $detail(a).text().trim(); // 예: "2024 Results"
+                    const linkText = $detail(a).text().trim();
                     const linkHref = $detail(a).attr('href');
-                    
-                    // 연도 4자리 + " Results" 패턴 확인 및 URL이 /results/로 끝나는지 확인
                     const yearMatch = linkText.match(/^(\d{4})\s*Results$/i);
+                    
                     if (yearMatch && linkHref && linkHref.endsWith('/results/')) {
                         yearsArray.push({
                             year: parseInt(yearMatch[1]),
@@ -60,8 +83,7 @@ export default async function handler(req, res) {
                     }
                 });
 
-                // 연도별 내림차순 정렬 (최신순)
-                yearsArray.sort((a, b) => b.year - a.year);
+                console.log(`[디버그]   -> 수집된 연도 개수: ${yearsArray.length}`);
 
                 raceResults.push({
                     name: name,
@@ -69,20 +91,21 @@ export default async function handler(req, res) {
                     seriesUrl: seriesUrl,
                     years: yearsArray
                 });
-            } catch (detailError) {
-                console.error(`[경고] ${name} 상세 페이지 수집 실패:`, detailError.message);
-                // 상세 페이지 실패 시에도 기본 정보는 포함
-                raceResults.push({ name, seriesId, seriesUrl, years: [], error: "Detail fetch failed" });
+            } catch (err) {
+                console.log(`[디버그]   -> 상세 페이지 에러 (${name}): ${err.message}`);
+                raceResults.push({ name, seriesId, seriesUrl, years: [], error: err.message });
             }
         }
     }
 
-    console.log(`[완료] 총 ${raceResults.length}개의 대회 데이터 수집 완료`);
-    res.setHeader('Content-Type', 'application/json');
+    console.log(`[최종] 총 ${raceResults.length}개의 데이터 반환`);
     return res.status(200).json(raceResults);
 
   } catch (error) {
-    console.error('[에러] Ironman 수집 실패:', error.message);
+    console.error(`[에러] 전체 프로세스 실패: ${error.message}`);
+    if (error.response) {
+        console.log(`[에러 디버그] 응답 바디: ${error.response.data.substring(0, 500)}`);
+    }
     return res.status(500).json({ error: error.message });
   }
 }
