@@ -67,7 +67,12 @@
                         <tr>
                             <th style="width: 50px;">#</th>
                             <th style="width: 200px;">대회명</th>
-                            <th>연도별 결과 및 배번 검색 (Bib 입력 후 🔍 클릭)</th>
+                            <th>
+                                <div class="flex justify-between items-center">
+                                    <span>연도별 결과 및 배번 검색 (Bib 입력 후 🔍 클릭)</span>
+                                    <button onclick="downloadJson()" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"><i class="fas fa-download mr-1"></i> JSON 다운로드</button>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="raceTableBody"></tbody>
@@ -128,6 +133,21 @@
                 statusArea.classList.add('hidden');
                 btn.disabled = false;
             }
+        }
+
+        function downloadJson() {
+            if (!crawledData || crawledData.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+            const blob = new Blob([JSON.stringify(crawledData, null, 2)], {type: 'application/json'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ironman_races_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         async function searchPlayer(url, inputId) {
