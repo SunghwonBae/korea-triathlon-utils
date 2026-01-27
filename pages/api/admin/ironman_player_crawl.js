@@ -8,60 +8,65 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: '조회할 이름이 필요합니다.' });
   }
 
-  // 1. URL에서 대회 ID 추출 (예: 2460)
-  const raceIdMatch = resultUrl.match(/race\/(\d+)\//);
-  const raceId = raceIdMatch ? raceIdMatch[1] : null;
-
-  if (!raceId) {
-    return res.status(400).json({ error: '유효한 대회 ID를 찾을 수 없습니다.' });
-  }
-
   const config = {
     headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': resultUrl,
-        'X-Requested-With': 'XMLHttpRequest'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     },
     httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     timeout: 15000
   };
 
   try {
-    // 2. CoachCox의 실제 데이터 소스 호출 (DataTables AJAX 엔드포인트)
-    // 이 URL은 CoachCox가 테이블 데이터를 로드할 때 사용하는 표준 방식입니다.
-    const apiUrl = `https://www.coachcox.co.uk/imstats/wp-admin/admin-ajax.php?action=get_race_results&race=${raceId}`;
-    
-    console.log(`[API 요청] ${apiUrl}`);
-    const response = await axios.get(apiUrl, config);
-    
-    // CoachCox의 응답 구조는 { "data": [ [col0, col1, ...], [...] ] } 형태입니다.
-    const allData = response.data.data;
+    console.log(`[분석 시작] 소스 코드에서 데이터 추출 중: ${resultUrl}`);
+    const response = await axios.get(resultUrl, config);
+    const html = response.data;
 
-    if (!allData || !Array.isArray(allData)) {
-      return res.status(404).json({ error: '데이터를 불러올 수 없습니다. API 구조가 변경되었을 수 있습니다.' });
+    // 1. var dataSet = [ ... ]; 부분을 추출하는 정규표현식
+    // CoachCox 소스 내에 var dataSet = [[...]]; 형식으로 존재함
+    const match = html.match(/var\s+dataSet\s*=\s*(\[\[[\s\S]*?\]\]);/);
+
+    if (!match || !match[1]) {
+      console.log("[에러] 소스 코드에서 dataSet 변수를 찾을 수 없습니다.");
+      return res.status(404).json({ error: '페이지 구조 내에서 데이터를 찾을 수 없습니다.' });
     }
 
-    // 3. 이름 기반 필터링
-    // 0:Bib, 1:Name, 2:Gender, 3:AgeGroup, 4:Finish, 5:TotalRank, 6:Swim, 8:Bike, 10:Run
+    // 2. 추출된 문자열을 실제 JSON(배열)으로 변환
+    let allData;
+    try {
+        allData = JSON.parse(match[1]);
+    } catch (e) {
+        console.log("[에러] JSON 파싱 실패");
+        return res.status(500).json({ error: '데이터 파싱 오류' });
+    }
+
+    console.log(`[디버그] 전체 데이터 개수: ${allData.length}개`);
+
+    // 3. 이름 기반 필터링 및 객체화
+    // 소스 내 배열 순서: 
+    // [0]이름(HTML포함), [1]성별, [2]카테고리, [3]카테고리순위, [4]전체시간, [5]전체순위 ... [8]수영, [9]사이클, [10]런
     const searchResults = allData
-      .filter(row => row[1] && row[1].toLowerCase().includes(playerName.toLowerCase().trim()))
+      .filter(row => {
+        // 이름에 <a> 태그가 포함되어 있으므로 태그 제거 후 비교
+        const cleanName = row[0].replace(/<[^>]*>?/gm, '').trim();
+        return cleanName.toLowerCase().includes(playerName.toLowerCase().trim());
+      })
       .map(row => ({
-        bib: row[0],
-        name: row[1].replace(/<[^>]*>?/gm, ''), // HTML 태그 제거 (링크 포함된 경우 대비)
-        gender: row[2],
-        category: row[3],
+        name: row[0].replace(/<[^>]*>?/gm, '').trim(),
+        gender: row[1],
+        category: row[2],
+        categoryRank: row[3],
         finish: row[4],
-        rank: row[5],
-        swim: row[6],
-        bike: row[8],
+        totalRank: row[5],
+        swim: row[8],
+        bike: row[9],
         run: row[10]
       }));
 
-    console.log(`[조회 완료] 매칭 인원: ${searchResults.length}명`);
+    console.log(`[완료] 검색 결과: ${searchResults.length}명`);
     return res.status(200).json(searchResults);
 
   } catch (error) {
-    console.error(`[에러] API 호출 실패: ${error.message}`);
-    return res.status(500).json({ error: '데이터 수집 중 오류: ' + error.message });
+    console.error(`[서버 에러] ${error.message}`);
+    return res.status(500).json({ error: error.message });
   }
 }
