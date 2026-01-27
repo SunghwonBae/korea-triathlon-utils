@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     const rows = table.find('tbody tr');
     console.log(`[디버그] 추출된 행(tr) 개수: ${rows.length}`);
 
-    let playerData = null;
+    const searchResults = [];
     let matchCount = 0;
 
     rows.each((i, el) => {
@@ -45,7 +45,6 @@ export default async function handler(req, res) {
       if (cols.length < 5) return;
 
       const rowName = $(cols[0]).text().trim();
-      const rowFinish = $(cols[4]).text().trim();
 
       // 처음 5개 행만 로그로 출력하여 구조 파악
       if (i < 5) {
@@ -53,32 +52,31 @@ export default async function handler(req, res) {
       }
 
       // 이름 포함 여부(부분 일치) 및 시간 일치 확인
-      if (rowName.toLowerCase().includes(playerName.toLowerCase().trim()) && rowFinish === finishTime.trim()) {
+      if (rowName.toLowerCase().includes(playerName.toLowerCase().trim())) {
         matchCount++;
-        playerData = {
-          name: rowName,
-          gender: $(cols[1]).text().trim(),
-          category: $(cols[2]).text().trim(),
-          categoryRank: $(cols[3]).text().trim(),
-          finish: rowFinish,
-          totalRank: $(cols[5]).text().trim(),
-          swim: $(cols[8]).text().trim(),
-          bike: $(cols[9]).text().trim(),
-          run: $(cols[10]).text().trim(),
-          runRank: $(cols[11]).text().trim()
-        };
+        searchResults.push({
+            name: rowName,
+            gender: $(cols[1]).text().trim(),
+            category: $(cols[2]).text().trim(),
+            categoryRank: $(cols[3]).text().trim(),
+            finish: $(cols[4]).text().trim(),
+            totalRank: $(cols[5]).text().trim(),
+            swim: $(cols[8]).text().trim(),
+            bike: $(cols[9]).text().trim(),
+            run: $(cols[10]).text().trim()
+        });
         return false; // 찾으면 중단
       }
     });
 
     console.log(`[결과] 일치 검색 완료. 매칭 수: ${matchCount}`);
 
-    if (playerData) {
-      return res.status(200).json(playerData);
+    if (searchResults.length > 0) {
+      return res.status(200).json(searchResults);
     } else {
       return res.status(404).json({ 
         error: '선수를 찾을 수 없습니다.',
-        debugMsg: `상위 5개 샘플 확인 결과, 입력하신 "${playerName}" / "${finishTime}"와 일치하는 행이 없습니다.`
+        debugMsg: `상위 5개 샘플 확인 결과, 입력하신 "${playerName}" 와 일치하는 행이 없습니다.`
       });
     }
   } catch (error) {
