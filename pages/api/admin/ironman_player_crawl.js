@@ -9,61 +9,70 @@ export default async function handler(req, res) {
   }
 
   const raceIdMatch = resultUrl.match(/race\/(\d+)\//);
-  const raceId = raceIdMatch ? raceIdMatch[1] : null;
+  const raceId = raceIdMatch ? raceIdMatch[1] : "2460"; // 추출 실패시 기본값
 
+  // 브라우저와 거의 동일한 헤더 설정
   const config = {
     headers: { 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://www.coachcox.co.uk/',
-        'Origin': 'https://www.coachcox.co.uk'
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': `https://www.coachcox.co.uk/imstats/race/${raceId}/results/`,
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
     },
-    httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    timeout: 10000
+    httpsAgent: new https.Agent({ 
+        rejectUnauthorized: false, // SSL 인증서 무시
+        keepAlive: true 
+    }),
+    timeout: 15000
   };
 
   try {
-    // 1단계: HTML 소스에서 현재 사용 중인 정확한 API 주소(버전 포함)를 동적으로 추출
-    const pageRes = await axios.get(resultUrl, config);
-    const html = pageRes.data;
+    // 브라우저에서 확인하신 그 주소 그대로 호출합니다.
+    const apiUrl = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
     
-    // 소스 코드 내의 'wp-json/imstats/v.../race/results/ID' 패턴 탐색
-    const apiPattern = new RegExp(`https://www.coachcox.co.uk/wp-json/imstats/v[\\d\\.]+/race/results/${raceId}`);
-    const apiMatch = html.match(apiPattern);
+    console.log(`[데이터 요청 시작] API: ${apiUrl}`);
     
-    // 만약 패턴을 못 찾으면 기존 v1.90을 기본값으로 사용
-    const finalApiUrl = apiMatch ? apiMatch[0] : `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
-
-    console.log(`[시도 중] API 주소: ${finalApiUrl}`);
-
-    // 2단계: 실제 데이터 요청
-    const response = await axios.get(finalApiUrl, config);
+    const response = await axios.get(apiUrl, config);
     
-    // CoachCox의 API 구조상 데이터가 response.data.results에 들어있음
+    // 브라우저에서 본 JSON 구조에 따라 결과 추출
     const allResults = response.data.results || [];
 
     if (allResults.length === 0) {
-      return res.status(404).json({ error: '결과 데이터를 찾을 수 없습니다. (응답 데이터 비어있음)' });
+      return res.status(404).json({ error: 'JSON 응답에 결과 데이터가 비어있습니다.' });
     }
 
-    // 3단계: 필터링 (n: 이름, bi: 배번, ot: 전체시간 등)
+    // 이름으로 필터링
     const searchResults = allResults
-      .filter(item => item.n && item.n.toLowerCase().includes(playerName.toLowerCase().trim()))
+      .filter(item => {
+        if (!item.n) return false;
+        // n 필드에 HTML 태그(링크)가 포함되어 있을 수 있으므로 제거 후 비교
+        const cleanName = item.n.replace(/<[^>]*>?/gm, '').trim();
+        return cleanName.toLowerCase().includes(playerName.toLowerCase().trim());
+      })
       .map(item => ({
-        bib: item.bi,
-        name: item.n.replace(/<[^>]*>?/gm, '').trim(), // 이름에 링크 태그가 있을 경우 제거
-        category: item.c,
-        finish: item.ot,
-        swim: item.st,
-        bike: item.bt,
-        run: item.rt,
-        rank: item.odr
+        bib: item.bi || '-',
+        name: item.n.replace(/<[^>]*>?/gm, '').trim(),
+        category: item.c || '-',
+        finish: item.ot || '-',
+        swim: item.st || '-',
+        bike: item.bt || '-',
+        run: item.rt || '-',
+        rank: item.odr || '-'
       }));
 
-    console.log(`[완료] 검색된 인원: ${searchResults.length}명`);
+    console.log(`[조회 성공] 검색어: ${playerName}, 결과수: ${searchResults.length}`);
     return res.status(200).json(searchResults);
 
   } catch (error) {
-    console.error(`[에러] 호출 실패: ${error.message}`);
-    return res.status(500).json({ error: '데이터 수집 중 오류: ' + error.message });
+    console.error(`[API 호출 에러] 상태: ${error.response?.status}, 메시지: ${error.message}`);
+    
+    // 만약 403이나 401이 뜬다면 서버 차단이므로 대체 메시지 출력
+    if (error.response?.status === 403) {
+        return res.status(403).json({ error: '사이트 보안 시스템이 서버의 접근을 차단했습니다.' });
+    }
+    
+    return res.status(500).json({ error: '데이터 요청 중 오류: ' + error.message });
   }
 }
