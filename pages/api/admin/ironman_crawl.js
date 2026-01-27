@@ -30,18 +30,18 @@ export default async function handler(req, res) {
     const $ = cheerio.load(response.data);
     
     // 구조 확인을 위한 디버그: 특정 클래스가 존재하는지 체크
-    const infoBoxCount = $('.ims-infobox').length;
-    console.log(`[디버그] 3. 발견된 .ims-infobox 개수: ${infoBoxCount}`);
+    const infoBoxCount = $('.ims-infobox-wrap').length;
+    console.log(`[디버그] 3. 발견된 .ims-infobox-wrap 개수: ${infoBoxCount}`);
 
-    // 만약 ims-infobox가 없다면 다른 선택자 시도 (구조 변경 대비)
+    // 만약 ims-infobox-wrap이 없다면 다른 선택자 시도 (구조 변경 대비)
     if (infoBoxCount === 0) {
-        console.log(`[디버그] .ims-infobox를 찾지 못했습니다. 대안 선택자 검색 중...`);
+        console.log(`[디버그] .ims-infobox-wrap를 찾지 못했습니다. 대안 선택자 검색 중...`);
         // 페이지 내의 모든 링크 개수 등 출력
         console.log(`[디버그] 총 a 태그 개수: ${$('a').length}`);
     }
 
     const raceResults = [];
-    const raceBlocks = $('.ims-infobox');
+    const raceBlocks = $('.ims-infobox-wrap');
 
     // 0개일 경우를 대비해 샘플 로그 출력
     for (let i = 0; i < raceBlocks.length; i++) {
