@@ -12,6 +12,12 @@
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; height: 100vh; overflow: hidden; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
         .sidebar { width: 220px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
         .thumb-item { width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem; cursor: pointer; border: 3px solid transparent; transition: 0.2s; }
         .thumb-item.active { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
@@ -20,6 +26,21 @@
         .control-panel { width: 400px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 1.5rem; gap: 1.25rem; overflow-y: auto; }
         .search-layer { position: absolute; z-index: 50; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; margin-top: 0.25rem; }
         .bib-badge { background: #fee2e2; color: #b91c1c; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-weight: 800; font-size: 0.75rem; display: inline-block; margin: 0.15rem; }
+        /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */ }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #dc2626; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #ef4444; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="flex">
@@ -37,10 +58,13 @@
 </aside>
 
 <main class="flex-1 flex flex-col">
-    <header class="h-16 bg-white border-b flex items-center justify-between px-6">
-        <h1 class="font-black text-slate-800 text-lg flex items-center">
-            <i class="fas fa-stopwatch text-red-500 mr-2"></i> Ironman Tracker Capture
-        </h1>
+    <header class="h-16 bg-white border-b flex items-center justify-between px-6 gap-4">
+        <div class="flex items-center gap-4">
+            <button id="menuToggle" class="bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-slate-700 shadow-md hover:bg-slate-50 hover:text-red-600 transition-all"><i class="fas fa-bars"></i></button>
+            <h1 class="font-black text-slate-800 text-lg flex items-center">
+                <i class="fas fa-stopwatch text-red-500 mr-2"></i> Ironman Tracker Capture
+            </h1>
+        </div>
         <div id="statusMsg" class="text-sm font-medium text-slate-500">이미지를 선택하여 OCR을 시작하세요.</div>
     </header>
     <div class="crop-container">
@@ -123,6 +147,7 @@
     </div>
 </div>
 
+<script src="menu_full_handler.js" defer></script>
 <script>
     let cropper, crawledData = [], extractedBibs = [];
     let selectedRace = null, selectedYearData = null, lastResults = [];
@@ -254,7 +279,7 @@
         try {
             const response = await fetch(apiUrl);
             const buffer = await response.arrayBuffer();
-            const decoder = new TextDecoder('iso-8859-1'); // 깨진 문자 해결
+            const decoder = new TextDecoder('utf-8'); // 깨진 문자 해결// iso-8859-1
             const allData = JSON.parse(decoder.decode(buffer));
 
             const results = allData.filter(item => extractedBibs.includes(item.bi?.toString()));

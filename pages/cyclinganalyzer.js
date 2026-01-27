@@ -8,18 +8,32 @@ export default function CyclingAnalyzer() {
   const [mounted, setMounted] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isLinkOpen, setIsLinkOpen] = useState(true);
-  const [isUtilsOpen, setIsUtilsOpen] = useState(true);
-  const [isReportsOpen, setIsReportsOpen] = useState(true);
+  const [menuHtml, setMenuHtml] = useState(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // 메뉴 HTML 로드
   useEffect(() => {
     if (!mounted) return;
+    fetch('/menu_structure.html')
+      .then(res => res.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const navContent = doc.getElementById('slideMenu')?.innerHTML;
+        setMenuHtml(navContent || '');
+      })
+      .catch(err => console.error("Menu load failed", err));
+  }, [mounted]);
+
+  // 메뉴 이벤트 및 로직 처리
+  useEffect(() => {
+    if (!mounted) return;
+
     const menuBtn = document.getElementById('menuToggle');
-    const menuClose = document.getElementById('menuClose');
+    const menuClose = document.getElementById('menuClose'); // menuHtml 로드 후 존재
     const slideMenu = document.getElementById('slideMenu');
     const menuOverlay = document.getElementById('menuOverlay');
 
@@ -39,15 +53,59 @@ export default function CyclingAnalyzer() {
     const closeMenu = () => toggleMenu(false);
 
     menuBtn?.addEventListener('click', openMenu);
-    menuClose?.addEventListener('click', closeMenu);
+    if (menuClose) menuClose.addEventListener('click', closeMenu);
     menuOverlay?.addEventListener('click', closeMenu);
+
+    // 아코디언 및 하이라이팅 (HTML이 로드된 경우에만 수행)
+    if (menuHtml) {
+        // 1. 아코디언
+        const headers = document.querySelectorAll('.folder-header');
+        headers.forEach(header => {
+            header.addEventListener('click', () => {
+                const parent = header.parentElement;
+                const submenu = parent.querySelector('.submenu-list');
+                const arrow = header.querySelector('.arrow');
+                const isOpen = submenu.style.display === 'block';
+                if (isOpen) {
+                    submenu.style.display = 'none';
+                    if (arrow) arrow.style.transform = 'rotate(0deg)';
+                } else {
+                    submenu.style.display = 'block';
+                    if (arrow) arrow.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+
+        // 2. 하이라이팅
+        const path = window.location.pathname;
+        const links = document.querySelectorAll('.slide-menu .menu-link');
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            // 현재 페이지 매칭 (/cyclinganalyzer)
+            if (href === path || href === '/cyclinganalyzer') {
+                link.style.fontWeight = 'bold';
+                link.style.color = '#0A317E';
+                link.style.borderLeft = '5px solid #0A317E';
+                link.style.backgroundColor = '#eef2ff';
+
+                const parentSubmenu = link.closest('.submenu-list');
+                if (parentSubmenu) {
+                    parentSubmenu.style.display = 'block';
+                    const folderHeader = parentSubmenu.parentElement.querySelector('.folder-header');
+                    const arrow = folderHeader?.querySelector('.arrow');
+                    if (arrow) arrow.style.transform = 'rotate(180deg)';
+                }
+            }
+        });
+    }
 
     return () => {
       menuBtn?.removeEventListener('click', openMenu);
-      menuClose?.removeEventListener('click', closeMenu);
+      if (menuClose) menuClose.removeEventListener('click', closeMenu);
       menuOverlay?.removeEventListener('click', closeMenu);
     };
-  }, [mounted]);
+  }, [mounted, menuHtml]);
 
   const handleUpload = async () => {
     if (!file) return alert("엑셀 파일을 선택해주세요.");
@@ -95,57 +153,11 @@ export default function CyclingAnalyzer() {
       </div>
 
       <div id="menuOverlay" className="menu-overlay"></div>
-      <nav id="slideMenu" className="slide-menu">
-        <div className="menu-header">
-          <h2>Korea Triathlon Utils</h2>
-          <button id="menuClose" className="menu-close-btn">✕</button>
-        </div>
-        <ul className="menu-list">
-          <li><a href="/" className="menu-link">🏠 홈으로</a></li>
-         
-          <li className="menu-folder">
-            <div className="menu-link folder-header" onClick={() => setIsReportsOpen(!isReportsOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <span>📊 Reports</span>
-              <span className="arrow" style={{transform: isReportsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
-            </div>
-            <ul className="submenu-list" style={{display: isReportsOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
-              <li><a href="/report_ironman.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏆 IM CHART</a></li>
-              <li><a href="/report_challenge.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🥇 Tri-Gram #CHALLENGE</a></li>
-              <li><a href="/report_triathlon.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏁 TRI-ing My Best!</a></li>
-              <li><a href="/triathlon_memory.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>💾 T-Memory</a></li>
-              <li><a href="/memory_report.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🗂️ T-Memory Report</a></li>
-              <li><a href="/cyclinganalyzer" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 구간평속 분석</a></li>
-            </ul>
-          </li>
-          <li className="menu-folder">
-            <div className="menu-link folder-header" onClick={() => setIsUtilsOpen(!isUtilsOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <span>🧮 Utils</span>
-              <span className="arrow" style={{transform: isUtilsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
-            </div>
-            <ul className="submenu-list" style={{display: isUtilsOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
-              <li><a href="/ironman_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>⚖️ 킹코스 완주시간</a></li>
-              <li><a href="/gelwater_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🍌 보급 계산</a></li>
-              <li><a href="/bike_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 자전거 기어비</a></li>
-              <li><a href="/bike_uphill.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 싸이클 업힐 분석기</a></li>
-              <li><a href="/bike_gpx_zwo.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🚴 .gpx to .zwo 워크아웃생성</a></li>
-              <li><a href="/cyclinganalyzer" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem', fontWeight: 'bold', color: '#007bff', borderLeft: '5px solid #007bff', backgroundColor: '#eef2ff'}}>📊 사이클 구간평속 분석</a></li>
-              <li><a href="/running_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 보폭 회전수</a></li>
-              <li><a href="/runpace_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 페이스</a></li>
-              <li><a href="/run_mileage_calculator.html" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>🏃 런 마일리지</a></li>
-            </ul>
-          </li>
-          <li className="menu-folder">
-            <div className="menu-link folder-header" onClick={() => setIsLinkOpen(!isLinkOpen)} style={{cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <span>🔗 링크</span>
-              <span className="arrow" style={{transform: isLinkOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
-            </div>
-            <ul className="submenu-list" style={{display: isLinkOpen ? 'block' : 'none', backgroundColor: '#f8f9fa', listStyle: 'none', padding: 0}}>
-              <li><a href="https://cafe.naver.com/ktriathlonservice" target="_blank" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>KTS</a></li>
-              <li><a href="https://www.triathlon.or.kr/" target="_blank" className="menu-link" style={{paddingLeft: '30px', fontSize: '0.95rem'}}>철인3종협회</a></li>
-            </ul>
-          </li>
-        </ul>
-      </nav>
+      <nav 
+        id="slideMenu" 
+        className="slide-menu"
+        dangerouslySetInnerHTML={{ __html: menuHtml }}
+      />
 
       <main className="main-content">
         <div className="card">
