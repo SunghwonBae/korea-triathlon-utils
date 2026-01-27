@@ -173,9 +173,9 @@
             document.body.removeChild(a);
         }
 
-        async function searchPlayer() {
-            const resultUrl = document.getElementById('resultUrl').value;
-            const playerName = document.getElementById('playerName').value;
+        
+        async function searchPlayer(resultUrl, index, year) {
+            const playerName = document.getElementById(`name_${index}_${year}`).value;
 
             if (!resultUrl || !playerName) {
                 alert("URL과 이름을 입력해주세요.");
