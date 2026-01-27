@@ -3,8 +3,10 @@ import * as cheerio from 'cheerio';
 import https from 'https';
 
 export default async function handler(req, res) {
-  // 배번(bib) 대신 이름(playerName)과 전체기록(finishTime)을 받습니다.
   const { resultUrl, playerName, finishTime } = req.query;
+
+  console.log(`\n[조회 시작] URL: ${resultUrl}`);
+  console.log(`[파라미터] 이름: ${playerName}, 기록: ${finishTime}`);
 
   if (!resultUrl || !playerName || !finishTime) {
     return res.status(400).json({ error: '이름과 전체 기록이 모두 필요합니다.' });
@@ -12,7 +14,8 @@ export default async function handler(req, res) {
 
   const config = {
     headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' 
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
     },
     httpsAgent: new https.Agent({ rejectUnauthorized: false }),
     timeout: 15000
@@ -21,24 +24,37 @@ export default async function handler(req, res) {
   try {
     const response = await axios.get(resultUrl, config);
     const $ = cheerio.load(response.data);
+    
+    // 디버그: 테이블 존재 여부 확인
+    const table = $('#imraceresultstable');
+    console.log(`[디버그] 테이블(#imraceresultstable) 존재 여부: ${table.length > 0}`);
+
+    if (table.length === 0) {
+        console.log(`[디버그] 테이블을 찾을 수 없습니다. 페이지 내 모든 table ID:`, $('table').map((i, el) => $(el).attr('id')).get());
+        return res.status(500).json({ error: '결과 테이블을 찾을 수 없습니다.' });
+    }
+
+    const rows = table.find('tbody tr');
+    console.log(`[디버그] 추출된 행(tr) 개수: ${rows.length}`);
+
     let playerData = null;
+    let matchCount = 0;
 
-    console.log(`[디버그] ${resultUrl} 에서 [${playerName} / ${finishTime}] 검색 중...`);
-
-    // id가 imraceresultstable인 테이블 내의 모든 행(tr)을 탐색
-    $('#imraceresultstable tbody tr').each((_, el) => {
+    rows.each((i, el) => {
       const cols = $(el).find('td');
-      if (cols.length < 10) return; 
+      if (cols.length < 5) return;
 
-      // td 순서 (사용자 정의 기반):
-      // 0:이름, 1:성별, 2:카테고리, 3:카테고리순위, 4:전체시간, 5:전체순위, 
-      // 6:예선시간, 7:예선순위, 8:수영시간, 9:싸이클시간, 10:런시간, 11:런순위
-      
       const rowName = $(cols[0]).text().trim();
       const rowFinish = $(cols[4]).text().trim();
 
-      // 이름과 전체 시간이 모두 일치하는지 확인 (대소문자 무시)
-      if (rowName.toLowerCase() === playerName.toLowerCase() && rowFinish === finishTime) {
+      // 처음 5개 행만 로그로 출력하여 구조 파악
+      if (i < 5) {
+        console.log(`[행 샘플 ${i}] 이름: "${rowName}", 시간: "${rowFinish}", 컬럼수: ${cols.length}`);
+      }
+
+      // 이름 포함 여부(부분 일치) 및 시간 일치 확인
+      if (rowName.toLowerCase().includes(playerName.toLowerCase().trim()) && rowFinish === finishTime.trim()) {
+        matchCount++;
         playerData = {
           name: rowName,
           gender: $(cols[1]).text().trim(),
@@ -51,16 +67,22 @@ export default async function handler(req, res) {
           run: $(cols[10]).text().trim(),
           runRank: $(cols[11]).text().trim()
         };
-        return false; // 매칭 시 종료
+        return false; // 찾으면 중단
       }
     });
+
+    console.log(`[결과] 일치 검색 완료. 매칭 수: ${matchCount}`);
 
     if (playerData) {
       return res.status(200).json(playerData);
     } else {
-      return res.status(404).json({ error: '일치하는 선수를 찾을 수 없습니다. 이름과 시간을 다시 확인하세요.' });
+      return res.status(404).json({ 
+        error: '선수를 찾을 수 없습니다.',
+        debugMsg: `상위 5개 샘플 확인 결과, 입력하신 "${playerName}" / "${finishTime}"와 일치하는 행이 없습니다.`
+      });
     }
   } catch (error) {
-    return res.status(500).json({ error: '서버 에러: ' + error.message });
+    console.error(`[서버 에러] ${error.message}`);
+    return res.status(500).json({ error: error.message });
   }
 }
