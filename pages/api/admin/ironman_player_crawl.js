@@ -6,10 +6,10 @@ export default async function handler(req, res) {
   const { resultUrl, playerName, finishTime } = req.query;
 
   console.log(`\n[조회 시작] URL: ${resultUrl}`);
-  console.log(`[파라미터] 이름: ${playerName}, 기록: ${finishTime}`);
+  console.log(`[파라미터] 이름: ${playerName}`);
 
-  if (!resultUrl || !playerName || !finishTime) {
-    return res.status(400).json({ error: '이름과 전체 기록이 모두 필요합니다.' });
+  if (!resultUrl || !playerName ) {
+    return res.status(400).json({ error: '조회할 이름이 필요합니다.' });
   }
 
   const config = {
