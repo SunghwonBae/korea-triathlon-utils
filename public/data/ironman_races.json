@@ -1,0 +1,3228 @@
+[
+  {
+    "name": "Kona (Women)",
+    "seriesId": "12",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/12/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2203/results/"
+      },
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2202/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2173/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2180/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2185/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2186/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1879/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1803/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/502/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/459/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/408/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/346/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/312/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/257/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/222/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/12/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/173/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/172/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/171/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/170/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/169/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/168/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/167/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/166/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/165/results/"
+      }
+    ]
+  },
+  {
+    "name": "Nice (Men)",
+    "seriesId": "12",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/12/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2203/results/"
+      },
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2202/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2173/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2180/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2185/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2186/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1879/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1803/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/502/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/459/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/408/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/346/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/312/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/257/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/222/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/12/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/173/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/172/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/171/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/170/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/169/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/168/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/167/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/166/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/165/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Alaska",
+    "seriesId": "332",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/332/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1883/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Arizona",
+    "seriesId": "1",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/1/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2466/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2166/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2134/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1903/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1768/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/528/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/464/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/412/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/364/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/318/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/260/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/225/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/33/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/183/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/184/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/271/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/185/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/186/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/187/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/188/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Boulder",
+    "seriesId": "37",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/37/",
+    "years": [
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/476/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/422/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/391/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/338/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/294/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/245/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman California",
+    "seriesId": "254",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/254/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2464/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2169/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2139/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1901/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Canada",
+    "seriesId": "35",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/35/",
+    "years": [
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2149/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1774/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/488/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/439/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/385/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/336/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/291/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/244/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/217/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1947/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Chattanooga",
+    "seriesId": "40",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/40/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2459/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2174/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2144/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1897/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1775/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/499/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/456/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/404/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/352/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/309/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/256/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Coeur d'Alene",
+    "seriesId": "7",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/7/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1919/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1766/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/390/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/341/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/285/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/238/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/200/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/7/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/98/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/97/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/96/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/95/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/94/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/93/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/92/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/90/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Cozumel",
+    "seriesId": "8",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/8/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2467/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2167/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2135/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1904/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1777/results/"
+      },
+      {
+        "year": 2020,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1449/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/529/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/463/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/413/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/366/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/319/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/261/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/226/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/8/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/34/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/190/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/189/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Des Moines",
+    "seriesId": "331",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/331/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1874/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Florida",
+    "seriesId": "9",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/9/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2465/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2168/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2133/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1902/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1780/results/"
+      },
+      {
+        "year": 2020,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1451/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/504/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/461/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/410/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/362/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/315/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/258/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/224/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/9/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/32/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/182/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/181/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/180/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/179/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/178/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/177/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/176/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/175/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Indiana",
+    "seriesId": "308",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/308/",
+    "years": [
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1785/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Lake Placid",
+    "seriesId": "13",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/13/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2194/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2155/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1924/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1885/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1786/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/486/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/436/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/383/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/334/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/292/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/242/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/207/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/13/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/124/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/123/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/122/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/121/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/120/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/119/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/117/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/116/results/"
+      },
+      {
+        "year": 2002,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/115/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Lake Tahoe",
+    "seriesId": "36",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/36/",
+    "years": [
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/307/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/223/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Los Cabos",
+    "seriesId": "30",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/30/",
+    "years": [
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/411/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/361/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/314/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/230/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/50/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Louisville",
+    "seriesId": "15",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/15/",
+    "years": [
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/503/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/460/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/409/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/354/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/313/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/249/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/216/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/15/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/142/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/141/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/140/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/139/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/138/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Maryland",
+    "seriesId": "43",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/43/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2457/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2177/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2143/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1896/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1789/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/498/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/455/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/407/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/359/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/310/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/269/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Mont-Tremblant",
+    "seriesId": "17",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/17/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1930/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1790/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/493/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/444/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/389/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/342/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/298/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/247/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/215/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/17/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Muskoka",
+    "seriesId": "53",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/53/",
+    "years": [
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/304/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman New York",
+    "seriesId": "18",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/18/",
+    "years": [
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/18/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman North Carolina",
+    "seriesId": "56",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/56/",
+    "years": [
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/360/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Ottawa",
+    "seriesId": "365",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/365/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2207/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Santa Rosa",
+    "seriesId": "55",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/55/",
+    "years": [
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/473/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/428/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/399/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/358/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman St George",
+    "seriesId": "22",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/22/",
+    "years": [
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/22/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/679/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/678/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Texas",
+    "seriesId": "25",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/25/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2199/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2148/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1910/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1870/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1795/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/471/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/418/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/374/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/326/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/278/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/233/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/67/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/25/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/65/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Tulsa",
+    "seriesId": "178",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/178/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1913/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1890/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1796/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Waco",
+    "seriesId": "335",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/335/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1900/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1892/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Wisconsin",
+    "seriesId": "29",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/29/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2454/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2179/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2141/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1894/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1802/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/495/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/449/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/401/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/353/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/305/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/251/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/221/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/29/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/31/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/163/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/162/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/161/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/160/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/159/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/158/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/157/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/156/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman World Championship St George",
+    "seriesId": "330",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/330/",
+    "years": [
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1871/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Austria",
+    "seriesId": "3",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/3/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2193/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2159/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1917/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1878/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1771/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/482/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/432/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/380/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/331/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/283/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/237/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/201/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/3/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/105/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/104/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/103/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/102/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/101/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/100/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/99/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Barcelona",
+    "seriesId": "44",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/44/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2461/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2170/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2136/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1898/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1772/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/500/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/458/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/405/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/351/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/311/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/270/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Copenhagen",
+    "seriesId": "34",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/34/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2209/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2150/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1931/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1880/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1776/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/492/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/443/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/388/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/340/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/300/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/248/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/214/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/212/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/211/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/210/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Finland",
+    "seriesId": "312",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/312/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1932/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1806/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman France",
+    "seriesId": "10",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/10/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2191/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2160/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1918/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1875/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1781/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/481/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/431/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/379/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/329/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/284/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/239/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/199/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/10/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/89/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/87/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/86/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/85/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/84/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/83/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Frankfurt",
+    "seriesId": "11",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/11/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2205/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2151/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1920/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1876/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1779/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/479/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/434/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/381/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/332/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/287/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/240/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/202/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/11/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/114/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/113/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/112/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/111/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/110/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/109/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/108/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/106/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Gdynia",
+    "seriesId": "313",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/313/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1927/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1881/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1807/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Hamburg",
+    "seriesId": "58",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/58/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2192/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2161/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1915/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1873/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1782/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/487/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/438/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/395/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Ireland",
+    "seriesId": "67",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/67/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1929/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1783/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/478/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Israel",
+    "seriesId": "336",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/336/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1905/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Italy",
+    "seriesId": "62",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/62/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2456/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2175/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2142/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1895/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1778/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/497/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/454/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/403/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Lanzarote",
+    "seriesId": "14",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/14/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2195/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2165/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1912/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1872/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1787/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/474/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/429/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/376/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/327/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/279/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/234/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/66/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/14/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/64/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/63/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/62/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/61/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Leeds",
+    "seriesId": "364",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/364/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2206/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Les Sables",
+    "seriesId": "361",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/361/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2196/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Maastricht-Limburg",
+    "seriesId": "47",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/47/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1882/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/441/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/386/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/337/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/293/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Mallorca",
+    "seriesId": "38",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/38/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1891/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1836/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/350/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/308/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/254/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Norway",
+    "seriesId": "65",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/65/",
+    "years": [
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/480/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/433/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Pays d'Aix-en-Provence",
+    "seriesId": "334",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/334/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1889/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Portugal - Cascais",
+    "seriesId": "257",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/257/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2463/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2172/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2138/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1899/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1805/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Regensburg",
+    "seriesId": "20",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/20/",
+    "years": [
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/20/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/677/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Sweden",
+    "seriesId": "23",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/23/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2208/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2152/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1928/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1784/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/491/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/442/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/387/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/339/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/297/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/246/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/213/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/23/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Switzerland",
+    "seriesId": "24",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/24/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2453/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2156/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1922/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1887/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1793/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/485/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/437/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/384/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/335/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/289/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/243/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/208/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/24/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/131/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/130/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/129/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/128/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/127/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/126/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/125/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Tallinn",
+    "seriesId": "66",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/66/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2452/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2153/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1925/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1884/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1794/results/"
+      },
+      {
+        "year": 2020,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/702/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/489/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/440/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman UK",
+    "seriesId": "26",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/26/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1921/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1877/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1797/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/483/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/435/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/382/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/333/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/290/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/241/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/209/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/26/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/137/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/136/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/135/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/134/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/133/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Vichy",
+    "seriesId": "52",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/52/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2129/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1893/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1798/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/494/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/445/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/396/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/344/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/303/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Vitoria-Gasteiz",
+    "seriesId": "68",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/68/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2200/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2157/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1923/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1886/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1799/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/484/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Wales",
+    "seriesId": "27",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/27/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2458/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2178/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2145/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1800/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/496/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/450/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/402/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/348/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/306/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/252/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/220/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/27/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/30/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Weymouth",
+    "seriesId": "54",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/54/",
+    "years": [
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/355/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/357/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/356/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Australia",
+    "seriesId": "2",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/2/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2187/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2163/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1911/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1770/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/472/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/419/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/375/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/325/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/276/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/232/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/60/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/59/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/58/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/57/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/56/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/55/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/54/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/53/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Cairns",
+    "seriesId": "5",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/5/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2189/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2158/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1916/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1888/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1769/results/"
+      },
+      {
+        "year": 2020,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/689/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/477/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/421/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/378/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/330/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/281/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/236/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/75/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/5/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman China",
+    "seriesId": "204",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/204/",
+    "years": [
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1180/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1150/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Gurye",
+    "seriesId": "61",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/61/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2460/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2176/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2140/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/448/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/400/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Japan",
+    "seriesId": "32",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/32/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2455/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2181/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/299/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/250/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/219/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/154/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/153/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/152/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/151/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Kazakhstan",
+    "seriesId": "256",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/256/",
+    "years": [
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2131/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1804/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Malaysia",
+    "seriesId": "39",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/39/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2462/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2171/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2137/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1788/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/527/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/462/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/427/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/363/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/317/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/255/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1124/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1117/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Melbourne",
+    "seriesId": "16",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/16/",
+    "years": [
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/273/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/229/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/51/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/16/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman New Zealand",
+    "seriesId": "19",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/19/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2183/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2184/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1908/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1907/results/"
+      },
+      {
+        "year": 2020,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/681/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/469/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/416/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/372/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/321/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/272/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/228/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/44/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/19/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/36/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/37/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/38/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/39/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/40/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1118/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/41/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/42/results/"
+      },
+      {
+        "year": 2003,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/43/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Philippines",
+    "seriesId": "64",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/64/",
+    "years": [
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2162/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2146/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1792/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/430/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Taiwan",
+    "seriesId": "45",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/45/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2201/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1835/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/680/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/457/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/406/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/324/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/275/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Western Australia",
+    "seriesId": "28",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/28/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2468/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2154/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2130/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1906/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1801/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/530/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/505/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/414/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/367/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/320/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/262/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/227/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/28/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/35/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/197/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/196/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/195/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/194/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/193/results/"
+      },
+      {
+        "year": 2005,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/192/results/"
+      },
+      {
+        "year": 2004,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/191/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Argentina",
+    "seriesId": "63",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/63/",
+    "years": [
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1834/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/531/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/465/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/415/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Brazil",
+    "seriesId": "4",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/4/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2188/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2164/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1914/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1773/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/475/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/420/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/377/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/328/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/280/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/235/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/74/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/4/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/73/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/72/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/71/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/70/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/69/results/"
+      },
+      {
+        "year": 2006,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/68/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman Fortaleza",
+    "seriesId": "41",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/41/",
+    "years": [
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/365/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/316/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/259/results/"
+      }
+    ]
+  },
+  {
+    "name": "Ironman South Africa",
+    "seriesId": "21",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/21/",
+    "years": [
+      {
+        "year": 2025,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2197/results/"
+      },
+      {
+        "year": 2024,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2147/results/"
+      },
+      {
+        "year": 2023,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1909/results/"
+      },
+      {
+        "year": 2022,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1869/results/"
+      },
+      {
+        "year": 2021,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1765/results/"
+      },
+      {
+        "year": 2019,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/470/results/"
+      },
+      {
+        "year": 2018,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/417/results/"
+      },
+      {
+        "year": 2017,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/373/results/"
+      },
+      {
+        "year": 2016,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/322/results/"
+      },
+      {
+        "year": 2015,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/274/results/"
+      },
+      {
+        "year": 2014,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/231/results/"
+      },
+      {
+        "year": 2013,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/52/results/"
+      },
+      {
+        "year": 2012,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/21/results/"
+      },
+      {
+        "year": 2011,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/49/results/"
+      },
+      {
+        "year": 2010,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/48/results/"
+      },
+      {
+        "year": 2009,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/47/results/"
+      },
+      {
+        "year": 2008,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/46/results/"
+      },
+      {
+        "year": 2007,
+        "resultUrl": "https://www.coachcox.co.uk/imstats/race/45/results/"
+      }
+    ]
+  }
+]

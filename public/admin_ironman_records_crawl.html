@@ -84,6 +84,19 @@
     <script>
         let crawledData = [];
 
+        async function loadInitialData() {
+            try {
+                const res = await fetch('/data/ironman_race.json');
+                if (res.ok) {
+                    crawledData = await res.json();
+                    renderTable(crawledData);
+                    document.getElementById('resultArea').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.log('초기 데이터 로드 실패:', e);
+            }
+        }
+
         async function startCrawl() {
             const statusArea = document.getElementById('statusArea');
             const resultArea = document.getElementById('resultArea');
@@ -97,33 +110,7 @@
             try {
                 const res = await fetch('/api/admin/ironman_crawl');
                 crawledData = await res.json();
-
-                tbody.innerHTML = '';
-                crawledData.forEach((item, index) => {
-                    let yearHtml = item.years.map(y => `
-                        <div class="flex flex-col bg-red-50 border border-red-100 rounded-lg p-2 m-1 shadow-sm">
-                            <a href="${y.resultUrl}" target="_blank" class="text-xs font-bold text-red-700 mb-1 hover:underline">
-                                ${y.year} Overview
-                            </a>
-                            <div class="flex gap-1">
-                                <input type="text" placeholder="이름" id="name_${index}_${y.year}" class="w-16 text-[10px] p-1 border rounded bg-white">
-                                <input type="text" placeholder="00:00:00" id="time_${index}_${y.year}" class="w-16 text-[10px] p-1 border rounded bg-white">
-                                <button onclick="searchPlayer('${y.resultUrl}', ${index}, ${y.year})" class="bg-red-500 text-white p-1 rounded">
-                                    <i class="fas fa-search text-[10px]"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    const row = `
-                        <tr>
-                            <td class="text-slate-400 text-center text-xs">${index + 1}</td>
-                            <td><div class="font-bold text-slate-800 text-sm">${item.name}</div></td>
-                            <td><div class="flex flex-wrap">${yearHtml || '<span class="text-gray-300">No data</span>'}</div></td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
+                renderTable(crawledData);
                 resultArea.classList.remove('hidden');
             } catch (e) {
                 alert('에러: ' + e.message);
@@ -131,6 +118,36 @@
                 statusArea.classList.add('hidden');
                 btn.disabled = false;
             }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('raceTableBody');
+            tbody.innerHTML = '';
+            data.forEach((item, index) => {
+                let yearHtml = item.years.map(y => `
+                    <div class="flex flex-col bg-red-50 border border-red-100 rounded-lg p-2 m-1 shadow-sm">
+                        <a href="${y.resultUrl}" target="_blank" class="text-xs font-bold text-red-700 mb-1 hover:underline">
+                            ${y.year} Overview
+                        </a>
+                        <div class="flex gap-1">
+                            <input type="text" placeholder="이름" id="name_${index}_${y.year}" class="w-16 text-[10px] p-1 border rounded bg-white">
+                            <input type="text" placeholder="00:00:00" id="time_${index}_${y.year}" class="w-16 text-[10px] p-1 border rounded bg-white">
+                            <button onclick="searchPlayer('${y.resultUrl}', ${index}, ${y.year})" class="bg-red-500 text-white p-1 rounded">
+                                <i class="fas fa-search text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                const row = `
+                    <tr>
+                        <td class="text-slate-400 text-center text-xs">${index + 1}</td>
+                        <td><div class="font-bold text-slate-800 text-sm">${item.name}</div></td>
+                        <td><div class="flex flex-wrap">${yearHtml || '<span class="text-gray-300">No data</span>'}</div></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
         }
 
         function downloadJson() {
@@ -165,6 +182,8 @@
                 alert('조회 실패: ' + e.message);
             }
         }
+
+        window.onload = loadInitialData;
     </script>
 </body>
 </html>
