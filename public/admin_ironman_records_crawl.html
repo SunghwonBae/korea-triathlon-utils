@@ -173,58 +173,88 @@
             document.body.removeChild(a);
         }
 
-        async function searchPlayer(url, idx, year) {
-            const name = document.getElementById(`name_${idx}_${year}`).value;
-            if (!name) return alert('검색할 이름을 입력하세요.');
+        async function searchPlayer() {
+            const resultUrl = document.getElementById('resultUrl').value;
+            const playerName = document.getElementById('playerName').value;
 
-            const modal = document.getElementById('resultModal');
-            const modalBody = document.getElementById('modalBody');
+            if (!resultUrl || !playerName) {
+                alert("URL과 이름을 입력해주세요.");
+                return;
+            }
+
+            // 1. Race ID 추출
+            const raceIdMatch = resultUrl.match(/race\/(\d+)\//);
+            const raceId = raceIdMatch ? raceIdMatch[1] : null;
             
+            // 2. 브라우저에서 직접 호출할 API 주소 (v1.90)
+            const apiUrl = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
+
             try {
-                const res = await fetch(`/api/admin/ironman_player_crawl?resultUrl=${encodeURIComponent(url)}&playerName=${encodeURIComponent(name)}`);
-                const results = await res.json();
-
-                if (results.error) throw new Error(results.error);
-                if (results.length === 0) return alert('일치하는 선수가 없습니다.');
-
-                let html = `
-                    <table class="w-full text-sm text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="p-2 border">이름</th>
-                                <th class="p-2 border">카테고리</th>
-                                <th class="p-2 border">전체기록</th>
-                                <th class="p-2 border">수영</th>
-                                <th class="p-2 border">사이클</th>
-                                <th class="p-2 border">런</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                results.forEach(p => {
-                    html += `
-                        <tr>
-                            <td class="p-2 border font-bold">${p.name}</td>
-                            <td class="p-2 border">${p.category}</td>
-                            <td class="p-2 border text-red-600 font-bold">${p.finish}</td>
-                            <td class="p-2 border">${p.swim}</td>
-                            <td class="p-2 border">${p.bike}</td>
-                            <td class="p-2 border">${p.run}</td>
-                        </tr>
-                    `;
+                // 관리자 브라우저 권한으로 직접 요청
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                const allResults = data.results || [];
+                
+                // 3. 이름 필터링
+                const filtered = allResults.filter(item => {
+                    const cleanName = item.n.replace(/<[^>]*>?/gm, '').trim();
+                    return cleanName.toLowerCase().includes(playerName.toLowerCase().trim());
                 });
 
-                html += `</tbody></table>`;
-                modalBody.innerHTML = html;
-                modal.style.display = "block";
-            } catch (e) {
-                alert('에러: ' + e.message);
+                if (filtered.length === 0) {
+                    alert("검색 결과가 없습니다.");
+                    return;
+                }
+
+                // 4. 결과 테이블 생성 (팝업)
+                showResultModal(filtered);
+
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                alert("데이터를 가져오는데 실패했습니다. CoachCox 사이트 로그인이 필요하거나 CORS 차단일 수 있습니다.");
             }
         }
 
-        function closeModal() {
-            document.getElementById('resultModal').style.display = "none";
+        function showResultModal(results) {
+            let html = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white p-6 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+                        <h3 class="text-xl font-bold mb-4">검색 결과 (${results.length}명)</h3>
+                        <table class="w-full text-sm border">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="p-2 border">Bib</th>
+                                    <th class="p-2 border">이름</th>
+                                    <th class="p-2 border">기록</th>
+                                    <th class="p-2 border">수영</th>
+                                    <th class="p-2 border">사이클</th>
+                                    <th class="p-2 border">런</th>
+                                    <th class="p-2 border">선택</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            results.forEach(p => {
+                const cleanName = p.n.replace(/<[^>]*>?/gm, '').trim();
+                html += `
+                    <tr>
+                        <td class="p-2 border text-center">${p.bi}</td>
+                        <td class="p-2 border font-bold">${cleanName}</td>
+                        <td class="p-2 border text-center">${p.ot}</td>
+                        <td class="p-2 border text-center">${p.st}</td>
+                        <td class="p-2 border text-center">${p.bt}</td>
+                        <td class="p-2 border text-center">${p.rt}</td>
+                        <td class="p-2 border text-center">
+                            <button onclick="applyPlayerData('${cleanName}', '${p.ot}', '${p.bi}')" class="bg-blue-500 text-white px-2 py-1 rounded">적용</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table><button onclick="this.parentElement.parentElement.remove()" class="mt-4 w-full bg-gray-500 text-white p-2 rounded">닫기</button></div></div>`;
+            document.body.insertAdjacentHTML('beforeend', html);
         }
 
         window.onload = loadInitialData;
