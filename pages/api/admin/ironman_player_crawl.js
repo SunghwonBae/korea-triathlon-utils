@@ -8,62 +8,60 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: '조회할 이름이 필요합니다.' });
   }
 
-  // 1. 결과 URL을 CSV 다운로드 URL로 변환
-  // 예: .../race/2460/results/ -> .../race/2460/csv/
-  const csvUrl = resultUrl.replace('/results/', '/csv/');
+  // 1. URL에서 대회 ID 추출 (예: 2460)
+  const raceIdMatch = resultUrl.match(/race\/(\d+)\//);
+  const raceId = raceIdMatch ? raceIdMatch[1] : null;
+
+  if (!raceId) {
+    return res.status(400).json({ error: '유효한 대회 ID를 찾을 수 없습니다.' });
+  }
 
   const config = {
     headers: { 
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': resultUrl,
+        'X-Requested-With': 'XMLHttpRequest'
     },
     httpsAgent: new https.Agent({ rejectUnauthorized: false }),
-    timeout: 20000
+    timeout: 15000
   };
 
   try {
-    console.log(`[CSV 요청] ${csvUrl}`);
-    const response = await axios.get(csvUrl, config);
-    const csvData = response.data;
+    // 2. CoachCox의 실제 데이터 소스 호출 (DataTables AJAX 엔드포인트)
+    // 이 URL은 CoachCox가 테이블 데이터를 로드할 때 사용하는 표준 방식입니다.
+    const apiUrl = `https://www.coachcox.co.uk/imstats/wp-admin/admin-ajax.php?action=get_race_results&race=${raceId}`;
+    
+    console.log(`[API 요청] ${apiUrl}`);
+    const response = await axios.get(apiUrl, config);
+    
+    // CoachCox의 응답 구조는 { "data": [ [col0, col1, ...], [...] ] } 형태입니다.
+    const allData = response.data.data;
 
-    if (!csvData || csvData.length < 10) {
-      return res.status(404).json({ error: 'CSV 데이터를 불러올 수 없습니다.' });
+    if (!allData || !Array.isArray(allData)) {
+      return res.status(404).json({ error: '데이터를 불러올 수 없습니다. API 구조가 변경되었을 수 있습니다.' });
     }
 
-    // 2. CSV 파싱 (줄바꿈으로 분리)
-    const lines = csvData.split('\n');
-    const searchResults = [];
+    // 3. 이름 기반 필터링
+    // 0:Bib, 1:Name, 2:Gender, 3:AgeGroup, 4:Finish, 5:TotalRank, 6:Swim, 8:Bike, 10:Run
+    const searchResults = allData
+      .filter(row => row[1] && row[1].toLowerCase().includes(playerName.toLowerCase().trim()))
+      .map(row => ({
+        bib: row[0],
+        name: row[1].replace(/<[^>]*>?/gm, ''), // HTML 태그 제거 (링크 포함된 경우 대비)
+        gender: row[2],
+        category: row[3],
+        finish: row[4],
+        rank: row[5],
+        swim: row[6],
+        bike: row[8],
+        run: row[10]
+      }));
 
-    // CSV 헤더 예시: Bib, Name, Gender, Age Group, Finish, Swim, Bike, Run ...
-    // CoachCox CSV의 실제 인덱스에 맞춰 매핑 (첫 줄은 헤더이므로 i=1부터 시작)
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-
-      // 쉼표로 분리 (데이터 내 쉼표가 있을 경우를 대비해 정규식 사용 권장이나 기본형으로 우선 처리)
-      const cols = lines[i].split(',').map(item => item.replace(/"/g, '').trim());
-
-      // CSV 구조 (CoachCox 표준): 0:Bib, 1:Name, 2:Gender, 3:AgeGroup, 4:Finish, 5:Swim, 6:Bike, 7:Run ...
-      const rowName = cols[1];
-
-      if (rowName && rowName.toLowerCase().includes(playerName.toLowerCase().trim())) {
-        searchResults.push({
-          bib: cols[0],
-          name: rowName,
-          gender: cols[2],
-          category: cols[3],
-          finish: cols[4],
-          swim: cols[5],
-          bike: cols[6],
-          run: cols[7],
-          // 추가 정보가 필요하면 cols[인덱스]를 더 추가하세요
-        });
-      }
-    }
-
-    console.log(`[완료] 검색된 인원: ${searchResults.length}명`);
+    console.log(`[조회 완료] 매칭 인원: ${searchResults.length}명`);
     return res.status(200).json(searchResults);
 
   } catch (error) {
-    console.error(`[에러] CSV 수집 실패: ${error.message}`);
-    return res.status(500).json({ error: 'CSV 수집 중 오류: ' + error.message });
+    console.error(`[에러] API 호출 실패: ${error.message}`);
+    return res.status(500).json({ error: '데이터 수집 중 오류: ' + error.message });
   }
 }
