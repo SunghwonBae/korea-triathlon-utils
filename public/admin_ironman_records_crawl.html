@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Ironman Records Crawler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .card { background: white; border-radius: 1.5rem; padding: 2.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; }
+        .btn-red { background-color: #ef4444; color: white; font-weight: bold; transition: all 0.2s; }
+        .btn-red:hover { background-color: #dc2626; transform: translateY(-1px); }
+        .table-container { width: 100%; overflow-x: auto; border-radius: 1rem; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f1f5f9; padding: 1rem; font-size: 0.875rem; font-weight: 700; color: #475569; }
+        td { padding: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.875rem; vertical-align: middle; }
+        .year-badge { 
+            display: inline-flex; 
+            align-items: center;
+            padding: 0.25rem 0.5rem; 
+            margin: 0.2rem; 
+            background-color: #fee2e2; 
+            color: #b91c1c; 
+            border-radius: 0.5rem; 
+            font-size: 0.75rem; 
+            font-weight: 600;
+        }
+        .search-input {
+            width: 60px;
+            padding: 0.2rem;
+            border: 1px solid #fca5a5;
+            border-radius: 0.3rem;
+            font-size: 0.7rem;
+            margin-left: 0.4rem;
+            outline: none;
+        }
+        .search-btn {
+            background: #ef4444;
+            color: white;
+            padding: 0.25rem 0.4rem;
+            border-radius: 0.3rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 lg:p-12">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="card w-full text-center mb-8">
+            <div class="mb-6">
+                <h1 class="text-3xl font-black text-slate-800 mb-2">Ironman 결과 정밀 수집기</h1>
+                <p class="text-slate-500 font-medium">대회 목록 수집 후, 특정 연도의 배번을 입력하여 개별 기록을 추출하세요.</p>
+            </div>
+            <button onclick="startCrawl()" id="crawlBtn" class="btn-red px-8 py-3 rounded-xl">
+                <i class="fas fa-sync-alt mr-2"></i> 대회 목록 및 연도별 링크 수집
+            </button>
+            <div id="statusArea" class="mt-4 hidden animate-pulse text-red-600 font-bold">수집 중...</div>
+        </div>
+
+        <div id="resultArea" class="card w-full hidden">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 200px;">대회명</th>
+                            <th>연도별 결과 및 배번 검색 (Bib 입력 후 🔍 클릭)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="raceTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let crawledData = [];
+
+        async function startCrawl() {
+            const statusArea = document.getElementById('statusArea');
+            const resultArea = document.getElementById('resultArea');
+            const btn = document.getElementById('crawlBtn');
+            const tbody = document.getElementById('raceTableBody');
+            
+            statusArea.classList.remove('hidden');
+            btn.disabled = true;
+            resultArea.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/admin/ironman_crawl');
+                crawledData = await res.json();
+
+                tbody.innerHTML = '';
+                crawledData.forEach((item, index) => {
+                    let yearHtml = item.years.map(y => `
+                        <div class="inline-flex items-center bg-red-50 border border-red-100 rounded-lg p-1 m-1 shadow-sm">
+                            <a href="${y.resultUrl}" target="_blank" class="text-xs font-bold text-red-700 px-2 hover:underline">
+                                ${y.year}
+                            </a>
+                            <div class="flex items-center border-l border-red-200 ml-1 pl-1">
+                                <input type="text" placeholder="Bib" id="bib_${index}_${y.year}" 
+                                    class="w-12 text-[10px] p-1 border-none bg-transparent focus:ring-0 outline-none"
+                                    onkeypress="if(event.keyCode==13) searchPlayer('${y.resultUrl}', 'bib_${index}_${y.year}')">
+                                <button onclick="searchPlayer('${y.resultUrl}', 'bib_${index}_${y.year}')" 
+                                        class="text-red-500 hover:text-red-700 p-1">
+                                    <i class="fas fa-search text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    const row = `
+                        <tr>
+                            <td class="text-slate-400 text-center text-xs">${index + 1}</td>
+                            <td><div class="font-bold text-slate-800 text-sm">${item.name}</div></td>
+                            <td><div class="flex flex-wrap">${yearHtml || '<span class="text-gray-300">No data</span>'}</div></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+                resultArea.classList.remove('hidden');
+            } catch (e) {
+                alert('에러: ' + e.message);
+            } finally {
+                statusArea.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        async function searchPlayer(url, inputId) {
+            const bib = document.getElementById(inputId).value;
+            if (!bib) return alert('배번을 입력하세요.');
+
+            try {
+                const res = await fetch(`/api/admin/ironman_player_crawl?resultUrl=${encodeURIComponent(url)}&bib=${bib}`);
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                alert(`[조회 결과]\n이름: ${data.name}\n순위: ${data.rank}\n기록: ${data.finish}\n수영: ${data.swim} / 사이클: ${data.bike} / 런: ${data.run}`);
+            } catch (e) {
+                alert('조회 실패: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
