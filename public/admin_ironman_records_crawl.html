@@ -86,7 +86,7 @@
 
         async function loadInitialData() {
             try {
-                const res = await fetch('/data/ironman_race.json');
+                const res = await fetch('/data/ironman_races.json');
                 if (res.ok) {
                     crawledData = await res.json();
                     renderTable(crawledData);
