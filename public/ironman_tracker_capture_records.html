@@ -190,6 +190,8 @@
         document.getElementById('selectedInfo').classList.add('hidden');
         document.getElementById('yearButtons').innerHTML = '';
         document.getElementById('fetchRecordsBtn').disabled = true;
+        document.getElementById('raceSearchInput').value = '';
+        document.getElementById('raceSearchResults').classList.add('hidden');
         loadRaceData();
     }
 
@@ -268,7 +270,7 @@
 
         const filtered = crawledData.filter(r => r.name.toLowerCase().includes(val)).slice(0, 10);
         results.innerHTML = filtered.map(r => `
-            <div class="px-4 py-3 hover:bg-red-50 cursor-pointer text-sm border-b border-slate-50" onclick="selectRace('${r.name}')">
+            <div class="px-4 py-3 hover:bg-red-50 cursor-pointer text-sm border-b border-slate-50" onclick="selectRace('${r.name.replace(/'/g, "\\'")}')">
                 ${r.name}
             </div>
         `).join('');
@@ -283,7 +285,7 @@
         const yearArea = document.getElementById('yearArea');
         const yearButtons = document.getElementById('yearButtons');
         yearButtons.innerHTML = selectedRace.years.map(y => `
-            <button onclick="selectYear('${y.year}', '${y.resultUrl}')" class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold hover:border-red-500 hover:text-red-500 transition-all">
+            <button onclick="selectYear('${String(y.year).replace(/'/g, "\\'")}', '${y.resultUrl}')" class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold hover:border-red-500 hover:text-red-500 transition-all">
                 ${y.year}
             </button>
         `).join('');
