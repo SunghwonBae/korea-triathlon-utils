@@ -98,6 +98,11 @@
         </button>
     </section>
 
+    <section>
+        <label for="manualBibInput" class="block text-xs font-black text-slate-400 uppercase mb-2">배번 직접 입력</label>
+        <input type="text" id="manualBibInput" placeholder="배번 입력 후 Enter" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none">
+    </section>
+
     <div id="bibContainer" class="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 min-h-[60px]">
         <p class="text-[11px] text-slate-400 italic">추출된 배번이 여기에 표시됩니다.</p>
     </div>
@@ -227,6 +232,31 @@
         });
     });
 
+    document.getElementById('manualBibInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const bib = e.target.value.trim();
+            if (bib && !extractedBibs.includes(bib)) {
+                extractedBibs.push(bib);
+                renderBibs();
+            }
+            e.target.value = '';
+        }
+    });
+
+    function renderBibs() {
+        const container = document.getElementById('bibContainer');
+        container.innerHTML = extractedBibs.length 
+            ? extractedBibs.map(b => `<span class="bib-badge">${b}<button onclick="removeBib('${b}')" class="ml-1 text-red-400 hover:text-red-700 font-black" title="삭제">×</button></span>`).join('')
+            : '<p class="text-[11px] text-slate-400 italic">추출된 배번이 여기에 표시됩니다.</p>';
+        checkReady();
+    }
+
+    function removeBib(bibToRemove) {
+        extractedBibs = extractedBibs.filter(b => b !== bibToRemove);
+        renderBibs();
+    }
+
     // OCR 분석 및 텍스트 누적
     document.getElementById('analyzeBtn').addEventListener('click', async () => {
         if (!cropper) return;
@@ -249,7 +279,7 @@
     function parseAllBibs() {
         const text = document.getElementById('debugOutput').value;
         const lines = text.split('\n').map(l => l.trim());
-        const bibSet = new Set();
+        const bibSet = new Set(extractedBibs);
         
         lines.forEach((line, i) => {
             const match = line.match(/Bib\s*(\d+)/i);
@@ -260,12 +290,7 @@
         });
 
         extractedBibs = Array.from(bibSet);
-        const container = document.getElementById('bibContainer');
-        container.innerHTML = extractedBibs.length 
-            ? extractedBibs.map(b => `<span class="bib-badge">${b}</span>`).join('')
-            : '<p class="text-[11px] text-slate-400 italic">배번 패턴을 찾지 못했습니다.</p>';
-        
-        checkReady();
+        renderBibs();
     }
 
     // 실시간 대회 검색
