@@ -50,6 +50,16 @@
             color: #ef4444;
             border-bottom-color: #ef4444;
         }
+        /* 모달 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { 
+            background: white; padding: 25px; border-radius: 16px; 
+            width: 85%; max-width: 400px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #ef4444; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -181,7 +191,19 @@
         </div>
     </div>
 </div>
-
+<!-- 확인 모달 -->
+<div id="confirmModal" class="modal-overlay" style="z-index: 200;">
+    <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
+        <div style="margin-bottom: 20px;">
+            <i class="fas fa-exclamation-circle" style="font-size: 40px; color: #ff4d4f;"></i>
+        </div>
+        <h4 style="margin:0 0 25px 0; font-size: 16px; color: #333; font-weight: bold;" id="confirmMessage">정말 삭제하시겠습니까?</h4>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button onclick="closeConfirm()" style="flex: 1; padding: 12px 0; background: #f1f1f1; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; color: #555; font-weight: bold;">취소</button>
+            <button id="confirmOkBtn" style="flex: 1; padding: 12px 0; background: #ff4d4f; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">삭제</button>
+        </div>
+    </div>
+</div>
 <script src="menu_full_handler.js" defer></script>
 <script>
     let cropper, crawledData = [], extractedBibs = [], currentRaceType = 'ironman';
@@ -267,10 +289,10 @@
     }
 
     function clearAllBibs() {
-        if(confirm('전체 배번을 삭제하시겠습니까?')) {
+        showConfirm('전체 배번을 삭제하시겠습니까?', () => {
             extractedBibs = [];
             renderBibs();
-        }
+        });
     }
 
     // OCR 분석 및 텍스트 누적
@@ -374,7 +396,7 @@
             document.getElementById('resultModal').classList.remove('hidden');
             document.getElementById('statusMsg').innerText = "조회 성공";
         } catch (e) {
-            alert("기록 로드 실패");
+            showToast("기록 로드 실패");
             document.getElementById('statusMsg').innerText = "조회 실패";
         }
     });
@@ -418,8 +440,41 @@
         document.body.removeChild(a);
     }
 
+    function showToast(msg) {
+        const el = document.createElement('div');
+        el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
+        el.innerText = msg;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
+        setTimeout(() => {
+            el.classList.add('opacity-0', 'translate-y-4');
+            setTimeout(() => el.remove(), 300);
+        }, 3000);
+    }
+
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmOkBtn = document.getElementById('confirmOkBtn');
+    let confirmCallback = null;
+     
+    function showConfirm(msg, callback) {
+        confirmMessage.innerText = msg;
+        confirmCallback = callback;
+        confirmModal.style.display = 'flex';
+    }
+
+    function closeConfirm() {
+        confirmModal.style.display = 'none';
+        confirmCallback = null;
+    }
+    
+    confirmOkBtn.onclick = function() {
+        if (confirmCallback) confirmCallback();
+        closeConfirm();
+    };
+
     function downloadCsv() {
-        if (!lastResults || lastResults.length === 0) return alert("다운로드할 데이터가 없습니다.");
+        if (!lastResults || lastResults.length === 0) return showToast("다운로드할 데이터가 없습니다.");
         
         let csvContent = "\uFEFFBib,Name,Division,Overall,Swim,T1,Bike,T2,Run,Status\n";
         
