@@ -70,6 +70,9 @@
     </style>
 </head>
 <body class="min-h-screen p-6 lg:p-12">
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
     <button id="menuToggle" class="fixed top-6 left-6 z-[100] bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-slate-700 shadow-md hover:bg-slate-50 hover:text-red-600 transition-all"><i class="fas fa-bars"></i></button>
     <div class="max-w-7xl mx-auto">
         <div class="card w-full text-center mb-8">
@@ -94,7 +97,7 @@
                                 <div class="flex justify-between items-center">
                                     <span>연도별 결과 및 선수 검색 (이름 또는 배번 입력 후 🔍 클릭)</span>
                                     <div>
-                                        <button onclick="document.getElementById('Goseong-race').scrollIntoView({ behavior: 'smooth' });" class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600 mr-2">구례바로가기</button>
+                                        <button onclick="document.getElementById('Goseong-race').scrollIntoView({ behavior: 'smooth' });" class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600 mr-2">고성바로가기</button>
                                         <button onclick="downloadJson()" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600"><i class="fas fa-download mr-1"></i> 대회목록 및 연도별 링크 JSON 다운로드</button>
                                     </div>
                                 </div>
@@ -121,6 +124,8 @@
         let crawledData = [];
 
         async function loadInitialData() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
             try {
                 const res = await fetch('/data/ironman_70.3_races.json');
                 if (res.ok) {
@@ -130,6 +135,8 @@
                 }
             } catch (e) {
                 console.log('초기 데이터 로드 실패:', e);
+            } finally {
+                loadingOverlay.classList.add('hidden');
             }
         }
 

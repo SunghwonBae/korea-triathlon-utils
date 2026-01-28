@@ -70,6 +70,9 @@
     </style>
 </head>
 <body class="min-h-screen p-6 lg:p-12">
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
     <button id="menuToggle" class="fixed top-6 left-6 z-[100] bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-slate-700 shadow-md hover:bg-slate-50 hover:text-red-600 transition-all"><i class="fas fa-bars"></i></button>
     <div class="max-w-7xl mx-auto">
         <div class="card w-full text-center mb-8">
@@ -121,6 +124,7 @@
         let crawledData = [];
 
         async function loadInitialData() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
             try {
                 const res = await fetch('/data/ironman_races.json');
                 if (res.ok) {
@@ -130,6 +134,8 @@
                 }
             } catch (e) {
                 console.log('초기 데이터 로드 실패:', e);
+            } finally {
+                loadingOverlay.classList.add('hidden');
             }
         }
 
