@@ -21,6 +21,15 @@
         .sidebar { width: 220px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
         .thumb-item { width: 100%; height: 100px; object-fit: cover; border-radius: 0.5rem; cursor: pointer; border: 3px solid transparent; transition: 0.2s; }
         .thumb-item.active { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+        .thumb-wrapper { position: relative; margin-bottom: 0.75rem; flex-shrink: 0; }
+        .thumb-delete-btn { 
+            position: absolute; top: -8px; right: -8px; 
+            background: #ef4444; color: white; 
+            width: 22px; height: 22px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 12px; cursor: pointer; border: 2px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10;
+        }
         .crop-container { flex: 1; background: #1e293b; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #imageToCrop { max-width: 100%; max-height: 100%; }
         .control-panel { width: 400px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 1.5rem; gap: 1.25rem; overflow-y: auto; }
@@ -49,6 +58,45 @@
         .tab-btn.active {
             color: #ef4444;
             border-bottom-color: #ef4444;
+        }
+        @media (max-width: 1024px) {
+            body {
+                flex-direction: column;
+                overflow-y: auto;
+                height: auto;
+            }
+            .sidebar, .control-panel {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-left: none;
+            }
+            .sidebar {
+                border-bottom: 1px solid #e2e8f0;
+            }
+            #thumbContainer {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                height: auto;
+                padding: 1rem;
+            }
+            .thumb-wrapper { width: 120px; margin-right: 1rem; margin-bottom: 0; }
+            .thumb-item { width: 100%; height: 80px; }
+            main.flex-1 { flex: none; }
+            .crop-container { height: 50vh; }
+            .control-panel { overflow-y: visible; }
+            
+            /* 모바일 레이아웃 재정렬 (Header -> Status -> Sidebar -> Crop -> Control) */
+            main.flex-1 { display: contents; }
+            main > header { order: 1; width: 100%; }
+            main > #statusMsgBar { order: 2; width: 100%; }
+            .sidebar { order: 3; }
+            .crop-container { order: 4; }
+            main > .p-4.bg-white.border-t { order: 5; width: 100%; }
+            .control-panel { order: 6; }
+            
+            #thumbContainer { max-height: 120px; }
         }
         /* 모달 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
@@ -87,8 +135,8 @@
                 <i class="fas fa-stopwatch text-red-500 mr-2"></i> Ironman Tracker Capture
             </h1>
         </div>
-        <div id="statusMsg" class="text-sm font-medium text-slate-500">이미지를 선택하여 OCR을 시작하세요.</div>
     </header>
+    <div id="statusMsgBar" class="w-full bg-slate-50 border-b px-6 py-2 text-xs font-medium text-slate-500 text-center">이미지를 선택하여 OCR을 시작하세요.</div>
     <div class="crop-container">
         <img id="imageToCrop">
     </div>
@@ -241,11 +289,17 @@
     document.getElementById('imageInput').addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
         const thumbContainer = document.getElementById('thumbContainer');
-        thumbContainer.innerHTML = "";
         
-        files.forEach((file, idx) => {
+        // "업로드된 이미지 없음" 메시지 제거
+        const emptyMsg = thumbContainer.querySelector('p');
+        if (emptyMsg) emptyMsg.remove();
+        
+        files.forEach((file) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'thumb-wrapper';
+
                 const img = document.createElement('img');
                 img.src = ev.target.result;
                 img.className = 'thumb-item';
@@ -256,11 +310,32 @@
                     document.getElementById('imageToCrop').src = ev.target.result;
                     cropper = new Cropper(document.getElementById('imageToCrop'), { viewMode: 1, autoCropArea: 0.8 });
                 };
-                thumbContainer.appendChild(img);
-                if(idx === 0) img.click();
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'thumb-delete-btn';
+                delBtn.innerHTML = '<i class="fas fa-times"></i>';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    wrapper.remove();
+                    if (thumbContainer.children.length === 0) {
+                        thumbContainer.innerHTML = '<p class="text-xs text-slate-400 text-center mt-10">업로드된 이미지 없음</p>';
+                        if (cropper) { cropper.destroy(); cropper = null; document.getElementById('imageToCrop').src = ''; }
+                    }
+                };
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(delBtn);
+                thumbContainer.appendChild(wrapper);
+                
+                // 이미지가 하나도 선택되지 않은 상태라면 첫 번째 이미지 자동 선택
+                if (!cropper && thumbContainer.querySelectorAll('.thumb-item').length === 1) {
+                    img.click();
+                }
             };
             reader.readAsDataURL(file);
         });
+        // 같은 파일을 다시 선택할 수 있도록 초기화
+        e.target.value = '';
     });
 
     document.getElementById('manualBibInput').addEventListener('keydown', (e) => {
@@ -381,7 +456,7 @@
         const raceId = selectedYearData.url.match(/race\/(\d+)\//)[1];
         const apiUrl = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
         
-        document.getElementById('statusMsg').innerText = "데이터 요청 중...";
+        document.getElementById('statusMsgBar').innerText = "데이터 요청 중...";
         try {
             const response = await fetch(apiUrl);
             const buffer = await response.arrayBuffer();
@@ -394,10 +469,10 @@
             renderResults(results);
             document.getElementById('modalSubTitle').innerText = `${selectedRace.name} (${selectedYearData.year}) / 총 ${results.length}명 추출`;
             document.getElementById('resultModal').classList.remove('hidden');
-            document.getElementById('statusMsg').innerText = "조회 성공";
+            document.getElementById('statusMsgBar').innerText = "조회 성공";
         } catch (e) {
             showToast("기록 로드 실패");
-            document.getElementById('statusMsg').innerText = "조회 실패";
+            document.getElementById('statusMsgBar').innerText = "조회 실패";
         }
     });
 
@@ -497,7 +572,7 @@
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `ironman_records_${selectedYearData.year}.csv`;
+        a.download = `${selectedRace.name}_${selectedYearData.year}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
