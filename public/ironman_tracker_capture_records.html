@@ -59,6 +59,10 @@
             color: #ef4444;
             border-bottom-color: #ef4444;
         }
+        .py-6 {
+            padding-top: 1.0rem !important;
+            padding-bottom: 1.0rem !important;
+        }
         @media (max-width: 1024px) {
             body {
                 flex-direction: column;
@@ -97,6 +101,18 @@
             .control-panel { order: 6; }
             
             #thumbContainer { max-height: 120px; }
+        }
+        @media (max-width: 768px) {
+            .mobile-hidden { display: none !important; }
+            #resultModal .p-8 { padding: 1rem !important; }
+            #resultModal table th, #resultModal table td { padding: 0.5rem 0.1rem !important; font-size: 0.7rem !important; }
+            #resultModal h2 { font-size: 1.2rem !important; }
+            #resultModal .text-sm { font-size: 0.75rem !important; }
+            .bib-badge { font-size: 0.65rem; padding: 0.15rem 0.4rem; }
+            .download-btn {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.75rem !important;
+            }
         }
         /* 모달 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
@@ -207,16 +223,18 @@
                 <p id="modalSubTitle" class="text-sm text-slate-500 font-medium"></p>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="downloadCsv()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
-                    <i class="fas fa-file-csv"></i> CSV 다운로드
-                </button>
-                <button onclick="downloadJson()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
-                    <i class="fas fa-file-download"></i> JSON 다운로드
-                </button>
                 <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-800 transition-all">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 px-8 pt-4">
+                <button onclick="downloadCsv()" class="download-btn bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                    <i class="fas fa-file-csv"></i> CSV 다운로드
+                </button>
+                <button onclick="downloadJson()" class="download-btn bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                    <i class="fas fa-file-download"></i> JSON 다운로드
+                </button>
         </div>
         <div class="flex-1 overflow-auto p-8">
             <table class="w-full text-left border-separate border-spacing-y-2">
@@ -227,11 +245,11 @@
                         <th class="pb-4">연령대</th>
                         <th class="pb-4">전체 기록</th>
                         <th class="pb-4">수영</th>
-                        <th class="pb-4">T1</th>
+                        <th class="pb-4 mobile-hidden">T1</th>
                         <th class="pb-4">사이클</th>
-                        <th class="pb-4">T2</th>
+                        <th class="pb-4 mobile-hidden">T2</th>
                         <th class="pb-4">런</th>
-                        <th class="pb-4 pr-4 text-center">상태</th>
+                        <th class="pb-4 pr-4 text-center mobile-hidden">상태</th>
                     </tr>
                 </thead>
                 <tbody id="recordTableBody"></tbody>
@@ -491,11 +509,11 @@
                 <td class="py-4 text-slate-500 font-medium">${p.di || '-'}</td>
                 <td class="py-4 font-black text-slate-900">${p.fs === "DNF" ? "DNF" : formatTime(p.ot)}</td>
                 <td class="py-4 text-xs text-slate-400 font-mono">${formatTime(p.st)}</td>
-                <td class="py-4 text-xs text-slate-400 font-mono">${formatTime(p.t1t)}</td>
+                <td class="py-4 text-xs text-slate-400 font-mono mobile-hidden">${formatTime(p.t1t)}</td>
                 <td class="py-4 text-xs text-slate-400 font-mono">${formatTime(p.bt)}</td>
-                <td class="py-4 text-xs text-slate-400 font-mono">${formatTime(p.t2t)}</td>
+                <td class="py-4 text-xs text-slate-400 font-mono mobile-hidden">${formatTime(p.t2t)}</td>
                 <td class="py-4 text-xs text-slate-400 font-mono">${formatTime(p.rt)}</td>
-                <td class="py-4 pr-4 text-center">
+                <td class="py-4 pr-4 text-center mobile-hidden">
                     <span class="px-3 py-1 rounded-full text-[10px] font-black ${p.fs === 'FIN' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
                         ${p.fs}
                     </span>
@@ -509,7 +527,7 @@
         const blob = new Blob([JSON.stringify(lastResults, null, 2)], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `ironman_records_${selectedYearData.year}.json`;
+        a.download = `${selectedRace.name}_${selectedYearData.year}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
