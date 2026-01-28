@@ -93,9 +93,14 @@
     <section>
         <label class="block text-xs font-black text-slate-400 uppercase mb-2">1. OCR 누적 데이터</label>
         <textarea id="debugOutput" class="w-full h-32 p-3 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none font-mono" placeholder="OCR 결과가 여기에 누적됩니다."></textarea>
-        <button onclick="parseAllBibs()" class="w-full mt-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-lg text-xs font-bold transition-colors">
-            텍스트에서 배번(Bib)만 걸러내기
-        </button>
+        <div class="flex gap-2 mt-2">
+            <button onclick="parseAllBibs()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-lg text-xs font-bold transition-colors">
+                텍스트에서 배번(Bib)만 걸러내기
+            </button>
+            <button onclick="document.getElementById('debugOutput').value = ''" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors">
+                초기화
+            </button>
+        </div>
     </section>
 
     <section>
@@ -103,7 +108,11 @@
         <input type="text" id="manualBibInput" placeholder="배번 입력 후 Enter" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none">
     </section>
 
-    <div id="bibContainer" class="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 min-h-[60px]">
+    <div class="flex justify-between items-end mb-1 mt-2">
+        <span class="text-xs font-black text-slate-400 uppercase">추출된 배번 목록</span>
+        <button onclick="clearAllBibs()" class="text-[10px] text-red-400 hover:text-red-600 font-bold bg-red-50 px-2 py-1 rounded transition-colors">전체삭제</button>
+    </div>
+    <div id="bibContainer" class="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 min-h-[60px] max-h-[200px] overflow-y-auto">
         <p class="text-[11px] text-slate-400 italic">추출된 배번이 여기에 표시됩니다.</p>
     </div>
 
@@ -255,6 +264,13 @@
     function removeBib(bibToRemove) {
         extractedBibs = extractedBibs.filter(b => b !== bibToRemove);
         renderBibs();
+    }
+
+    function clearAllBibs() {
+        if(confirm('전체 배번을 삭제하시겠습니까?')) {
+            extractedBibs = [];
+            renderBibs();
+        }
     }
 
     // OCR 분석 및 텍스트 누적
