@@ -141,6 +141,24 @@
                 typeSelect.onchange = (e) => renderRaceCheckboxes(e.target.value);
                 renderRaceCheckboxes(types[0]);
 
+                const KR_LOCALE = {
+                    contains: '포함',
+                    notContains: '포함하지 않음',
+                    equals: '일치',
+                    notEqual: '일치하지 않음',
+                    startsWith: '시작 단어',
+                    endsWith: '끝 단어',
+                    lessThan: '미만',
+                    greaterThan: '초과',
+                    lessThanOrEqual: '이하',
+                    greaterThanOrEqual: '이상',
+                    inRange: '범위 내',
+                    filterOoo: '검색...',
+                    applyFilter: '확인',
+                    resetFilter: '초기화',
+                    blank: '공백',
+                    notBlank: '공백 아님'
+                };
                 // 2. AG Grid 초기화 (모든 컬럼 누락 없이 배치)
                 const gridOptions = {
                     columnDefs: [
@@ -157,7 +175,20 @@
                         { field: "d", headerName: "부문", width: 110 },
                         { field: "c", headerName: "클럽", width: 150 }
                     ],
-                    defaultColDef: { sortable: true, filter: 'agTextColumnFilter', resizable: true },
+                    localeText: KR_LOCALE, // 한국어 객체 적용
+                    // 1. 그리드 전체에서 마우스 드래그로 텍스트 선택 가능하게 설정
+                    enableCellTextSelection: true,
+                    defaultColDef: {
+                        resizable: true,
+                        sortable: true,
+                        filterParams: { 
+                            buttons: ['reset', 'apply'],
+                            closeOnApply: true 
+                        }
+                    },
+                    // 가상 스크롤 최적화
+                    rowBuffer: 10,
+                    animateRows: true,
                     pagination: true,
                     paginationPageSize: 20,
                     onGridReady: (params) => {
