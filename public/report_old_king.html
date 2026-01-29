@@ -339,6 +339,14 @@
             return `${h}:${m}:${s}`;
         }
 
+        const sToMs = (s) => {
+            if (!s || s <= 0) return "00:00";
+            s = Math.round(s);
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        };
+
         // 값이 0이거나 없을 때 공백으로 표시하는 렌더러
         function zeroToEmptyFormatter(params) {
             if (params.value === 0 || params.value === "" || params.value === null) {
@@ -419,9 +427,9 @@
             { headerName: "개최일", field: "rd", width: 100, filter: true , sortable: true },
             { headerName: "TOTAL", field: "to", width: 110, valueFormatter: timeFormatter, filter: 'agNumberColumnFilter', cellClass: 'bold-cell' },
             { headerName: "SWIM", field: "sw", width: 100, valueFormatter: timeFormatter, cellClass: 'swim-cell' },
-            { headerName: "T1", field: "t1", width: 100, valueFormatter: timeFormatter },
+            { headerName: "T1", field: "t1", width: 100, valueFormatter: sToMs },
             { headerName: "BIKE", field: "bi", width: 100, valueFormatter: timeFormatter, cellClass: 'bike-cell' },
-            { headerName: "T2", field: "t2", width: 100, valueFormatter: timeFormatter },
+            { headerName: "T2", field: "t2", width: 100, valueFormatter: sToMs },
             { headerName: "RUN", field: "ru", width: 100, valueFormatter: timeFormatter, cellClass: 'run-cell' },
             { headerName: "Overall-R", field: "or", width: 110, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: zeroToEmptyFormatter },
             { headerName: "Domestic-R", field: "dr", width: 110, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: zeroToEmptyFormatter },
