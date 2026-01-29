@@ -61,6 +61,7 @@
         </div>
 
         <div id="groupAnalysis" class="hidden space-y-6"></div>
+        <div id="divisionAnalysis" class="hidden space-y-6"></div>
 
         <div class="card">
             <div class="flex justify-between items-center mb-4">
@@ -78,9 +79,11 @@
         
         let allRecords = [], allMeta = [], gridApi, chart1, chart2;
         let groupCharts = [];
-        
+        let divisionCharts = [];
+
         const formatS = (s) => {
             if(!s || isNaN(s) || s === 0) return "-";
+            s = Math.round(s);
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
             const sec = s % 60;
@@ -89,8 +92,9 @@
 
         const sToMs = (s) => {
             if (!s || s <= 0) return "00:00";
+            s = Math.round(s);
             const m = Math.floor(s / 60);
-            const sec = Math.floor(s % 60);
+            const sec = s % 60;
             return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         };
 
@@ -225,6 +229,7 @@
 
             renderCharts(chartData);
             performGroupAnalysis(selectedRids);
+            performDivisionAnalysis(selectedRids);
         }
 
         function renderCharts(data) {
@@ -410,6 +415,156 @@
             createChart('swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
             createChart('bikeChart', '사이클 평속 (km/h)', createData('avgBikeSpeed'), (v) => v.toFixed(1));
             createChart('runChart', '런 페이스 (min/km)', createData('runPaceSec'), formatPace);
+        }
+
+        function performDivisionAnalysis(selectedRids) {
+            const container = document.getElementById('divisionAnalysis');
+            if (selectedRids.length === 0) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            const divisionAnalyses = selectedRids.map(rid => {
+                const raceData = allRecords.filter(r => r.rn === rid && r.t > 0);
+                if (raceData.length === 0) return null;
+
+                const meta = allMeta.find(m => m.id === rid);
+                const raceName = meta ? meta.name : rid;
+                const raceType = meta ? meta.type : 'Olympic';
+                
+                return analyzeDivisionsForRace(raceName, raceData, raceType);
+            }).filter(a => a !== null);
+
+            renderDivisionTables(divisionAnalyses);
+            renderDivisionCharts(divisionAnalyses);
+        }
+
+        function analyzeDivisionsForRace(raceName, raceData, raceType) {
+            const distances = getRaceDistances(raceType);
+            const divisionGroups = {};
+            
+            raceData.forEach(item => {
+                const d = item.d || 'Unknown';
+                if (!divisionGroups[d]) divisionGroups[d] = [];
+                divisionGroups[d].push(item);
+            });
+
+            const divisionAverages = Object.keys(divisionGroups).sort().map(division => {
+                const group = divisionGroups[division];
+                const count = group.length;
+                const avg = (key) => group.reduce((sum, item) => sum + (item[key] || 0), 0) / count;
+
+                const avgTotal = avg('t');
+                const avgSwim = avg('s');
+                const avgBike = avg('bk');
+                const avgRun = avg('r');
+
+                // Calculate speeds/paces
+                const swimPaceSec = avgSwim / (distances.swim * 10);
+                const bikeSpeed = calculateSpeed(distances.bike, avgBike);
+                const runPaceSec = avgRun / distances.run;
+
+                return {
+                    division, count,
+                    avgTotal, avgSwim, avgBike, avgRun,
+                    swimPaceSec, bikeSpeed: parseFloat(bikeSpeed), runPaceSec
+                };
+            });
+
+            return { raceName, averages: divisionAverages };
+        }
+
+        function renderDivisionTables(divisionAnalyses) {
+            const container = document.getElementById('divisionAnalysis');
+            if (divisionAnalyses.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            let html = divisionAnalyses.map(analysis => `
+                <div class="card">
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg text-center">${analysis.raceName} 부문별 평균 기록</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-center border-collapse">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b">
+                                <tr>
+                                    <th class="p-3">Division</th><th class="p-3">Count</th><th class="p-3">Total</th>
+                                    <th class="p-3 text-blue-600">Swim</th>
+                                    <th class="p-3 text-green-600">Bike</th>
+                                    <th class="p-3 text-orange-600">Run</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${analysis.averages.map(avg => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-3 font-bold text-slate-700">${avg.division}</td>
+                                        <td class="p-3 text-slate-500">${avg.count}</td>
+                                        <td class="p-3 font-bold text-slate-900">${formatS(avg.avgTotal)}</td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgSwim)}</div><div class="text-xs text-blue-500">${formatPace(avg.swimPaceSec)}/100m</div></td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgBike)}</div><div class="text-xs text-green-600">${avg.bikeSpeed} km/h</div></td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgRun)}</div><div class="text-xs text-orange-500">${formatPace(avg.runPaceSec)}/km</div></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-slate-700 mb-4 text-center">부문별 평균 속도 비교</h4>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div id="divSwimChart_${analysis.raceName.replace(/[^a-zA-Z0-9]/g, '')}" style="height: 300px;"></div>
+                            <div id="divBikeChart_${analysis.raceName.replace(/[^a-zA-Z0-9]/g, '')}" style="height: 300px;"></div>
+                            <div id="divRunChart_${analysis.raceName.replace(/[^a-zA-Z0-9]/g, '')}" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+            container.classList.remove('hidden');
+        }
+
+        function renderDivisionCharts(divisionAnalyses) {
+            divisionCharts.forEach(c => c.destroy());
+            divisionCharts = [];
+
+            divisionAnalyses.forEach(analysis => {
+                const safeName = analysis.raceName.replace(/[^a-zA-Z0-9]/g, '');
+                
+                const createChart = (containerId, title, key, formatter) => {
+                    const data = analysis.averages.map(a => ({
+                        division: a.division,
+                        value: a[key]
+                    }));
+
+                    const chart = AgChart.create({
+                        container: document.getElementById(containerId),
+                        title: { text: title, fontSize: 14, fontWeight: 'bold' },
+                        data: data,
+                        series: [{
+                            type: 'bar',
+                            xKey: 'division',
+                            yKey: 'value',
+                            yName: title,
+                            fill: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171')
+                        }],
+                        axes: [
+                            { type: 'category', position: 'bottom' },
+                            { 
+                                type: 'number', position: 'left',
+                                label: { formatter: (params) => formatter ? formatter(params.value) : params.value.toFixed(1) }
+                            }
+                        ],
+                        legend: { enabled: false },
+                        padding: { top: 10, right: 20, bottom: 10, left: 10 }
+                    });
+                    divisionCharts.push(chart);
+                };
+
+                createChart(`divSwimChart_${safeName}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
+                createChart(`divBikeChart_${safeName}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => v.toFixed(1));
+                createChart(`divRunChart_${safeName}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', init);
