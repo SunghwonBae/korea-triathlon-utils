@@ -413,7 +413,7 @@
             };
 
             createChart('swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
-            createChart('bikeChart', '사이클 평속 (km/h)', createData('avgBikeSpeed'), (v) => v.toFixed(1));
+            createChart('bikeChart', '사이클 평속 (km/h)', createData('avgBikeSpeed'), (v) => Number(v).toFixed(1));
             createChart('runChart', '런 페이스 (min/km)', createData('runPaceSec'), formatPace);
         }
 
@@ -562,7 +562,7 @@
                 };
 
                 createChart(`divSwimChart_${safeName}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
-                createChart(`divBikeChart_${safeName}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => v.toFixed(1));
+                createChart(`divBikeChart_${safeName}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
                 createChart(`divRunChart_${safeName}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
             });
         }
