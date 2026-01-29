@@ -511,7 +511,7 @@
 
                 const chartOptions = {
                     container: document.getElementById(containerId),
-                    title: { text: '' },
+                    title: { text: title, fontSize: 14, fontWeight: 'bold' },
                     data: data,
                     series: series,
                     axes: [
@@ -527,7 +527,7 @@
 
                 const chart = AgChart.create(chartOptions);
                 groupCharts.push(chart);
-                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions, title);
+                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions);
             };
 
             createChart('swimChartWrapper', 'swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
