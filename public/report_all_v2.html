@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ag-charts-community@8.2.1/dist/ag-charts-community.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -31,11 +33,6 @@
             <div>
                 <h1 class="text-2xl font-bold italic uppercase tracking-tight">Triathlon <span class="text-blue-400">Compare V2</span></h1>
                 <p class="text-slate-400 text-sm">대회별 기록 비교 및 상세 데이터 통합 리포트</p>
-            </div>
-            <div class="relative w-full md:w-80">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="quickFilter" placeholder="성명, 클럽, 대회명 검색..." 
-                       class="w-full bg-slate-800 border-none rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
         </header>
 
@@ -68,6 +65,37 @@
         <div class="card">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-search text-blue-500"></i> 상세 레코드 검색 및 필터
+                </h3>
+                <button id="toggleSearchBtn" class="text-xs font-bold text-slate-500 hover:text-blue-600">접기 ▲</button>
+            </div>
+            <div id="searchContent" class="space-y-4">
+                <!-- Keyword search -->
+                <div class="flex items-center gap-2">
+                    <button id="logicToggle" class="bg-slate-600 text-white font-bold px-4 py-2 rounded-lg text-sm w-16">AND</button>
+                    <input type="text" id="gridQuickFilter" placeholder="입력 후 Enter (예: 홍길동, 서울, 철인클럽...) AND/OR 선택 후 다중 검색 가능" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div id="searchTags" class="flex flex-wrap gap-2 min-h-[20px]"></div>
+                
+                <!-- Sliders -->
+                <div class="text-center pt-2">
+                    <button id="toggleFilterBtn" class="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1 mx-auto">
+                        <i class="fas fa-sliders-h"></i> 상세 기록 필터 (시간 범위 설정) <span id="filterArrow">▼</span>
+                    </button>
+                </div>
+                <div id="filterPanel" class="hidden pt-6 mt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Total Time</span><span id="valTotal" class="text-red-600 font-mono"></span></div><div id="sliderTotal" class="mx-1"></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Swim</span><span id="valSwim" class="text-blue-600 font-mono"></span></div><div id="sliderSwim" class="mx-1"></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Bike</span><span id="valBike" class="text-green-600 font-mono"></span></div><div id="sliderBike" class="mx-1"></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Run</span><span id="valRun" class="text-orange-600 font-mono"></span></div><div id="sliderRun" class="mx-1"></div></div>
+                    <div class="md:col-span-2 text-center"><button onclick="resetSliders()" class="text-xs text-slate-400 underline hover:text-slate-600 font-bold">필터 초기화</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
                     <i class="fas fa-list text-blue-500"></i> 상세 레코드
                 </h3>
                 <span id="gridInfo" class="text-xs font-mono text-slate-500"></span>
@@ -79,6 +107,10 @@
     <script>
         const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
         
+        let searchFilters = [];
+        let currentLogic = 'AND';
+        let sliders = {};
+
         let allRecords = [], allMeta = [], gridApi, chart1, chart2;
         let groupCharts = [];
         let divisionCharts = [];
@@ -99,6 +131,13 @@
             const sec = s % 60;
             return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         };
+
+        function formatSeconds(sec) {
+            if (!sec) return "00:00";
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            return `${h}:${m.toString().padStart(2, '0')}`;
+        }
 
         function getRaceDistances(type) {
             const distances = {
@@ -129,6 +168,7 @@
                 ]);
                 allRecords = await rRes.json();
                 allMeta = await mRes.json();
+                initAdvancedFilters(allRecords);
 
                 // 1. 타입 필터링 설정
                 const types = [...new Set(allMeta.map(m => m.type))];
@@ -186,6 +226,30 @@
                             closeOnApply: true 
                         }
                     },
+                    isExternalFilterPresent: () => searchFilters.length > 0 || isSliderActive(),
+                    doesExternalFilterPass: (node) => {
+                        const data = node.data;
+                        const isFullRange = (slider) => {
+                            if (!slider) return true;
+                            const [currentMin, currentMax] = slider.get().map(Number);
+                            const { min, max } = slider.options.range;
+                            return (Math.abs(currentMin - min) < 0.1 && Math.abs(currentMax - max) < 0.1);
+                        };
+
+                        if (sliders.t && !isFullRange(sliders.t)) { if (data.t < sliders.t.get()[0] || data.t > sliders.t.get()[1]) return false; }
+                        if (sliders.s && !isFullRange(sliders.s)) { if (data.s < sliders.s.get()[0] || data.s > sliders.s.get()[1]) return false; }
+                        if (sliders.bk && !isFullRange(sliders.bk)) { if (data.bk < sliders.bk.get()[0] || data.bk > sliders.bk.get()[1]) return false; }
+                        if (sliders.r && !isFullRange(sliders.r)) { if (data.r < sliders.r.get()[0] || data.r > sliders.r.get()[1]) return false; }
+
+                        if (searchFilters.length === 0) return true;
+                        const rowString = `${data.n} ${data.c} ${data.rn}`.toLowerCase();
+                        return searchFilters.every(filter => rowString.includes(filter.term));
+                    },
+                    onFilterChanged: () => {
+                        if(gridApi) {
+                            document.getElementById('gridInfo').innerText = `TOTAL: ${gridApi.getDisplayedRowCount().toLocaleString()} records`;
+                        }
+                    },
                     // 가상 스크롤 최적화
                     rowBuffer: 10,
                     animateRows: true,
@@ -199,10 +263,6 @@
                 gridApi = agGrid.createGrid(document.querySelector('#myGrid'), gridOptions);
 
                 // 검색 필터 연동
-                document.getElementById('quickFilter').oninput = (e) => {
-                    gridApi.setGridOption('quickFilterText', e.target.value);
-                };
-
             } catch (err) { console.error("데이터 로드 실패:", err); }
         }
 
@@ -585,7 +645,7 @@
                         division: a.division,
                         value: a[key] || 0
                     }));
-                    console.log(`Data for ${containerId} (${key}):`, JSON.stringify(data));
+                    //console.log(`Data for ${containerId} (${key}):`, JSON.stringify(data));
 
                     // Simplified options for debugging
                     const chart = AgChart.create({
@@ -620,6 +680,104 @@
                 createChart(`divBikeChart_${index}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
                 createChart(`divRunChart_${index}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
             });
+        }
+
+        function initAdvancedFilters(data) {
+            // Keyword Search
+            const logicBtn = document.getElementById('logicToggle');
+            const input = document.getElementById('gridQuickFilter');
+            const tagsContainer = document.getElementById('searchTags');
+
+            logicBtn.addEventListener('click', () => {
+                currentLogic = currentLogic === 'AND' ? 'OR' : 'AND';
+                logicBtn.innerText = currentLogic;
+                logicBtn.className = `font-bold px-4 py-2 rounded-lg text-sm w-16 text-white ${currentLogic === 'AND' ? 'bg-slate-600' : 'bg-blue-600'}`;
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && input.value.trim() !== '') {
+                    addFilter(input.value.trim(), currentLogic);
+                    input.value = '';
+                }
+            });
+
+            window.addFilter = function(term, logic) {
+                searchFilters.push({ term: term.toLowerCase(), logic });
+                renderTags();
+                gridApi.onFilterChanged();
+            };
+
+            window.removeFilter = function(index) {
+                searchFilters.splice(index, 1);
+                renderTags();
+                gridApi.onFilterChanged();
+            };
+
+            function renderTags() {
+                tagsContainer.innerHTML = searchFilters.map((filter, index) => `
+                    <span class="flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full ${filter.logic === 'AND' ? 'bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-700'}">
+                        ${filter.term}
+                        <button onclick="removeFilter(${index})" class="text-slate-400 hover:text-slate-800">&times;</button>
+                    </span>
+                `).join('');
+            }
+
+            // Sliders
+            createSlider('sliderTotal', 'valTotal', 't', data);
+            createSlider('sliderSwim', 'valSwim', 's', data);
+            createSlider('sliderBike', 'valBike', 'bk', data);
+            createSlider('sliderRun', 'valRun', 'r', data);
+
+            document.getElementById('toggleFilterBtn').onclick = () => {
+                document.getElementById('filterPanel').classList.toggle('hidden');
+                const arrow = document.getElementById('filterArrow');
+                arrow.innerText = arrow.innerText === '▼' ? '▲' : '▼';
+            };
+            document.getElementById('toggleSearchBtn').onclick = (e) => {
+                document.getElementById('searchContent').classList.toggle('hidden');
+                e.target.innerText = e.target.innerText === '접기 ▲' ? '펴기 ▼' : '접기 ▲';
+            };
+        }
+
+        function createSlider(id, valId, key, data) {
+            const el = document.getElementById(id);
+            const values = data.map(x => x[key]).filter(v => v > 0);
+            if (values.length === 0) return;
+
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+
+            noUiSlider.create(el, {
+                start: [min, max], connect: true,
+                range: { 'min': min, 'max': max },
+                step: 60, tooltips: false
+            });
+
+            sliders[key] = el.noUiSlider;
+
+            el.noUiSlider.on('update', (values) => {
+                document.getElementById(valId).innerText = `${formatSeconds(parseInt(values[0]))} - ${formatSeconds(parseInt(values[1]))}`;
+            });
+            
+            el.noUiSlider.on('change', () => {
+                gridApi.onFilterChanged();
+            });
+        }
+
+        function resetSliders() {
+            searchFilters = [];
+            document.getElementById('searchTags').innerHTML = '';
+            ['t', 's', 'bk', 'r'].forEach(k => {
+                if (sliders[k]) {
+                    const range = sliders[k].options.range;
+                    sliders[k].set([range.min, range.max]);
+                }
+            });
+            gridApi.onFilterChanged();
+        }
+
+        function isSliderActive() {
+            return Object.values(sliders).some(s => s && (s.get()[0] !== s.options.range.min || s.get()[1] !== s.options.range.max));
         }
 
         document.addEventListener('DOMContentLoaded', init);
