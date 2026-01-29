@@ -169,7 +169,6 @@
                 ]);
                 allRecords = await rRes.json();
                 allMeta = await mRes.json();
-                initAdvancedFilters(allRecords);
 
                 // 1. 타입 필터링 설정
                 const types = [...new Set(allMeta.map(m => m.type))];
@@ -313,6 +312,7 @@
             }
 
             const filteredData = allRecords.filter(r => selectedRids.includes(r.rn));
+            initAdvancedFilters(filteredData);
             gridApi.setGridOption('rowData', filteredData);
             document.getElementById('gridInfo').innerText = `TOTAL: ${filteredData.length.toLocaleString()} records`;
 
@@ -506,12 +506,18 @@
                     yKey: ra.raceName,
                     yName: ra.raceName,
                     strokeWidth: 3,
-                    marker: { enabled: true, size: 5 }
+                    marker: { enabled: true, size: 5 },
+                    tooltip: {
+                        renderer: (params) => ({
+                            title: params.yName,
+                            content: `${params.xValue}: ${formatter ? formatter(params.yValue) : Number(params.yValue).toFixed(1)}`
+                        })
+                    }
                 }));
 
                 const chartOptions = {
                     container: document.getElementById(containerId),
-                    title: { text: title, fontSize: 14, fontWeight: 'bold' },
+                    title: { enabled: false },
                     data: data,
                     series: series,
                     axes: [
@@ -527,7 +533,7 @@
 
                 const chart = AgChart.create(chartOptions);
                 groupCharts.push(chart);
-                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions);
+                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions, title);
             };
 
             createChart('swimChartWrapper', 'swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
@@ -663,7 +669,7 @@
 
                         const chartOptions = {
                             container: document.getElementById(containerId),
-                            title: { text: `${analysis.raceName}` },
+                            title: { enabled: false },
                             data: data,
                             series: [{
                                 type: 'line', xKey: 'division', yKey: 'value', yName: title,
@@ -681,7 +687,7 @@
 
                         const chart = AgChart.create(chartOptions);
                         divisionCharts.push(chart);
-                        document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions);
+                        document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions, title);
                     };
 
                     createChart(`divSwimChartWrapper_${index}`, `divSwimChart_${index}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
@@ -695,35 +701,18 @@
             const titleEl = document.getElementById('modalChartTitle');
             const container = document.getElementById('modalChartContainer');
 
-            titleEl.innerText = title;
+            titleEl.innerText = title || "Chart";
             container.innerHTML = ''; // Clear previous chart
             modal.classList.remove('hidden');
             modal.classList.add('flex');
 
-            // Create a new chart in the modal
             activeModalChart = AgChart.create({
                 ...options,
                 container: container,
                 legend: { position: 'bottom' } // 모달에서는 항상 범례를 표시
             });
         }
-        function openChartModal(options) {
-            const modal = document.getElementById('chartModal');
-            const titleEl = document.getElementById('modalChartTitle');
-            const container = document.getElementById('modalChartContainer');
 
-            titleEl.innerText = options.title.text;
-            container.innerHTML = ''; // Clear previous chart
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            // Create a new chart in the modal
-            activeModalChart = AgChart.create({
-                ...options,
-                container: container,
-                legend: { position: 'bottom' } // 모달에서는 항상 범례를 표시
-            });
-        }
 
         function closeChartModal() {
             const modal = document.getElementById('chartModal');
