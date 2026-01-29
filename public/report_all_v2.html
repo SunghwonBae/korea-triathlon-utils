@@ -511,7 +511,6 @@
 
                 const chartOptions = {
                     container: document.getElementById(containerId),
-                    title: { text: title },
                     data: data,
                     series: series,
                     axes: [
@@ -663,7 +662,7 @@
 
                         const chartOptions = {
                             container: document.getElementById(containerId),
-                            title: { text: `${analysis.raceName} - ${title}` },
+                            title: { text: `${analysis.raceName}` },
                             data: data,
                             series: [{
                                 type: 'line', xKey: 'division', yKey: 'value', yName: title,
