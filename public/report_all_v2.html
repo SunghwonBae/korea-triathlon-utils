@@ -550,17 +550,24 @@
                         title: { text: title, fontSize: 14, fontWeight: 'bold' },
                         data: data,
                         series: [{
-                            type: 'bar',
+                            type: 'line',
                             xKey: 'division',
                             yKey: 'value',
                             yName: title,
-                            fill: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171'),
+                            stroke: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171'),
+                            strokeWidth: 3,
+                            marker: { enabled: true, size: 6 },
+                            tooltip: { renderer: (params) => ({ content: `${params.xValue}: ${formatter ? formatter(params.yValue) : Number(params.yValue).toFixed(1)}` }) }
                         }],
                         axes: [
-                            { type: 'category', position: 'bottom' },
-                            { type: 'number', position: 'left' }
+                            { type: 'category', position: 'bottom', label: { rotation: 45 } },
+                            { 
+                                type: 'number', position: 'left',
+                                label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) }
+                            }
                         ],
                         legend: { enabled: false },
+                        padding: { top: 10, right: 20, bottom: 10, left: 10 }
                     });
                     divisionCharts.push(chart);
                 };
