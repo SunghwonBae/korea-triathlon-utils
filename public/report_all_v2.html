@@ -526,7 +526,7 @@
 
                 const chart = AgChart.create(chartOptions);
                 groupCharts.push(chart);
-                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions);
+                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions, title);
             };
 
             createChart('swimChartWrapper', 'swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
@@ -689,6 +689,23 @@
             });
         }
 
+        function openChartModal(options, title) {
+            const modal = document.getElementById('chartModal');
+            const titleEl = document.getElementById('modalChartTitle');
+            const container = document.getElementById('modalChartContainer');
+
+            titleEl.innerText = title;
+            container.innerHTML = ''; // Clear previous chart
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Create a new chart in the modal
+            activeModalChart = AgChart.create({
+                ...options,
+                container: container,
+                legend: { position: 'bottom' } // 모달에서는 항상 범례를 표시
+            });
+        }
         function openChartModal(options) {
             const modal = document.getElementById('chartModal');
             const titleEl = document.getElementById('modalChartTitle');
