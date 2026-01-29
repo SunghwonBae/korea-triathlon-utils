@@ -17,6 +17,11 @@
         .ag-theme-quartz { height: 600px; width: 100%; border-radius: 0.75rem; overflow: hidden; }
         .race-chk-item { transition: all 0.2s; border: 1px solid #f1f5f9; }
         .race-chk-item:hover { background-color: #eff6ff; border-color: #bfdbfe; }
+                /* 데이터 셀 스타일링 */
+        .bold-cell { font-weight: bold; }
+        .swim-cell { color: #3498db; font-weight: bold; }
+        .bike-cell { color: #2ecc71; font-weight: bold; }
+        .run-cell { color: #f39c12; font-weight: bold; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -41,9 +46,6 @@
                     </select>
                 <div class="flex-1 text-right">
                     <span id="selectionCount" class="text-sm font-bold text-blue-600 mr-4">선택된 대회: 0개</span>
-                    <button onclick="updateAnalysis()" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95">
-                        <i class="fas fa-chart-bar mr-2"></i>분석 및 비교 실행
-                    </button>
                 </div>
             </div>
             
@@ -142,19 +144,18 @@
                 // 2. AG Grid 초기화 (모든 컬럼 누락 없이 배치)
                 const gridOptions = {
                     columnDefs: [
-                        { field: "n", headerName: "성명", width: 100, pinned: 'left', filter: true },
+                        { field: "n", headerName: "성명",  cellClass: 'bold-cell',  width: 100, pinned: 'left', filter: true },
                         { field: "y", headerName: "연도", width: 80 },
                         { field: "rn", headerName: "대회ID", width: 160 },
                         { field: "t", headerName: "기록", width: 110, valueFormatter: p => formatS(p.value), cellStyle: {fontWeight:'bold', color:'#1d4ed8'} },
-                        { field: "s", headerName: "수영", width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "s", headerName: "수영", cellClass: 'swim-cell', width: 95, valueFormatter: p => formatS(p.value) },
                         { field: "t1", headerName: "T1", width: 80, valueFormatter: p => formatS(p.value) },
-                        { field: "bk", headerName: "바이크", width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "bk", headerName: "바이크", cellClass: 'bike-cell',width: 95, valueFormatter: p => formatS(p.value) },
                         { field: "t2", headerName: "T2", width: 80, valueFormatter: p => formatS(p.value) },
-                        { field: "r", headerName: "런", width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "r", headerName: "런", cellClass: 'run-cell', width: 95, valueFormatter: p => formatS(p.value) },
                         { field: "b", headerName: "배번", width: 85 },
                         { field: "d", headerName: "부문", width: 110 },
-                        { field: "c", headerName: "클럽", width: 150 },
-                        { field: "q", headerName: "자격", width: 80 }
+                        { field: "c", headerName: "클럽", width: 150 }
                     ],
                     defaultColDef: { sortable: true, filter: 'agTextColumnFilter', resizable: true },
                     pagination: true,
@@ -183,19 +184,24 @@
                 const div = document.createElement('div');
                 div.className = "race-chk-item flex items-center gap-2 p-2 rounded-lg cursor-pointer";
                 div.innerHTML = `
-                    <input type="checkbox" id="chk_${m.id}" value="${m.id}" class="race-chk w-4 h-4 cursor-pointer" ${idx < 3 ? 'checked' : ''} onchange="updateSelectedCountLabel()">
+                    <input type="checkbox" id="chk_${m.id}" value="${m.id}" class="race-chk w-4 h-4 cursor-pointer" ${idx < 3 ? 'checked' : ''} onchange="handleSelectionChange()">
                     <label for="chk_${m.id}" class="text-[11px] font-medium truncate cursor-pointer flex-1 text-slate-600">${m.name || m.id}</label>
                 `;
                 div.onclick = (e) => {
                     if(e.target.tagName !== 'INPUT') {
                         const chk = div.querySelector('input');
                         chk.checked = !chk.checked;
-                        updateSelectedCountLabel();
+                        handleSelectionChange();
                     }
                 };
                 listDiv.appendChild(div);
             });
             updateSelectedCountLabel();
+        }
+
+        function handleSelectionChange() {
+            updateSelectedCountLabel();
+            updateAnalysis();
         }
 
         function updateSelectedCountLabel() {
@@ -205,7 +211,14 @@
 
         function updateAnalysis() {
             const selectedRids = Array.from(document.querySelectorAll('.race-chk:checked')).map(cb => cb.value);
-            if(selectedRids.length === 0) return alert("대회를 최소 하나 이상 선택해주세요.");
+            if(selectedRids.length === 0) {
+                gridApi.setGridOption('rowData', []);
+                document.getElementById('gridInfo').innerText = `TOTAL: 0 records`;
+                renderCharts([]);
+                performGroupAnalysis([]);
+                performDivisionAnalysis([]);
+                return;
+            }
 
             const filteredData = allRecords.filter(r => selectedRids.includes(r.rn));
             gridApi.setGridOption('rowData', filteredData);
