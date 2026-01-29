@@ -482,7 +482,7 @@
                 return;
             }
 
-            let html = divisionAnalyses.map(analysis => `
+            let html = divisionAnalyses.map((analysis, index) => `
                 <div class="card">
                     <h3 class="font-bold text-slate-800 mb-4 text-lg text-center">${analysis.raceName} 부문별 평균 기록</h3>
                     <div class="overflow-x-auto">
@@ -512,9 +512,9 @@
                     <div class="mt-6">
                         <h4 class="font-bold text-slate-700 mb-4 text-center">부문별 평균 속도 비교</h4>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div id="divSwimChart_${analysis.raceName.replace(/[^a-zA-Z0-9]/g, '')}" style="height: 300px;"></div>
-                            <div id="divBikeChart_${analysis.raceName.replace(/[^a-zA-Z0-9]/g, '')}" style="height: 300px;"></div>
-                            <div id="divRunChart_${analysis.raceName.replace(/[^a-zA-Z0-9]/g, '')}" style="height: 300px;"></div>
+                            <div id="divSwimChart_${index}" style="height: 300px;"></div>
+                            <div id="divBikeChart_${index}" style="height: 300px;"></div>
+                            <div id="divRunChart_${index}" style="height: 300px;"></div>
                         </div>
                     </div>
                 </div>
@@ -528,43 +528,49 @@
             divisionCharts.forEach(c => c.destroy());
             divisionCharts = [];
 
-            divisionAnalyses.forEach(analysis => {
-                const safeName = analysis.raceName.replace(/[^a-zA-Z0-9]/g, '');
-                
-                const createChart = (containerId, title, key, formatter) => {
-                    const data = analysis.averages.map(a => ({
-                        division: a.division,
-                        value: a[key]
-                    }));
+            // DOM 업데이트 후 차트 렌더링을 위해 setTimeout 사용
+            setTimeout(() => {
+                divisionAnalyses.forEach((analysis, index) => {
+                    const createChart = (containerId, title, key, formatter) => {
+                        const container = document.getElementById(containerId);
+                        if (!container) return;
 
-                    const chart = AgChart.create({
-                        container: document.getElementById(containerId),
-                        title: { text: title, fontSize: 14, fontWeight: 'bold' },
-                        data: data,
-                        series: [{
-                            type: 'bar',
-                            xKey: 'division',
-                            yKey: 'value',
-                            yName: title,
-                            fill: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171')
-                        }],
-                        axes: [
-                            { type: 'category', position: 'bottom' },
-                            { 
-                                type: 'number', position: 'left',
-                                label: { formatter: (params) => formatter ? formatter(params.value) : params.value.toFixed(1) }
-                            }
-                        ],
-                        legend: { enabled: false },
-                        padding: { top: 10, right: 20, bottom: 10, left: 10 }
-                    });
-                    divisionCharts.push(chart);
-                };
+                        const data = analysis.averages.map(a => ({
+                            division: a.division,
+                            value: a[key] || 0
+                        }));
 
-                createChart(`divSwimChart_${safeName}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
-                createChart(`divBikeChart_${safeName}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
-                createChart(`divRunChart_${safeName}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
-            });
+                        const chart = AgChart.create({
+                            container: container,
+                            autoSize: true,
+                            title: { text: title, fontSize: 14, fontWeight: 'bold' },
+                            data: data,
+                            series: [{
+                                type: 'bar',
+                                xKey: 'division',
+                                yKey: 'value',
+                                yName: title,
+                                fill: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171'),
+                                tooltip: { renderer: (params) => ({ content: `${params.xValue}: ${formatter ? formatter(params.yValue) : params.yValue}` }) }
+                            }],
+                            axes: [
+                                { type: 'category', position: 'bottom' },
+                                { 
+                                    type: 'number', position: 'left',
+                                    label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) }
+                                }
+                            ],
+                            legend: { enabled: false },
+                            padding: { top: 10, right: 20, bottom: 10, left: 10 }
+                        });
+                        divisionCharts.push(chart);
+                    };
+
+                    createChart(`divSwimChart_${index}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
+                    createChart(`divBikeChart_${index}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
+                    createChart(`divRunChart_${index}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
+                });
+            }, 0);
         }
 
         document.addEventListener('DOMContentLoaded', init);
