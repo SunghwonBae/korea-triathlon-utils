@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>철인3종 대회 비교 분석 V2</title>
+    <title>철인3종 대회 기록 비교 분석</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
@@ -31,7 +31,7 @@
     <div class="max-w-7xl mx-auto space-y-6">
         <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-6 rounded-2xl gap-4 shadow-lg">
             <div>
-                <h1 class="text-2xl font-bold italic uppercase tracking-tight">Triathlon <span class="text-blue-400">Compare V2</span></h1>
+                <h1 class="text-2xl font-bold italic uppercase tracking-tight"><span class="text-blue-400">Compare & Analyze</span> Triathlons</h1>
                 <p class="text-slate-400 text-sm">대회별 기록 비교 및 상세 데이터 통합 리포트</p>
             </div>
         </header>
@@ -114,6 +114,7 @@
         let allRecords = [], allMeta = [], gridApi, chart1, chart2;
         let groupCharts = [];
         let divisionCharts = [];
+        let activeModalChart = null;
 
         const formatS = (s) => {
             if(!s || isNaN(s) || s === 0) return "-";
@@ -460,9 +461,9 @@
                 <div class="card mt-6">
                     <h3 class="font-bold text-slate-800 mb-6 text-lg text-center">종목별 평균 속도/페이스 비교</h3>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div id="swimChart" style="height: 300px;"></div>
-                        <div id="bikeChart" style="height: 300px;"></div>
-                        <div id="runChart" style="height: 300px;"></div>
+                        <div id="swimChartWrapper"></div>
+                        <div id="bikeChartWrapper"></div>
+                        <div id="runChartWrapper"></div>
                     </div>
                 </div>
             `;
@@ -488,37 +489,50 @@
                 return row;
             });
 
-            const createChart = (containerId, title, data, formatter) => {
+            const createChart = (wrapperId, containerId, title, data, formatter) => {
+                const wrapper = document.getElementById(wrapperId);
+                if (!wrapper) return;
+                wrapper.innerHTML = `
+                    <div class="flex justify-center items-center gap-2 mb-2 cursor-pointer hover:text-blue-600" id="title-${containerId}">
+                        <h4 class="font-bold text-slate-700 text-center text-sm">${title}</h4>
+                        <i class="fas fa-search-plus text-slate-400"></i>
+                    </div>
+                    <div id="${containerId}" style="height: 300px;"></div>
+                `;
+
                 const series = raceAnalyses.map(ra => ({
                     type: 'line',
                     xKey: 'group',
                     yKey: ra.raceName,
                     yName: ra.raceName,
                     strokeWidth: 3,
-                    marker: { enabled: true, size: 6 }
+                    marker: { enabled: true, size: 5 }
                 }));
 
-                const chart = AgChart.create({
+                const chartOptions = {
                     container: document.getElementById(containerId),
-                    title: { text: title, fontSize: 14, fontWeight: 'bold' },
+                    title: { text: title },
                     data: data,
                     series: series,
                     axes: [
                         { type: 'category', position: 'bottom' },
                         { 
                             type: 'number', position: 'left',
-                            label: { formatter: (params) => formatter ? formatter(params.value) : params.value.toFixed(1) }
+                            label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) }
                         }
                     ],
                     legend: { position: 'bottom' },
                     padding: { top: 10, right: 20, bottom: 10, left: 10 }
-                });
+                };
+
+                const chart = AgChart.create(chartOptions);
                 groupCharts.push(chart);
+                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions);
             };
 
-            createChart('swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
-            createChart('bikeChart', '사이클 평속 (km/h)', createData('avgBikeSpeed'), (v) => Number(v).toFixed(1));
-            createChart('runChart', '런 페이스 (min/km)', createData('runPaceSec'), formatPace);
+            createChart('swimChartWrapper', 'swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
+            createChart('bikeChartWrapper', 'bikeChart', '사이클 평속 (km/h)', createData('avgBikeSpeed'), (v) => Number(v).toFixed(1));
+            createChart('runChartWrapper', 'runChart', '런 페이스 (min/km)', createData('runPaceSec'), formatPace);
         }
 
         function performDivisionAnalysis(selectedRids) {
@@ -615,9 +629,9 @@
                     <div class="mt-6">
                         <h4 class="font-bold text-slate-700 mb-4 text-center">부문별 평균 속도 비교</h4>
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div id="divSwimChart_${index}" style="height: 300px;"></div>
-                            <div id="divBikeChart_${index}" style="height: 300px;"></div>
-                            <div id="divRunChart_${index}" style="height: 300px;"></div>
+                            <div id="divSwimChartWrapper_${index}"></div>
+                            <div id="divBikeChartWrapper_${index}"></div>
+                            <div id="divRunChartWrapper_${index}"></div>
                         </div>
                     </div>
                 </div>
@@ -634,53 +648,76 @@
 
             // The DOM is now ready. We can create the charts directly.
             divisionAnalyses.forEach((analysis, index) => {
-                const createChart = (containerId, title, key, formatter) => {
-                    const container = document.getElementById(containerId);
-                    if (!container) {
-                        console.error(`Container not found: ${containerId}`);
-                        return;
-                    }
+                 const createChart = (wrapperId, containerId, title, key, formatter) => {
+                        const wrapper = document.getElementById(wrapperId);
+                        if (!wrapper) return;
+                        wrapper.innerHTML = `
+                            <div class="flex justify-center items-center gap-2 mb-2 cursor-pointer hover:text-blue-600" id="title-${containerId}">
+                                <h4 class="font-bold text-slate-700 text-center text-sm">${title}</h4>
+                                <i class="fas fa-search-plus text-slate-400"></i>
+                            </div>
+                            <div id="${containerId}" style="height: 300px;"></div>
+                        `;
 
-                    const data = analysis.averages.map(a => ({
-                        division: a.division,
-                        value: a[key] || 0
-                    }));
-                    //console.log(`Data for ${containerId} (${key}):`, JSON.stringify(data));
+                        const data = analysis.averages.map(a => ({ division: a.division, value: a[key] || 0 }));
 
-                    // Simplified options for debugging
-                    const chart = AgChart.create({
-                        container: container,
-                        autoSize: true,
-                        title: { text: title, fontSize: 14, fontWeight: 'bold' },
-                        data: data,
-                        series: [{
-                            type: 'line',
-                            xKey: 'division',
-                            yKey: 'value',
-                            yName: title,
-                            stroke: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171'),
-                            strokeWidth: 3,
-                            marker: { enabled: true, size: 6 },
-                            tooltip: { renderer: (params) => ({ content: `${params.xValue}: ${formatter ? formatter(params.yValue) : Number(params.yValue).toFixed(1)}` }) }
-                        }],
-                        axes: [
-                            { type: 'category', position: 'bottom', label: { rotation: 45 } },
-                            { 
-                                type: 'number', position: 'left',
-                                label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) }
-                            }
-                        ],
-                        legend: { enabled: false },
-                        padding: { top: 10, right: 20, bottom: 10, left: 10 }
-                    });
-                    divisionCharts.push(chart);
-                };
+                        const chartOptions = {
+                            container: document.getElementById(containerId),
+                            title: { text: `${analysis.raceName} - ${title}` },
+                            data: data,
+                            series: [{
+                                type: 'line', xKey: 'division', yKey: 'value', yName: title,
+                                stroke: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171'),
+                                strokeWidth: 3, marker: { enabled: true, size: 5 },
+                                tooltip: { renderer: (params) => ({ content: `${params.xValue}: ${formatter ? formatter(params.yValue) : Number(params.yValue).toFixed(1)}` }) }
+                            }],
+                            axes: [
+                                { type: 'category', position: 'bottom', label: { rotation: 45 } },
+                                { type: 'number', position: 'left', label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) } }
+                            ],
+                            legend: { enabled: false },
+                            padding: { top: 10, right: 20, bottom: 10, left: 10 }
+                        };
 
-                createChart(`divSwimChart_${index}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
-                createChart(`divBikeChart_${index}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
-                createChart(`divRunChart_${index}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
+                        const chart = AgChart.create(chartOptions);
+                        divisionCharts.push(chart);
+                        document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions);
+                    };
+
+                    createChart(`divSwimChartWrapper_${index}`, `divSwimChart_${index}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
+                    createChart(`divBikeChartWrapper_${index}`, `divBikeChart_${index}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
+                    createChart(`divRunChartWrapper_${index}`, `divRunChart_${index}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
             });
         }
+
+        function openChartModal(options) {
+            const modal = document.getElementById('chartModal');
+            const titleEl = document.getElementById('modalChartTitle');
+            const container = document.getElementById('modalChartContainer');
+
+            titleEl.innerText = options.title.text;
+            container.innerHTML = ''; // Clear previous chart
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Create a new chart in the modal
+            activeModalChart = AgChart.create({
+                ...options,
+                container: container,
+                legend: { position: 'bottom' } // 모달에서는 항상 범례를 표시
+            });
+        }
+
+        function closeChartModal() {
+            const modal = document.getElementById('chartModal');
+            if (activeModalChart) {
+                activeModalChart.destroy();
+                activeModalChart = null;
+            }
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
 
         function initAdvancedFilters(data) {
             // Keyword Search
@@ -780,7 +817,25 @@
             return Object.values(sliders).some(s => s && (s.get()[0] !== s.options.range.min || s.get()[1] !== s.options.range.max));
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            // 모달 외부 클릭 시 닫기
+            document.getElementById('chartModal').addEventListener('click', (e) => {
+                if (e.target.id === 'chartModal') {
+                    closeChartModal();
+                }
+            });
+        });
     </script>
+
+    <div id="chartModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalChartTitle" class="text-xl font-bold"></h3>
+                <button onclick="closeChartModal()" class="text-slate-400 hover:text-slate-800 text-2xl">&times;</button>
+            </div>
+            <div id="modalChartContainer" class="flex-1 relative"></div>
+        </div>
+    </div>
 </body>
 </html>
