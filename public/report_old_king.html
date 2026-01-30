@@ -154,6 +154,114 @@
         .guide-text a { color: #3498db; text-decoration: none; font-weight: bold; }
         .guide-text ul { margin: 10px 0 0 0; padding-left: 20px; }
         .guide-text li { margin-bottom: 5px; }
+
+        /* 모달 기본 스타일 */
+.report-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-overlay {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px);
+}
+.modal-container {
+    position: relative;
+    width: 90%; max-width: 1200px; height: 85vh;
+    background: #2c3e50;
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+}
+.modal-close {
+    position: absolute;
+    top: 15px; right: 20px;
+    font-size: 30px; color: white;
+    background: none; border: none; cursor: pointer; z-index: 10;
+}
+
+/* 사이드바 스타일 */
+.modal-sidebar {
+    width: 200px;
+    background: #1a252f;
+    padding: 20px 10px;
+    overflow-y: auto;
+    border-right: 1px solid #34495e;
+}
+.sidebar-title { color: #bdc3c7; font-size: 0.9rem; margin-bottom: 15px; text-align: center; }
+.thumbnail-item {
+    width: 100%; margin-bottom: 15px; cursor: pointer;
+    border: 2px solid transparent; transition: 0.3s;
+    border-radius: 4px; overflow: hidden;
+}
+.thumbnail-item:hover { transform: scale(1.05); }
+.thumbnail-item.active { border-color: #3498db; }
+.thumbnail-item img { width: 100%; display: block; }
+/* 뷰어 영역 - 스크롤 가능하게 변경 */
+.modal-viewer {
+    flex: 1;
+    overflow: auto; /* 내용이 넘치면 스크롤바 생성 */
+    background: #2c3e50; /* 배경색 통일 */
+    padding: 30px;
+    display: block; /* flex에서 block으로 변경하여 스크롤 동작 원활하게 */
+    position: relative;
+}
+
+/* 3D 무대 */
+.book-stage {
+    perspective: 3000px; /* 원근감을 깊게 주어 입체감 향상 */
+    margin-bottom: 60px; /* 하단 컨트롤러와의 간격 확보 */
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+}
+
+/* 책 페이지 - 크기 확대 및 높이 제한 해제 */
+.book-page {
+    width: 900px; /* 가독성을 위해 큰 고정 너비 설정 */
+    max-width: 95%; /* 작은 화면에서는 꽉 차게 */
+    height: auto; /* 이미지 비율에 맞춰 높이 자동 조절 */
+    background: white;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); /* 그림자를 진하게 주어 입체감 표현 */
+    transform-origin: left center; /* 왼쪽 가장자리를 축으로 회전 */
+    transform-style: preserve-3d;
+    backface-visibility: hidden; /* 회전 시 뒷면이 보이지 않게 설정 */
+    /* 트랜지션은 JS에서 동적으로 제어합니다 */
+}
+
+.book-page img {
+    width: 100%;
+    height: auto; /* 이미지 원본 비율 유지 */
+    display: block;
+}
+
+/* 컨트롤러 - 뷰어 하단에 고정 */
+.viewer-controls {
+    display: flex; justify-content: center; align-items: center; gap: 20px;
+    color: white;
+    padding: 12px 30px;
+    background: rgba(0,0,0,0.7); /* 반투명 배경 */
+    border-radius: 30px;
+    width: fit-content;
+    margin: 0 auto; /* 가운데 정렬 */
+    position: sticky; /* 스크롤 시에도 하단에 고정 */
+    bottom: 30px;
+    z-index: 100;
+    backdrop-filter: blur(5px); /* 배경 블러 효과 */
+}
+
+.viewer-controls button {
+    background: #3498db; color: white; border: none;
+    padding: 10px 25px; border-radius: 25px; cursor: pointer;
+    font-size: 1rem; transition: background 0.2s;
+}
+.viewer-controls button:hover { background: #2980b9; }
     </style>
 </head>
 <body>
@@ -171,6 +279,9 @@
         <div id="guideContent" class="section-content guide-text">
             <p><b>2019년 IM코스급대회 국내완주자 정리 : <a href="https://cafe.naver.com/ktriathlonservice/23354" target="_blank">https://cafe.naver.com/ktriathlonservice/23354</a><br>
             길광수 선배님 정리본을 JSON으로 컨버터해서 제공합니다. 감사합니다.</b></p>
+            <p>
+                위 데이터를 기반으로 한 <b>홍종선 선배님의 <a href="javascript:void(0)" onclick="openReportModal()" style="color: #e74c3c; text-decoration: underline;">[IM 다수 완주자 통계분석]</a> 입니다.</b>
+            </p>
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
             <strong>💡 그리드, 차트 100% 활용 가이드</strong>
             <ul>
@@ -183,7 +294,32 @@
             </ul>
         </div>
     </div>
+<div id="reportModal" class="report-modal">
+    <div class="modal-overlay" onclick="closeReportModal()"></div>
+    <div class="modal-container">
+        <button class="modal-close" onclick="closeReportModal()">&times;</button>
+        
+        <div class="modal-sidebar">
+            <h3 class="sidebar-title">페이지 목록</h3>
+            <div id="thumbnailList" class="thumbnail-list">
+                </div>
+        </div>
 
+        <div class="modal-viewer">
+            <div class="book-stage">
+                <div id="bookPage" class="book-page">
+                    <img id="mainReportImg" src="" alt="Report Page">
+                </div>
+            </div>
+            
+            <div class="viewer-controls">
+                <button onclick="prevPage()"><i class="fas fa-chevron-left"></i> 이전</button>
+                <span id="pageIndicator">1 / 5</span>
+                <button onclick="nextPage()">다음 <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
     <div class="section-box">
         <div class="section-header">
             <h3 class="section-title"><i class="fas fa-chart-pie mr-2 text-blue-500"></i>종합 분석 차트</h3>
@@ -309,6 +445,121 @@
 
 
     <script>
+const reportImages = [
+    "data/back/대한민국_철인들의_전설0요약.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설1서론.pdf_page_2.jpg",
+    "data/back/대한민국_철인들의_전설1서론.pdf_page_3.jpg",
+    "data/back/대한민국_철인들의_전설1서론.pdf_page_4.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_2.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_3.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_4.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_5.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_2.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_3.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_4.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_5.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_6.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_7.jpg",
+    "data/back/대한민국_철인들의_전설4결론.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설4결론.pdf_page_2.jpg",
+];
+
+let currentPageIdx = 0;
+
+function openReportModal() {
+    document.getElementById('reportModal').style.display = 'flex';
+    // 모달 열 때 스크롤 위치 초기화
+    document.querySelector('.modal-viewer').scrollTop = 0;
+    initThumbnails();
+    // 첫 페이지는 애니메이션 없이 바로 로드
+    loadPage(0);
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').style.display = 'none';
+}
+
+function initThumbnails() {
+    const list = document.getElementById('thumbnailList');
+    list.innerHTML = '';
+    reportImages.forEach((src, idx) => {
+        const item = document.createElement('div');
+        item.className = `thumbnail-item ${idx === currentPageIdx ? 'active' : ''}`;
+        item.onclick = () => renderPage(idx);
+        item.innerHTML = `<img src="${src}" alt="Page ${idx+1}">`;
+        list.appendChild(item);
+    });
+}
+
+// 애니메이션 없이 페이지 즉시 로드 (초기화용)
+function loadPage(idx) {
+    currentPageIdx = idx;
+    document.getElementById('mainReportImg').src = reportImages[idx];
+    document.getElementById('pageIndicator').innerText = `${idx + 1} / ${reportImages.length}`;
+    updateThumbnails(idx);
+    document.getElementById('bookPage').style.transform = 'rotateY(0deg)';
+}
+
+// 페이지 넘김 애니메이션 실행 함수
+function renderPage(idx) {
+    if (idx < 0 || idx >= reportImages.length || idx === currentPageIdx) return;
+    
+    const pageEl = document.getElementById('bookPage');
+    const direction = idx > currentPageIdx ? 'next' : 'prev';
+    const animDuration = 600; // 애니메이션 지속 시간 (ms)
+
+    // 1단계: 현재 페이지 회전 (사라짐)
+    pageEl.style.transition = `transform ${animDuration}ms cubic-bezier(0.645, 0.045, 0.355, 1)`;
+    if (direction === 'next') {
+        pageEl.style.transform = 'rotateY(-90deg)'; // 왼쪽으로 회전하며 숨김
+    } else {
+        pageEl.style.transform = 'rotateY(90deg)'; // 오른쪽으로 회전하며 숨김
+    }
+    
+    // 2단계: 애니메이션 중간에 이미지 교체 및 위치 재설정
+    setTimeout(() => {
+        currentPageIdx = idx;
+        document.getElementById('mainReportImg').src = reportImages[idx];
+        document.getElementById('pageIndicator').innerText = `${idx + 1} / ${reportImages.length}`;
+        updateThumbnails(idx);
+        
+        // 트랜지션을 끄고 즉시 새 페이지의 시작 위치로 이동
+        pageEl.style.transition = 'none';
+        if (direction === 'next') {
+            pageEl.style.transform = 'rotateY(90deg)'; // 새 페이지를 오른쪽에서 준비
+        } else {
+            pageEl.style.transform = 'rotateY(-90deg)'; // 새 페이지를 왼쪽에서 준비
+        }
+        
+        // 브라우저가 변경사항을 적용하도록 강제 리플로우
+        pageEl.offsetHeight; 
+        
+        // 3단계: 새 페이지 회전 (나타남)
+        pageEl.style.transition = `transform ${animDuration}ms cubic-bezier(0.645, 0.045, 0.355, 1)`;
+        pageEl.style.transform = 'rotateY(0deg)'; // 중앙으로 회전하며 나타남
+        
+    }, animDuration / 2);
+}
+
+function updateThumbnails(activeIdx) {
+    document.querySelectorAll('.thumbnail-item').forEach((item, i) => {
+        item.classList.toggle('active', i === activeIdx);
+    });
+}
+
+function prevPage() { if (currentPageIdx > 0) renderPage(currentPageIdx - 1); }
+function nextPage() { if (currentPageIdx < reportImages.length - 1) renderPage(currentPageIdx + 1); }
+
+// 키보드 이벤트 리스너 (동일)
+document.addEventListener('keydown', (e) => {
+    if (document.getElementById('reportModal').style.display === 'flex') {
+        if (e.key === 'ArrowLeft') prevPage();
+        if (e.key === 'ArrowRight') nextPage();
+        if (e.key === 'Escape') closeReportModal();
+    }
+});
 
         function formatSeconds(sec) {
             if (!sec) return "00:00";
@@ -340,10 +591,10 @@
         }
 
         const sToMs = (s) => {
-            if (!s || s <= 0) return "00:00";
-            s = Math.round(s);
-            const m = Math.floor(s / 60);
-            const sec = s % 60;
+            const val = Number(s);
+            if (!Number.isFinite(val) || val <= 0) return "00:00";
+            const m = Math.floor(val / 60);
+            const sec = Math.floor(val % 60);
             return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         };
 
@@ -427,9 +678,9 @@
             { headerName: "개최일", field: "rd", width: 100, filter: true , sortable: true },
             { headerName: "TOTAL", field: "to", width: 110, valueFormatter: timeFormatter, filter: 'agNumberColumnFilter', cellClass: 'bold-cell' },
             { headerName: "SWIM", field: "sw", width: 100, valueFormatter: timeFormatter, cellClass: 'swim-cell' },
-            { headerName: "T1", field: "t1", width: 100, valueFormatter: sToMs },
+            { headerName: "T1", field: "t1", width: 100, valueFormatter: params => sToMs(params.value) },
             { headerName: "BIKE", field: "bi", width: 100, valueFormatter: timeFormatter, cellClass: 'bike-cell' },
-            { headerName: "T2", field: "t2", width: 100, valueFormatter: sToMs },
+            { headerName: "T2", field: "t2", width: 100, valueFormatter: params => sToMs(params.value) },
             { headerName: "RUN", field: "ru", width: 100, valueFormatter: timeFormatter, cellClass: 'run-cell' },
             { headerName: "Overall-R", field: "or", width: 110, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: zeroToEmptyFormatter },
             { headerName: "Domestic-R", field: "dr", width: 110, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: zeroToEmptyFormatter },

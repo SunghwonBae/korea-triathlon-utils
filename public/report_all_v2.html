@@ -126,7 +126,7 @@
         };
 
         const sToMs = (s) => {
-            if (!s || s <= 0) return "00:00";
+            if (!s || isNaN(s) || s <= 0) return "00:00";
             s = Math.round(s);
             const m = Math.floor(s / 60);
             const sec = s % 60;
@@ -287,7 +287,7 @@
                 };
                 listDiv.appendChild(div);
             });
-            updateSelectedCountLabel();
+            handleSelectionChange();
         }
 
         function handleSelectionChange() {
@@ -301,6 +301,8 @@
         }
 
         function updateAnalysis() {
+            if (!gridApi) return;
+
             const selectedRids = Array.from(document.querySelectorAll('.race-chk:checked')).map(cb => cb.value);
             if(selectedRids.length === 0) {
                 gridApi.setGridOption('rowData', []);
@@ -785,26 +787,33 @@
         function createSlider(id, valId, key, data) {
             const el = document.getElementById(id);
             const values = data.map(x => x[key]).filter(v => v > 0);
-            if (values.length === 0) return;
+            if (values.length === 0) {
+                if (el.noUiSlider) el.noUiSlider.destroy();
+                return;
+            }
 
             const min = Math.min(...values);
             const max = Math.max(...values);
 
-            noUiSlider.create(el, {
-                start: [min, max], connect: true,
-                range: { 'min': min, 'max': max },
-                step: 60, tooltips: false
-            });
-
-            sliders[key] = el.noUiSlider;
-
-            el.noUiSlider.on('update', (values) => {
-                document.getElementById(valId).innerText = `${formatSeconds(parseInt(values[0]))} - ${formatSeconds(parseInt(values[1]))}`;
-            });
-            
-            el.noUiSlider.on('change', () => {
-                gridApi.onFilterChanged();
-            });
+            if (el.noUiSlider) {
+                el.noUiSlider.updateOptions({
+                    range: { 'min': min, 'max': max }
+                });
+                el.noUiSlider.set([min, max]);
+            } else {
+                noUiSlider.create(el, {
+                    start: [min, max], connect: true,
+                    range: { 'min': min, 'max': max },
+                    step: 60, tooltips: false
+                });
+                sliders[key] = el.noUiSlider;
+                el.noUiSlider.on('update', (values) => {
+                    document.getElementById(valId).innerText = `${formatSeconds(parseInt(values[0]))} - ${formatSeconds(parseInt(values[1]))}`;
+                });
+                el.noUiSlider.on('change', () => {
+                    gridApi.onFilterChanged();
+                });
+            }
         }
 
         function resetSliders() {
