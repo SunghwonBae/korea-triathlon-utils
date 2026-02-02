@@ -179,7 +179,7 @@
 
     <section>
         <label for="manualBibInput" class="block text-xs font-black text-slate-400 uppercase mb-2">배번 직접 입력</label>
-        <input type="text" id="manualBibInput" placeholder="배번 입력 후 Enter" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none">
+        <input type="text" id="manualBibInput" placeholder="배번입력 후 Enter, 다중입력은 쉼표로 연결입력후 Enter" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none">
     </section>
 
     <div class="flex justify-between items-end mb-1 mt-2">
@@ -359,9 +359,16 @@
     document.getElementById('manualBibInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const bib = e.target.value.trim();
-            if (bib && !extractedBibs.includes(bib)) {
-                extractedBibs.push(bib);
+            const inputVal = e.target.value;
+            const bibs = inputVal.split(',').map(b => b.trim()).filter(b => b !== "");
+            
+            bibs.forEach(bib => {
+                if (!extractedBibs.includes(bib)) {
+                    extractedBibs.push(bib);
+                }
+            });
+            
+            if (bibs.length > 0) {
                 renderBibs();
             }
             e.target.value = '';
