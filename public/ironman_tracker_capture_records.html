@@ -35,6 +35,7 @@
         .control-panel { width: 400px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 1.5rem; gap: 1.25rem; overflow-y: auto; }
         .search-layer { position: absolute; z-index: 50; width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; margin-top: 0.25rem; }
         .bib-badge { background: #fee2e2; color: #b91c1c; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-weight: 800; font-size: 0.75rem; display: inline-block; margin: 0.15rem; }
+        .name-badge { background: #eff6ff; color: #1d4ed8; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-weight: 800; font-size: 0.75rem; display: inline-block; margin: 0.15rem; }
         /* 슬라이드 메뉴 스타일 */
         .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
         .menu-overlay.is-active { opacity: 1; visibility: visible; }
@@ -178,16 +179,24 @@
     </section>
 
     <section>
-        <label for="manualBibInput" class="block text-xs font-black text-slate-400 uppercase mb-2">배번 직접 입력</label>
-        <input type="text" id="manualBibInput" placeholder="배번입력 후 Enter, 다중입력은 쉼표로 연결입력후 Enter" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none">
+        <div class="flex border-b border-slate-100 mb-2">
+            <button id="btn-tab-bib" onclick="switchInputMode('bib')" class="flex-1 py-2 text-xs font-bold text-red-500 border-b-2 border-red-500 transition-colors">배번 직접 입력</button>
+            <button id="btn-tab-name" onclick="switchInputMode('name')" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent transition-colors">이름 직접 입력</button>
+        </div>
+        <div id="input-mode-bib">
+            <input type="text" id="manualBibInput" placeholder="배번입력 후 Enter (쉼표로 구분 가능)" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none">
+        </div>
+        <div id="input-mode-name" class="hidden">
+            <input type="text" id="manualNameInput" placeholder="이름입력 후 Enter (쉼표로 구분 가능)" class="w-full p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
     </section>
 
     <div class="flex justify-between items-end mb-1 mt-2">
-        <span class="text-xs font-black text-slate-400 uppercase">추출된 배번 목록</span>
-        <button onclick="clearAllBibs()" class="text-[10px] text-red-400 hover:text-red-600 font-bold bg-red-50 px-2 py-1 rounded transition-colors">전체삭제</button>
+        <span class="text-xs font-black text-slate-400 uppercase">추출된 목록 (배번/이름)</span>
+        <button onclick="clearAllItems()" class="text-[10px] text-red-400 hover:text-red-600 font-bold bg-red-50 px-2 py-1 rounded transition-colors">전체삭제</button>
     </div>
-    <div id="bibContainer" class="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 min-h-[60px] max-h-[200px] overflow-y-auto">
-        <p class="text-[11px] text-slate-400 italic">추출된 배번이 여기에 표시됩니다.</p>
+    <div id="itemContainer" class="p-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 min-h-[60px] max-h-[200px] overflow-y-auto">
+        <p class="text-[11px] text-slate-400 italic">추출된 항목이 여기에 표시됩니다.</p>
     </div>
 
     <section class="relative">
@@ -272,7 +281,7 @@
 </div>
 <script src="menu_full_handler.js" defer></script>
 <script>
-    let cropper, crawledData = [], extractedBibs = [], currentRaceType = 'ironman';
+    let cropper, crawledData = [], extractedItems = [], currentRaceType = 'ironman';
     let selectedRace = null, selectedYearData = null, lastResults = [];
 
     // 초기 데이터 로드
@@ -363,35 +372,77 @@
             const bibs = inputVal.split(',').map(b => b.trim()).filter(b => b !== "");
             
             bibs.forEach(bib => {
-                if (!extractedBibs.includes(bib)) {
-                    extractedBibs.push(bib);
+                if (!extractedItems.some(item => item.value === bib && item.type === 'bib')) {
+                    extractedItems.push({ value: bib, type: 'bib' });
                 }
             });
             
             if (bibs.length > 0) {
-                renderBibs();
+                renderItems();
             }
             e.target.value = '';
         }
     });
 
-    function renderBibs() {
-        const container = document.getElementById('bibContainer');
-        container.innerHTML = extractedBibs.length 
-            ? extractedBibs.map(b => `<span class="bib-badge">${b}<button onclick="removeBib('${b}')" class="ml-1 text-red-400 hover:text-red-700 font-black" title="삭제">×</button></span>`).join('')
-            : '<p class="text-[11px] text-slate-400 italic">추출된 배번이 여기에 표시됩니다.</p>';
+    document.getElementById('manualNameInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const inputVal = e.target.value;
+            const names = inputVal.split(',').map(n => n.trim()).filter(n => n !== "");
+            
+            names.forEach(name => {
+                if (!extractedItems.some(item => item.value === name && item.type === 'name')) {
+                    extractedItems.push({ value: name, type: 'name' });
+                }
+            });
+            
+            if (names.length > 0) {
+                renderItems();
+            }
+            e.target.value = '';
+        }
+    });
+
+    function switchInputMode(mode) {
+        const btnBib = document.getElementById('btn-tab-bib');
+        const btnName = document.getElementById('btn-tab-name');
+        const divBib = document.getElementById('input-mode-bib');
+        const divName = document.getElementById('input-mode-name');
+
+        if (mode === 'bib') {
+            btnBib.className = "flex-1 py-2 text-xs font-bold text-red-500 border-b-2 border-red-500 transition-colors";
+            btnName.className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent transition-colors";
+            divBib.classList.remove('hidden');
+            divName.classList.add('hidden');
+        } else {
+            btnBib.className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent transition-colors";
+            btnName.className = "flex-1 py-2 text-xs font-bold text-blue-500 border-b-2 border-blue-500 transition-colors";
+            divBib.classList.add('hidden');
+            divName.classList.remove('hidden');
+        }
+    }
+
+    function renderItems() {
+        const container = document.getElementById('itemContainer');
+        container.innerHTML = extractedItems.length 
+            ? extractedItems.map(item => {
+                const badgeClass = item.type === 'bib' ? 'bib-badge' : 'name-badge';
+                const removeColor = item.type === 'bib' ? 'text-red-400 hover:text-red-700' : 'text-blue-400 hover:text-blue-700';
+                return `<span class="${badgeClass}">${item.value}<button onclick="removeItem('${item.value}', '${item.type}')" class="ml-1 ${removeColor} font-black" title="삭제">×</button></span>`;
+            }).join('')
+            : '<p class="text-[11px] text-slate-400 italic">추출된 항목이 여기에 표시됩니다.</p>';
         checkReady();
     }
 
-    function removeBib(bibToRemove) {
-        extractedBibs = extractedBibs.filter(b => b !== bibToRemove);
-        renderBibs();
+    function removeItem(val, type) {
+        extractedItems = extractedItems.filter(item => !(item.value === val && item.type === type));
+        renderItems();
     }
 
-    function clearAllBibs() {
-        showConfirm('전체 배번을 삭제하시겠습니까?', () => {
-            extractedBibs = [];
-            renderBibs();
+    function clearAllItems() {
+        showConfirm('전체 목록을 삭제하시겠습니까?', () => {
+            extractedItems = [];
+            renderItems();
         });
     }
 
@@ -417,18 +468,21 @@
     function parseAllBibs() {
         const text = document.getElementById('debugOutput').value;
         const lines = text.split('\n').map(l => l.trim());
-        const bibSet = new Set(extractedBibs);
+        // 기존 bib 타입 아이템들의 value만 Set으로 만듦 (중복 방지용)
+        const existingBibs = new Set(extractedItems.filter(i => i.type === 'bib').map(i => i.value));
         
         lines.forEach((line, i) => {
             const match = line.match(/Bib\s*(\d+)/i);
             if (match) {
                 const context = lines.slice(i+1, i+4).join(' ').toLowerCase();
-                if (context.includes('finish time')) bibSet.add(match[1]);
+                if (context.includes('finish time') && !existingBibs.has(match[1])) {
+                    extractedItems.push({ value: match[1], type: 'bib' });
+                    existingBibs.add(match[1]);
+                }
             }
         });
 
-        extractedBibs = Array.from(bibSet);
-        renderBibs();
+        renderItems();
     }
 
     // 실시간 대회 검색
@@ -473,7 +527,7 @@
     }
 
     function checkReady() {
-        document.getElementById('fetchRecordsBtn').disabled = !(extractedBibs.length > 0 && selectedYearData);
+        document.getElementById('fetchRecordsBtn').disabled = !(extractedItems.length > 0 && selectedYearData);
     }
 
     // 기록 조회 (인코딩 해결 포함)
@@ -488,7 +542,15 @@
             const decoder = new TextDecoder('utf-8'); // 깨진 문자 해결// iso-8859-1
             const allData = JSON.parse(decoder.decode(buffer));
 
-            const results = allData.filter(item => extractedBibs.includes(item.bi?.toString()));
+            const bibs = extractedItems.filter(i => i.type === 'bib').map(i => i.value);
+            const names = extractedItems.filter(i => i.type === 'name').map(i => i.value.toLowerCase());
+
+            const results = allData.filter(item => {
+                const bibMatch = item.bi && bibs.includes(item.bi.toString());
+                const nameMatch = item.n && names.some(n => item.n.toLowerCase().includes(n));
+                return bibMatch || nameMatch;
+            });
+
             lastResults = results;
             
             renderResults(results);
