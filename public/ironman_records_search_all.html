@@ -15,8 +15,25 @@
         table { width: 100%; border-collapse: collapse; }
         th { background-color: #f8fafc; padding: 1rem; font-size: 0.875rem; font-weight: 700; color: #64748b; border-bottom: 2px solid #e2e8f0; }
         td { padding: 1rem; border-top: 1px solid #f1f5f9; font-size: 0.875rem; }
-        .modal { display: none; position: fixed; z-index: 1000; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-        .modal-content { background: white; margin: 5% auto; padding: 2rem; border-radius: 1.5rem; max-width: 900px; width: 95%; max-height: 85vh; overflow-y: auto; }
+            .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+    /* Modal content fixed height + column layout so header stays above a scrollable body */
+    .modal-content { background: white; margin: 6% auto; padding: 20px; border-radius: 1rem; max-width: 800px; width: 90%; height: 500px; display: flex; flex-direction: column; overflow: hidden; }
+    /* Scrollable body area inside modal; keep horizontal scroll for wide tables */
+    #modalBody { overflow: auto; flex: 1 1 auto; }
+    /* Sticky table header inside the scrollable modal body */
+    #modalBody table thead th { position: sticky; top: 0; z-index: 10; background: #f1f5f9; }
+        /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */ }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #dc2626; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
         .type-badge { padding: 0.2rem 0.5rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 800; margin-right: 0.5rem; }
         .badge-full { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
         .badge-703 { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
@@ -27,7 +44,7 @@
     </style>
 </head>
 <body class="p-4 lg:p-12">
-
+    <button id="menuToggle" class="fixed top-6 left-6 z-[100] bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-slate-700 shadow-md hover:bg-slate-50 hover:text-red-600 transition-all"><i class="fas fa-bars"></i></button>
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
         <p class="mt-4 font-bold text-slate-600">데이터를 불러오는 중입니다...</p>
@@ -60,9 +77,8 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="w-16">구분</th>
                             <th>대회명</th>
-                            <th>연도별 결과 (이름/배번 입력 후 엔터)</th>
+                            <th>이름/배번 다중검색은 쉼표로 연결입력 후 엔터</th>
                         </tr>
                     </thead>
                     <tbody id="raceTableBody"></tbody>
@@ -80,7 +96,7 @@
             <div id="modalBody" class="overflow-x-auto"></div>
         </div>
     </div>
-
+    <script src="menu_full_handler.js" defer></script>
     <script>
         let allRaces = []; // 통합 데이터
         let currentFilter = 'all';
@@ -134,12 +150,7 @@
             
             tbody.innerHTML = data.map((item, idx) => `
                 <tr id="race-${item.name.replace(/\s+/g, '-')}">
-                    <td class="text-center">
-                        <span class="type-badge ${item.type === 'full' ? 'badge-full' : 'badge-703'}">
-                            ${item.type === 'full' ? 'IRON' : '70.3'}
-                        </span>
-                    </td>
-                    <td><div class="font-bold text-slate-800">${item.name}</div></td>
+                    <td><div class="font-bold text-slate-800"><span class="type-badge ${item.type === 'full' ? 'badge-full' : 'badge-703'}">${item.name.replace('Ironman', '')}</span></div></td>
                     <td>
                         <div class="flex flex-wrap gap-2">
                             ${item.years.map(y => `
@@ -160,52 +171,135 @@
         }
 
         // 4. 선수 검색 (기존 로직 유지)
-        async function searchPlayer(resultUrl, playerName) {
-            if (!playerName) return;
-            const raceId = resultUrl.match(/race\/(\d+)\//)?.[1];
-            if (!raceId) return;
+        async function searchPlayer(resultUrl, rawInput) {
+            if (!resultUrl || !rawInput) {
+                showToast("URL과 검색어를 입력해주세요.");
+                return;
+            }
 
+            // 1. 쉼표로 분리하고 공백 제거 및 소문자화
+            const searchTerms = rawInput.split(',')
+                .map(term => term.trim().toLowerCase())
+                .filter(term => term !== "");
+
+            // 2. Race ID 추출
+            const raceIdMatch = resultUrl.match(/race\/(\d+)\//);
+            const raceId = raceIdMatch ? raceIdMatch[1] : null;
             const apiUrl = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
+
             try {
                 const response = await fetch(apiUrl);
                 const allData = await response.json();
+
+                // 3. 필터링 로직 수정 (여러 키워드 중 하나라도 일치하면 포함)
                 const filtered = allData.filter(item => {
-                    const cleanName = (item.n || "").replace(/<[^>]*>?/gm, '').trim();
-                    return cleanName.toLowerCase().includes(playerName.toLowerCase().trim()) || (item.bi && item.bi.toString() === playerName.trim());
+                    const cleanName = (item.n || "").replace(/<[^>]*>?/gm, '').trim().toLowerCase();
+                    const bibNumber = item.bi ? item.bi.toString().trim() : "";
+
+                    // 입력한 여러 단어(searchTerms) 중 하나라도 이름에 포함되거나 배번이 일치하는지 확인
+                    return searchTerms.some(term => 
+                        cleanName.includes(term) || bibNumber === term
+                    );
                 });
 
-                if (filtered.length === 0) { alert("검색 결과가 없습니다."); return; }
+                if (filtered.length === 0) {
+                    showToast("검색 결과가 없습니다.");
+                    return;
+                }
+
                 showResultModal(filtered);
-            } catch (e) {
-                alert("데이터 로드 실패 (CORS 또는 로그인 문제)");
+
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                showToast("데이터를 가져오는데 실패했습니다.");
             }
         }
 
+        let currentModalData = []; // 현재 모달에 표시 중인 데이터를 담는 변수
+
+        // 1. 결과 모달 표시 함수 (수정)
         function showResultModal(results) {
-            const modalBody = document.getElementById('modalBody');
-            let html = `<table class="min-w-full border-collapse text-xs text-center">
-                <thead class="bg-slate-100">
-                    <tr>
-                        <th class="p-2 border">Bib</th><th class="p-2 border">이름</th><th class="p-2 border">국가</th>
-                        <th class="p-2 border">연령대</th><th class="p-2 border">전체</th><th class="p-2 border">수영</th>
-                        <th class="p-2 border">바이크</th><th class="p-2 border">런</th>
-                    </tr>
-                </thead><tbody>`;
-            
-            results.forEach(p => {
-                html += `<tr>
-                    <td class="p-2 border">${p.bi}</td>
-                    <td class="p-2 border font-bold">${p.n.replace(/<[^>]*>?/gm, '')}</td>
-                    <td class="p-2 border">${p.c || '-'}</td>
-                    <td class="p-2 border">${p.di || '-'}</td>
-                    <td class="p-2 border text-red-600 font-bold">${p.fs === "DNF" ? "DNF" : formatSeconds(p.ot)}</td>
-                    <td class="p-2 border">${formatSeconds(p.st)}</td>
-                    <td class="p-2 border">${formatSeconds(p.bt)}</td>
-                    <td class="p-2 border">${formatSeconds(p.rt)}</td>
-                </tr>`;
-            });
-            modalBody.innerHTML = html + `</tbody></table>`;
+            currentModalData = results; // 검색된 데이터를 전역 변수에 저장
+            renderModalTable(); // 테이블 그리기
             document.getElementById('resultModal').style.display = 'block';
+        }
+
+        // 2. 모달 내부 테이블 렌더링 함수 (추가)
+        // 삭제(제외) 버튼을 클릭할 때마다 이 함수가 호출되어 화면을 갱신합니다.
+        function renderModalTable() {
+            const modalBody = document.getElementById('modalBody');
+            
+            if (currentModalData.length === 0) {
+                modalBody.innerHTML = `<p class="text-center py-10 text-slate-500">표시할 데이터가 없습니다.</p>`;
+                return;
+            }
+
+            let html = `
+                <div class="flex justify-end mb-4">
+                    <button onclick="downloadFilteredJson()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md transition-all">
+                        <i class="fas fa-file-download mr-2"></i>현재 목록 JSON 다운로드 (${currentModalData.length}건)
+                    </button>
+                </div>
+                <table class="min-w-full border-collapse text-xs text-center border-t border-slate-200">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="p-3 border">Bib</th>
+                            <th class="p-3 border">이름</th>
+                            <th class="p-3 border">연령대</th>
+                            <th class="p-3 border text-red-600">Total</th>
+                            <th class="p-3 border">Swim</th>
+                            <th class="p-3 border">Bike</th>
+                            <th class="p-3 border">Run</th>
+                            <th class="p-3 border text-slate-400">제외</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            currentModalData.forEach((p, index) => {
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-2 border">${p.bi}</td>
+                        <td class="p-2 border font-bold">${p.n.replace(/<[^>]*>?/gm, '')}</td>
+                        <td class="p-2 border">${p.di || '-'}</td>
+                        <td class="p-2 border text-red-600 font-bold">${p.fs === "DNF" ? "DNF" : formatSeconds(p.ot)}</td>
+                        <td class="p-2 border">${formatSeconds(p.st)}</td>
+                        <td class="p-2 border">${formatSeconds(p.bt)}</td>
+                        <td class="p-2 border">${formatSeconds(p.rt)}</td>
+                        <td class="p-2 border">
+                            <button onclick="removeDataFromModal(${index})" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            modalBody.innerHTML = html;
+        }
+
+        // 3. 행 삭제 함수 (추가)
+        function removeDataFromModal(index) {
+            if (confirm("이 기록을 목록에서 제외하시겠습니까?")) {
+                currentModalData.splice(index, 1); // 해당 인덱스의 데이터 삭제
+                renderModalTable(); // 화면 다시 그리기
+            }
+        }
+
+        // 4. 필터링된 데이터 JSON 다운로드 함수 (추가)
+        function downloadFilteredJson() {
+            if (currentModalData.length === 0) return;
+
+            const dataStr = JSON.stringify(currentModalData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ironman_custom_results_${new Date().getTime()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         const formatSeconds = (s) => {
