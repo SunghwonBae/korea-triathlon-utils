@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ironman 통합 결과 검색기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root { --primary-blue: #0A317E; }
+        .card { background: white; border-radius: 1.5rem; padding: 2rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; }
+        .table-container { width: 100%; overflow-x: auto; border-radius: 1rem; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background-color: #f8fafc; padding: 1rem; font-size: 0.875rem; font-weight: 700; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 1rem; border-top: 1px solid #f1f5f9; font-size: 0.875rem; }
+        .modal { display: none; position: fixed; z-index: 1000; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+        .modal-content { background: white; margin: 5% auto; padding: 2rem; border-radius: 1.5rem; max-width: 900px; width: 95%; max-height: 85vh; overflow-y: auto; }
+        .type-badge { padding: 0.2rem 0.5rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 800; margin-right: 0.5rem; }
+        .badge-full { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-703 { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .loading-overlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #ef4444; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .search-container { position: sticky; top: 0; background: white; z-index: 10; padding: 1rem 0; }
+    </style>
+</head>
+<body class="p-4 lg:p-12">
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="mt-4 font-bold text-slate-600">데이터를 불러오는 중입니다...</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <div class="card text-center mb-8">
+            <h1 class="text-3xl font-black text-slate-800 mb-4"><i class="fas fa-trophy text-red-500 mr-2"></i>Ironman 통합 검색기</h1>
+            <div class="flex flex-wrap justify-center gap-3 mb-6">
+                <button onclick="filterByType('all')" class="px-4 py-2 rounded-full bg-slate-800 text-white text-sm font-bold shadow-lg">전체보기</button>
+                <button onclick="filterByType('full')" class="px-4 py-2 rounded-full bg-red-100 text-red-700 text-sm font-bold hover:bg-red-200">Ironman (Full)</button>
+                <button onclick="filterByType('70.3')" class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-bold hover:bg-blue-200">Ironman 70.3</button>
+                <button onclick="scrollToRace('Gurye')" class="px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold hover:bg-green-600">구례</button>
+                <button onclick="scrollToRace('Goseong')" class="px-4 py-2 rounded-full bg-green-500 text-white text-sm font-bold hover:bg-green-600">고성</button>
+            </div>
+            
+            <div class="relative max-w-md mx-auto">
+                <input type="text" id="globalSearch" oninput="handleSearch()" placeholder="대회 이름을 입력하세요 (예: Korea, Gurye...)" 
+                    class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-red-400 outline-none transition-all">
+                <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <span id="resultCount" class="text-sm font-bold text-slate-500">불러오는 중...</span>
+                <button onclick="downloadAllJson()" class="text-xs font-bold text-blue-600 hover:underline"><i class="fas fa-file-download mr-1"></i>통합 JSON 다운로드</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="w-16">구분</th>
+                            <th>대회명</th>
+                            <th>연도별 결과 (이름/배번 입력 후 엔터)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="raceTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800"><i class="fas fa-user-check mr-2 text-red-500"></i>검색 결과</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-black text-2xl">&times;</button>
+            </div>
+            <div id="modalBody" class="overflow-x-auto"></div>
+        </div>
+    </div>
+
+    <script>
+        let allRaces = []; // 통합 데이터
+        let currentFilter = 'all';
+
+        // 1. 데이터 병렬 로드
+        async function loadData() {
+            const overlay = document.getElementById('loadingOverlay');
+            try {
+                // 두 데이터를 동시에 호출 (병렬)
+                const [resFull, res703] = await Promise.all([
+                    fetch('/data/ironman_races.json').then(r => r.ok ? r.json() : []),
+                    fetch('/data/ironman_70.3_races.json').then(r => r.ok ? r.json() : [])
+                ]);
+
+                // 데이터 구조 통합 (구분값 추가)
+                const fullData = resFull.map(item => ({ ...item, type: 'full' }));
+                const data703 = res703.map(item => ({ ...item, type: '70.3' }));
+                
+                allRaces = [...fullData, ...data703];
+                renderTable(allRaces);
+            } catch (e) {
+                console.error('데이터 로드 실패:', e);
+                alert('데이터를 불러오는데 실패했습니다.');
+            } finally {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+            }
+        }
+
+        // 2. 검색 및 필터링 로직
+        function handleSearch() {
+            const query = document.getElementById('globalSearch').value.toLowerCase();
+            const filtered = allRaces.filter(race => {
+                const matchesSearch = race.name.toLowerCase().includes(query);
+                const matchesType = currentFilter === 'all' || race.type === currentFilter;
+                return matchesSearch && matchesType;
+            });
+            renderTable(filtered);
+        }
+
+        function filterByType(type) {
+            currentFilter = type;
+            handleSearch();
+        }
+
+        // 3. 테이블 렌더링 (최적화)
+        function renderTable(data) {
+            const tbody = document.getElementById('raceTableBody');
+            const countEl = document.getElementById('resultCount');
+            countEl.innerText = `총 ${data.length}개의 대회가 검색되었습니다.`;
+            
+            tbody.innerHTML = data.map((item, idx) => `
+                <tr id="race-${item.name.replace(/\s+/g, '-')}">
+                    <td class="text-center">
+                        <span class="type-badge ${item.type === 'full' ? 'badge-full' : 'badge-703'}">
+                            ${item.type === 'full' ? 'IRON' : '70.3'}
+                        </span>
+                    </td>
+                    <td><div class="font-bold text-slate-800">${item.name}</div></td>
+                    <td>
+                        <div class="flex flex-wrap gap-2">
+                            ${item.years.map(y => `
+                                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-md p-1 shadow-sm">
+                                    <span class="text-[10px] font-bold px-1">${y.year}</span>
+                                    <input type="text" placeholder="이름/배번" 
+                                        class="w-16 text-[10px] p-0.5 border-none bg-transparent outline-none"
+                                        onkeypress="if(event.keyCode==13) searchPlayer('${y.resultUrl}', this.value)">
+                                    <button onclick="searchPlayer('${y.resultUrl}', this.previousElementSibling.value)" class="text-red-500 px-1">
+                                        <i class="fas fa-search text-[10px]"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 4. 선수 검색 (기존 로직 유지)
+        async function searchPlayer(resultUrl, playerName) {
+            if (!playerName) return;
+            const raceId = resultUrl.match(/race\/(\d+)\//)?.[1];
+            if (!raceId) return;
+
+            const apiUrl = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
+            try {
+                const response = await fetch(apiUrl);
+                const allData = await response.json();
+                const filtered = allData.filter(item => {
+                    const cleanName = (item.n || "").replace(/<[^>]*>?/gm, '').trim();
+                    return cleanName.toLowerCase().includes(playerName.toLowerCase().trim()) || (item.bi && item.bi.toString() === playerName.trim());
+                });
+
+                if (filtered.length === 0) { alert("검색 결과가 없습니다."); return; }
+                showResultModal(filtered);
+            } catch (e) {
+                alert("데이터 로드 실패 (CORS 또는 로그인 문제)");
+            }
+        }
+
+        function showResultModal(results) {
+            const modalBody = document.getElementById('modalBody');
+            let html = `<table class="min-w-full border-collapse text-xs text-center">
+                <thead class="bg-slate-100">
+                    <tr>
+                        <th class="p-2 border">Bib</th><th class="p-2 border">이름</th><th class="p-2 border">국가</th>
+                        <th class="p-2 border">연령대</th><th class="p-2 border">전체</th><th class="p-2 border">수영</th>
+                        <th class="p-2 border">바이크</th><th class="p-2 border">런</th>
+                    </tr>
+                </thead><tbody>`;
+            
+            results.forEach(p => {
+                html += `<tr>
+                    <td class="p-2 border">${p.bi}</td>
+                    <td class="p-2 border font-bold">${p.n.replace(/<[^>]*>?/gm, '')}</td>
+                    <td class="p-2 border">${p.c || '-'}</td>
+                    <td class="p-2 border">${p.di || '-'}</td>
+                    <td class="p-2 border text-red-600 font-bold">${p.fs === "DNF" ? "DNF" : formatSeconds(p.ot)}</td>
+                    <td class="p-2 border">${formatSeconds(p.st)}</td>
+                    <td class="p-2 border">${formatSeconds(p.bt)}</td>
+                    <td class="p-2 border">${formatSeconds(p.rt)}</td>
+                </tr>`;
+            });
+            modalBody.innerHTML = html + `</tbody></table>`;
+            document.getElementById('resultModal').style.display = 'block';
+        }
+
+        const formatSeconds = (s) => {
+            if (!s || s === "0" || isNaN(s)) return "-";
+            const res = new Date(s * 1000).toISOString().substr(11, 8);
+            return res.startsWith("00:") ? res.substr(3) : res;
+        };
+
+        function closeModal() { document.getElementById('resultModal').style.display = 'none'; }
+        function scrollToRace(name) {
+            const target = Array.from(document.querySelectorAll('td div.font-bold')).find(el => el.textContent.includes(name));
+            if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function downloadAllJson() {
+            const blob = new Blob([JSON.stringify(allRaces, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `ironman_all_races_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
