@@ -15,13 +15,17 @@
         table { width: 100%; border-collapse: collapse; }
         th { background-color: #f8fafc; padding: 1rem; font-size: 0.875rem; font-weight: 700; color: #64748b; border-bottom: 2px solid #e2e8f0; }
         td { padding: 1rem; border-top: 1px solid #f1f5f9; font-size: 0.875rem; }
-            .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-    .modal-overlay {
-        position: absolute;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85);
-        backdrop-filter: blur(5px);
-    }
+                /* 모달 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content2 { 
+            background: white; padding: 25px; border-radius: 16px; 
+            width: 85%; max-width: 400px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+ 
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
             /* Modal content fixed height + column layout so header stays above a scrollable body */
     .modal-content { background: white; margin: 6% auto; padding: 20px; border-radius: 1rem; max-width: 1000px; width: 90%; max-height: 600px; display: flex; flex-direction: column; overflow: hidden; }
     /* Scrollable body area inside modal; keep horizontal scroll for wide tables */
@@ -160,8 +164,8 @@
     </div>
 
     <!-- 확인 모달 -->
-    <div id="confirmModal" class="modal-overlay" style="z-index: 200;display: none;">
-        <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content2" style="text-align: center; max-width: 300px; padding: 30px 20px;">
             <div style="margin-bottom: 20px;">
                 <i class="fas fa-exclamation-circle" style="font-size: 40px; color: #ff4d4f;"></i>
             </div>
