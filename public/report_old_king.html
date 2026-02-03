@@ -1594,9 +1594,8 @@ document.addEventListener('keydown', (e) => {
 
             let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             
-            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
-
-            if (memory.some(m => m.b === athlete.b && normalize(m.raceName) === normalize(fullTitle))) {
+            // 중복 체크: 대회명 제외하고 배번, 년도, 완주시간으로 체크
+            if (memory.some(m => m.b == athlete.b && m.raceYear == raceYear && m.t == athlete.to)) {
                 showToast("이미 T-Memory에 저장된 기록입니다.");
                 return;
             }
