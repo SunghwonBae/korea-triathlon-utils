@@ -59,6 +59,44 @@
             td:first-child { border-bottom: 1px solid #f1f5f9 !important; margin-bottom: 0.5rem; padding-bottom: 0.5rem !important; }
             td:first-child div { font-size: 1rem !important; }
             td:last-child div.flex-wrap { gap: 0.5rem !important; }
+
+            /* 모달 테이블 모바일 최적화 (카드 뷰) */
+            #modalBody table { display: block; width: 100%; border: none; }
+            #modalBody thead { display: none; }
+            #modalBody tbody { display: block; width: 100%; }
+            #modalBody tr {
+                display: grid;
+                grid-template-columns: 1fr 2fr 0.5fr; /* Bib Name Del */
+                gap: 8px 4px;
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.75rem;
+                padding: 12px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            
+            #modalBody td { display: block; border: none !important; padding: 0 !important; text-align: left; }
+
+            /* 1행: Bib, Name, Del */
+            #modalBody td.col-bib { grid-column: 1; font-weight: bold; color: #64748b; font-size: 0.85rem; }
+            #modalBody td.col-name { grid-column: 2; font-weight: bold; text-align: center; font-size: 1rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            #modalBody td.col-del { grid-column: 3; text-align: right; }
+
+            /* 2행: Swim, Bike, Run */
+            #modalBody td.col-swim { grid-column: 1; grid-row: 2; text-align: center; font-weight: bold; }
+            #modalBody td.col-swim::before { content: '🏊 '; font-size: 0.8em; }
+            #modalBody td.col-bike { grid-column: 2; grid-row: 2; text-align: center; font-weight: bold; }
+            #modalBody td.col-bike::before { content: '🚴 '; font-size: 0.8em; }
+            #modalBody td.col-run { grid-column: 3; grid-row: 2; text-align: center; font-weight: bold; }
+            #modalBody td.col-run::before { content: '🏃 '; font-size: 0.8em; }
+
+            /* 3행: Division, Total */
+            #modalBody td.col-div { grid-column: 1; grid-row: 3; font-size: 0.8rem; color: #94a3b8; align-self: end; }
+            #modalBody td.col-total { grid-column: 2 / 4; grid-row: 3; text-align: right; font-size: 1.2rem; color: #dc2626; }
+
+            /* 숨김 처리 */
+            #modalBody td.col-t1, #modalBody td.col-t2 { display: none; }
         }
     </style>
 </head>
@@ -269,9 +307,11 @@
                             <th class="p-3 border">이름</th>
                             <th class="p-3 border">연령대</th>
                             <th class="p-3 border text-red-600">Total</th>
-                            <th class="p-3 border">Swim</th>
-                            <th class="p-3 border">Bike</th>
-                            <th class="p-3 border">Run</th>
+                            <th class="p-3 border text-blue-600">Swim</th>
+                            <th class="p-3 border text-gray-500">T1</th>
+                            <th class="p-3 border text-green-600">Bike</th>
+                            <th class="p-3 border text-gray-500">T2</th>
+                            <th class="p-3 border text-orange-600">Run</th>
                             <th class="p-3 border text-slate-400">제외</th>
                         </tr>
                     </thead>
@@ -280,14 +320,16 @@
             currentModalData.forEach((p, index) => {
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-2 border">${p.bi}</td>
-                        <td class="p-2 border font-bold">${p.n.replace(/<[^>]*>?/gm, '')}</td>
-                        <td class="p-2 border">${p.di || '-'}</td>
-                        <td class="p-2 border text-red-600 font-bold">${p.fs === "DNF" ? "DNF" : formatSeconds(p.ot)}</td>
-                        <td class="p-2 border">${formatSeconds(p.st)}</td>
-                        <td class="p-2 border">${formatSeconds(p.bt)}</td>
-                        <td class="p-2 border">${formatSeconds(p.rt)}</td>
-                        <td class="p-2 border">
+                        <td class="p-2 border col-bib">${p.bi}</td>
+                        <td class="p-2 border font-bold col-name">${p.n.replace(/<[^>]*>?/gm, '')}</td>
+                        <td class="p-2 border col-div">${p.di || '-'}</td>
+                        <td class="p-2 border text-red-600 font-bold col-total">${p.fs === "DNF" ? "DNF" : formatSeconds(p.ot)}</td>
+                        <td class="p-2 border text-blue-600 col-swim">${formatSeconds(p.st)}</td>
+                        <td class="p-2 border text-gray-500 col-t1">${formatSeconds(p.t1t)}</td>
+                        <td class="p-2 border text-green-600 col-bike">${formatSeconds(p.bt)}</td>
+                        <td class="p-2 border text-gray-500 col-t2">${formatSeconds(p.t2t)}</td>
+                        <td class="p-2 border text-orange-600 col-run">${formatSeconds(p.rt)}</td>
+                        <td class="p-2 border col-del">
                             <button onclick="removeDataFromModal(${index})" class="text-slate-300 hover:text-red-500 transition-colors">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -311,7 +353,7 @@
         function downloadFilteredCsv() {
             if (currentModalData.length === 0) return;
 
-            let csvContent = "\uFEFFBib,Name,Division,Total,Swim,Bike,Run,Status\n";
+            let csvContent = "\uFEFFBib,Name,Division,Total,Swim,T1,Bike,T2,Run,Status\n";
             
             currentModalData.forEach(p => {
                 const row = [
@@ -320,7 +362,9 @@
                     p.di || '-',
                     p.fs === "DNF" ? "DNF" : formatSeconds(p.ot),
                     formatSeconds(p.st),
+                    formatSeconds(p.t1t),
                     formatSeconds(p.bt),
+                    formatSeconds(p.t2t),
                     formatSeconds(p.rt),
                     p.fs
                 ];
