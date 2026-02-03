@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <script src="menu_full_handler.js" defer></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
@@ -27,10 +27,34 @@
         .ag-theme-quartz .ag-header-cell-menu-button {
             opacity: 1;
         }
+
+                /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #2563eb; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        /* 모바일 세로모드 최적화 */
+        @media (max-width: 768px) {
+            body { padding: 1rem !important; }
+            main { padding: 0 !important; margin-top: 1rem !important; }
+            .card { padding: 1.5rem 1rem !important; }
+            h2.text-2xl { font-size: 1.5rem !important; }
+            .slide-menu { width: 85% !important; left: -85% !important; }
+            .slide-menu.is-active { left: 0 !important; }
+            #menuToggle { top: 1.5rem !important; left: 1.5rem !important; }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
-
+    <button id="menuToggle" class="absolute left-6 top-6 z-50 bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-blue-900 shadow-md hover:bg-slate-50 transition-all"><i class="fas fa-bars"></i></button>
+        
     <div class="max-w-7xl mx-auto space-y-6">
         <header class="flex flex-col md:flex-row justify-between items-center bg-white text-slate-900 p-6 rounded-2xl gap-4 shadow-lg">
             <div>
