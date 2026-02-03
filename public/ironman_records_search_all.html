@@ -413,16 +413,19 @@
             const p = currentModalData[index];
             if (!p || !currentRaceInfo) return;
 
-            const raceName = currentRaceInfo.race.name.replace('Ironman', '').trim();
-            const fullTitle = `Ironman ${currentRaceInfo.race.type === '70.3' ? '70.3 ' : ''}${raceName}`;
+            // 대회명 포맷 변경: IRONMAN[70.3]-LOCATION YEAR
+            let locationName = currentRaceInfo.race.name.replace(/Ironman/gi, '').replace(/70\.3/g, '').trim();
+            const typeStr = currentRaceInfo.race.type === '70.3' ? '70.3' : '';
+            const fullTitle = `IRONMAN${typeStr}-${locationName.toUpperCase()} ${currentRaceInfo.year}`;
+
             const raceYear = currentRaceInfo.year;
             const raceType = currentRaceInfo.race.type === '70.3' ? 'Half' : 'Ironman';
 
             let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
             
-            const normalize = (s) => (s || '').replace(/[_\-\s]/g, '').toUpperCase();
-
-            if (memory.some(m => m.b === p.bi && normalize(m.raceName) === normalize(fullTitle) && m.raceYear == raceYear)) {
+            // 중복 체크: 대회명 제외하고 배번, 년도, 완주시간으로 체크
+            const totalTime = parseInt(p.ot) || 0;
+            if (memory.some(m => m.b == p.bi && m.raceYear == raceYear && m.t === totalTime)) {
                 showToast("이미 T-Memory에 저장된 기록입니다.");
                 return;
             }
@@ -439,7 +442,7 @@
                 n: cleanName, 
                 d: p.di || '', 
                 c: p.c || '',
-                t: parseInt(p.ot) || 0, 
+                t: totalTime, 
                 s: parseInt(p.st) || 0, 
                 t1: parseInt(p.t1t) || 0, 
                 bk: parseInt(p.bt) || 0, 
