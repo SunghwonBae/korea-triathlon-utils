@@ -350,8 +350,13 @@
                     }
                 };
 
+                const fileName = document.createElement('div');
+                fileName.className = 'text-[10px] text-slate-500 text-center mt-1 truncate px-1 font-medium';
+                fileName.innerText = file.name;
+
                 wrapper.appendChild(img);
                 wrapper.appendChild(delBtn);
+                wrapper.appendChild(fileName);
                 thumbContainer.appendChild(wrapper);
                 
                 // 이미지가 하나도 선택되지 않은 상태라면 첫 번째 이미지 자동 선택
