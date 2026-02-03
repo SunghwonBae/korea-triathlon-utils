@@ -24,15 +24,18 @@
         .swim-cell { color: #3498db; font-weight: bold; }
         .bike-cell { color: #2ecc71; font-weight: bold; }
         .run-cell { color: #f39c12; font-weight: bold; }
+        .ag-theme-quartz .ag-header-cell-menu-button {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto space-y-6">
-        <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-6 rounded-2xl gap-4 shadow-lg">
+        <header class="flex flex-col md:flex-row justify-between items-center bg-white text-slate-900 p-6 rounded-2xl gap-4 shadow-lg">
             <div>
-                <h1 class="text-2xl font-bold italic uppercase tracking-tight"><span class="text-blue-400">Compare & Analyze</span> Triathlons</h1>
-                <p class="text-slate-400 text-sm">대회별 기록 비교 및 상세 데이터 통합 리포트</p>
+                <h1 class="text-2xl font-bold italic uppercase tracking-tight"><span class="text-blue-600">Compare & Analyze</span> Triathlons</h1>
+                <p class="text-slate-600 text-sm">대회별 기록 비교 및 상세 데이터 통합 리포트</p>
             </div>
         </header>
 
@@ -213,7 +216,7 @@
                         { field: "r", headerName: "런", cellClass: 'run-cell', width: 95, valueFormatter: p => formatS(p.value) },
                         { field: "b", headerName: "배번", width: 85 },
                         { field: "d", headerName: "부문", width: 110 },
-                        { field: "c", headerName: "클럽", width: 150 }
+                        { field: "c", headerName: "클럽/국가", width: 150 }
                     ],
                     localeText: KR_LOCALE, // 한국어 객체 적용
                     // 1. 그리드 전체에서 마우스 드래그로 텍스트 선택 가능하게 설정
@@ -226,6 +229,7 @@
                             closeOnApply: true 
                         }
                     },
+                    popupParent: document.body,
                     isExternalFilterPresent: () => searchFilters.length > 0 || isSliderActive(),
                     doesExternalFilterPass: (node) => {
                         const data = node.data;
