@@ -48,7 +48,7 @@ body {
 }
 .donation-section { max-width: 400px; margin: 0 auto 50px; padding: 0 15px; }
 .donation-card {
-    background: white; padding: 24px; border-radius: 20px;
+    background: white; padding: 20px; border-radius: 20px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06); border: 1px solid #f1f5f9;
 }
 .donation-text {
