@@ -7,29 +7,6 @@
 // 예시: 초기화가 완료되었음을 알리는 변수
 let isMenuReady = false;
 
-async function loadAndInitializeMenu() {
-    try {
-        const response = await fetch('menu_structure.html');
-        if (!response.ok) throw new Error(`메뉴 로드 실패`);
-        const menuHtml = await response.text(); 
-        
-        // 1. 메뉴 삽입 (이제 global-loading 엘리먼트가 확실히 존재함)
-        document.body.insertAdjacentHTML('beforeend', menuHtml);
-        
-        // 2. 메뉴 기능 및 로그인 상태 초기화
-        initializeMenuController();
-        initializeMenuAccordion(); // 아코디언 기능 초기화 추가
-        highlightCurrentMenu();    // 현재 페이지 하이라이트 및 폴더 펼치기
-        
-        isMenuReady = true;
-
-
-        
-    } catch (error) {
-        console.error("초기화 중 오류:", error);
-    }
-}
-
 // 로딩 제어 함수
 function showLoading() { 
     const loader = document.getElementById('global-loading');
@@ -52,9 +29,6 @@ function hideLoading() {
     }
 
 }
-
-
-
 
 
 
@@ -175,21 +149,47 @@ function highlightCurrentMenu() {
     });
 }
 
-// // 데이터를 담을 전역 객체
-// window.RUNNING_DATA = {
-//     vdotTable: null
-// };
-
-// async function loadVdotData() {
-//     try {
-//         const response = await fetch('/api/vdot');
-//         window.RUNNING_DATA.vdotTable = await response.json();
-//         console.log('VDOT 데이터 로드 완료');
+// menu_full_handler.js 하단에 추가 혹은 loadAndInitializeMenu 수정
+async function loadAndInitializeMenu() {
+    try {
+        const response = await fetch('menu_structure.html');
+        if (!response.ok) throw new Error(`메뉴 로드 실패`);
+        const menuHtml = await response.text(); 
+        document.body.insertAdjacentHTML('beforeend', menuHtml);
         
-//     } catch (err) {
-//         console.error('VDOT 로드 실패:', err);
-//     }
-// }
+        // --- 푸터 자동 주입 코드 시작 ---
+        const footerHtml = `
+        <footer class="main-footer">
+          <div class="donation-section">
+            <div class="donation-card">
+              <p class="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
+              <div class="donation-btn-group">
+                <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" class="btn-toss">
+                  <img src="https://static.toss.im/assets/homepage/brand/icn-logo-service-toss.svg" width="16" height="16"> Toss 후원
+                </a>
+                <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" class="btn-kakao">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3c-5.523 0-10 3.582-10 8c0 2.957 1.962 5.539 4.864 7.02l-1.232 4.521c-.102.373.329.67.639.464l5.353-3.54c.125.013.251.025.376.025 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/></svg>
+                  카카오페이
+                </a>
+              </div>
+            </div>
+          </div>
+            <p className="copyright">
+            2026 Korea Triathlon Utils.<br className="mobile-br"/> 
+            🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
+            </p>
+            <p className="special-link">
+            특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a>
+            </p>
+        </footer>`;
+        document.body.insertAdjacentHTML('beforeend', footerHtml);
+        // --- 푸터 자동 주입 코드 끝 ---
 
-// // 페이지 로드 시 실행
-// loadVdotData();
+        initializeMenuController();
+        initializeMenuAccordion();
+        highlightCurrentMenu();
+        isMenuReady = true;
+    } catch (error) {
+        console.error("초기화 중 오류:", error);
+    }
+}

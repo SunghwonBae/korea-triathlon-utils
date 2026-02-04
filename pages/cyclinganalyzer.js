@@ -252,7 +252,33 @@ export default function CyclingAnalyzer() {
           </div>
         )}
       </main>
+{/* --- 후원 및 푸터 섹션 시작 --- */}
+<footer className="main-footer">
+  <div className="donation-section">
+    <div className="donation-card">
+      <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
+      <div className="donation-btn-group">
+        <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss">
+          <img src="https://static.toss.im/assets/homepage/brand/icn-logo-service-toss.svg" width="16" height="16" alt="" />
+          Toss 후원
+        </a>
+        <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" rel="noopener noreferrer" className="btn-kakao">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3c-5.523 0-10 3.582-10 8c0 2.957 1.962 5.539 4.864 7.02l-1.232 4.521c-.102.373.329.67.639.464l5.353-3.54c.125.013.251.025.376.025 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/></svg>
+          카카오페이
+        </a>
+      </div>
+    </div>
+  </div>
 
+        <p className="copyright">
+          2026 Korea Triathlon Utils.<br className="mobile-br"/> 
+           🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
+        </p>
+        <p className="special-link">
+          특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a>
+        </p>
+</footer>
+{/* --- 후원 및 푸터 섹션 끝 --- */}
       <style jsx>{`
         /* bucheonTriStyle.css에서 제공하지 않는 로컬 스타일만 유지 */
         .header-section {
@@ -448,6 +474,88 @@ export default function CyclingAnalyzer() {
           
           .report-gallery { padding: 10px 0 !important; }
           .report-gallery img { width: 30% !important; }
+        }
+
+        .main-footer {
+          text-align: center;
+          padding: 60px 20px 40px;
+          background-color: #f8f9fc;
+          margin-top: 40px;
+        }
+
+        .donation-section {
+          max-width: 420px;
+          margin: 0 auto 50px;
+        }
+
+        .donation-card {
+          background: white;
+          padding: 30px 24px;
+          border-radius: 24px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+          border: 1px solid #f1f5f9;
+        }
+
+        .donation-text {
+          color: #1e293b !important;
+          font-weight: 800;
+          font-size: 1.1rem;
+          margin-bottom: 24px !important;
+          display: block;
+        }
+
+        .donation-btn-group {
+          display: flex;
+          gap: 12px;
+        }
+
+        .btn-toss, .btn-kakao {
+          flex: 1;
+          height: 52px;
+          border-radius: 14px;
+          font-weight: 700;
+          font-size: 0.95rem;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.2s;
+        }
+
+        .btn-toss {
+          background-color: #f2f5f9;
+          color: #333d4b !important;
+        }
+
+        .btn-kakao {
+          background-color: #FFEB00;
+          color: #3C1E1E !important;
+        }
+
+        .btn-toss:active, .btn-kakao:active {
+          transform: scale(0.97);
+        }
+
+        .copyright {
+          color: #94a3b8;
+          font-size: 0.85rem;
+          line-height: 1.6;
+        }
+
+        .copyright a {
+          color: #64748b;
+          text-decoration: underline;
+        }
+        .special-link { font-size: 0.85rem; }
+        .special-link a { color: #cbd5e1; text-decoration: underline; }
+        @media (max-width: 480px) {
+          .donation-btn-group {
+            flex-direction: column;
+          }
+          .btn-toss, .btn-kakao {
+            width: 100%;
+          }
         }
       `}</style>
     </div>

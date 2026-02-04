@@ -167,10 +167,28 @@ export default function MainIndex() {
           })}
         </div>
       </section>
-
       <footer className="main-footer">
-        <p>2026 Korea Triathlon Utils.<br className="mobile-br"/> 🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.</p>
-        <p>특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a></p>
+        <div className="donation-section">
+          <div className="donation-card">
+            <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
+            <div className="donation-btn-group">
+              <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss">
+                Toss로 후원
+              </a>
+              <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" rel="noopener noreferrer" className="btn-kakao">
+                카카오페이 후원
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <p className="copyright">
+          2026 Korea Triathlon Utils.<br className="mobile-br"/> 
+           🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
+        </p>
+        <p className="special-link">
+          특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a>
+        </p>
       </footer>
 
       <style jsx>{`
@@ -283,6 +301,32 @@ export default function MainIndex() {
           color: #9ca3af;
           font-size: 1rem;
         }
+
+        .donation-section { max-width: 400px; margin: 0 auto 50px; padding: 0 15px; }
+        .donation-card {
+          background: white; padding: 24px; border-radius: 20px;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06); border: 1px solid #f1f5f9;
+        }
+        .donation-text {
+          color: #1e293b !important; font-weight: 800; font-size: 1rem;
+          margin-bottom: 18px !important; display: block;
+        }
+        .donation-btn-group { display: flex; gap: 8px; }
+        .btn-toss, .btn-kakao {
+          flex: 1; height: 48px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;
+          text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+          transition: transform 0.1s;
+        }
+        .btn-toss { background-color: #f2f5f9; color: #333d4b !important; }
+        .btn-kakao { background-color: #FFEB00; color: #3C1E1E !important; }
+        .btn-toss:active, .btn-kakao:active { transform: scale(0.97); }
+        .copyright { color: #94a3b8; font-size: 0.85rem; line-height: 1.6; }
+        .special-link { font-size: 0.85rem; }
+        .special-link a { color: #cbd5e1; text-decoration: underline; }
+        @media (max-width: 480px) {
+          .donation-btn-group { flex-direction: column; }
+        }
+
         @media (max-width: 1024px) {
           .menu-grid {
             /* 수정됨 */
