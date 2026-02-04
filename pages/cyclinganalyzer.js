@@ -258,11 +258,11 @@ export default function CyclingAnalyzer() {
     <div className="donation-card">
       <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
       <div className="donation-btn-group">
-        <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss">
-          <img src="https://static.toss.im/assets/homepage/brand/icn-logo-service-toss.svg" width="16" height="16" alt="" />
+        <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" class="btn-toss">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 13.5h-9v-1.5h3.75V8.5h-2.25V7h3.75v6.5h3.75v1.5z" fill="#0047FF"/></svg>
           Toss 후원
         </a>
-        <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" rel="noopener noreferrer" className="btn-kakao">
+        <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" class="btn-kakao">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3c-5.523 0-10 3.582-10 8c0 2.957 1.962 5.539 4.864 7.02l-1.232 4.521c-.102.373.329.67.639.464l5.353-3.54c.125.013.251.025.376.025 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/></svg>
           카카오페이
         </a>
