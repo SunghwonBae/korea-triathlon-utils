@@ -173,11 +173,15 @@ export default function MainIndex() {
             <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
             <div className="donation-btn-group">
               <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 13.5h-9v-1.5h3.75V8.5h-2.25V7h3.75v6.5h3.75v1.5z" fill="#0047FF"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" fill="#0047FF"/>
+                    <path d="M12.44 15.62c2.05 0 3.73-1.63 3.73-3.62 0-2-1.68-3.62-3.73-3.62s-3.73 1.63-3.73 3.62c0 2 1.68 3.62 3.73 3.62z" fill="#fff" fill-opacity=".2"/>
+                    <path d="M15.54 11.23c-.34-1.29-1.52-2.25-2.92-2.25-1.67 0-3.02 1.35-3.02 3.02 0 1.67 1.35 3.02 3.02 3.02.76 0 1.45-.28 1.97-.74l2.05 2.05c-.93.93-2.21 1.5-3.63 1.5-2.83 0-5.13-2.3-5.13-5.13S10.18 7.57 13.01 7.57c1.86 0 3.48.99 4.38 2.47l-1.85 1.19z" fill="#fff"/>
+                </svg>
                 Toss 후원
               </a>
               <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" className="btn-kakao">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3c-5.523 0-10 3.582-10 8c0 2.957 1.962 5.539 4.864 7.02l-1.232 4.521c-.102.373.329.67.639.464l5.353-3.54c.125.013.251.025.376.025 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3c-5.523 0-10 3.582-10 8c0 2.957 1.962 5.539 4.864 7.02l-1.232 4.521c-.102.373.329.67.639.464l5.353-3.54c.125.013.251.025.376.025 5.523 0 10-3.582 10-8s-4.477-8-10-8z"/></svg>
                 카카오페이
               </a>
             </div>
