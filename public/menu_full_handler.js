@@ -165,10 +165,7 @@ async function loadAndInitializeMenu() {
               <p class="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
               <div class="donation-btn-group">
                 <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" class="btn-toss">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="24" height="24" rx="6.857" fill="#0047FF"/>
-                        <path d="M16.306 6.563a1.62 1.62 0 1 1 0 3.24 1.62 1.62 0 0 1 0-3.24Zm-3.866 7.897c-.667-.28-1.114-.765-1.36-1.294-.273-.588-.433-1.537.127-2.667.595-1.2.874-1.679 2.214-2.116.32-.105.652-.215 1.008-.295.133-.03.285-.176.285-.31 0-.179-.192-.312-.463-.312-1.775 0-4.12 1.316-5.366 3.185-.495.742-.827 1.752-.827 2.82 0 3.55 2.804 4.533 5.34 4.533 3.504 0 4.804-2.184 4.804-3.547 0-.13-.152-.245-.286-.245-.182 0-.325.128-.425.314-.548 1.015-1.62 1.684-3.462 1.684-.594 0-1.145-.092-1.589-.281V14.46Z" fill="white"/>
-                    </svg>
+                    <img src="Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" class="btn-icon"/>
                     Toss 후원
                 </a>
                 <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" class="btn-kakao">
