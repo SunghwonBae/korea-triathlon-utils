@@ -500,9 +500,9 @@ export default function CyclingAnalyzer() {
 
         .donation-text {
           color: #1e293b !important;
-          font-weight: 800;
-          font-size: 1.1rem;
-          margin-bottom: 24px !important;
+          font-weight: 600;
+          font-size: 0.8rem;
+          margin-bottom: 20px !important;
           display: block;
         }
 
@@ -515,8 +515,8 @@ export default function CyclingAnalyzer() {
           flex: 1;
           height: 52px;
           border-radius: 14px;
-          font-weight: 700;
-          font-size: 0.95rem;
+          font-weight: 600;
+          font-size: 0.8rem;
           text-decoration: none;
           display: flex;
           align-items: center;
@@ -541,7 +541,7 @@ export default function CyclingAnalyzer() {
 
         .copyright {
           color: #94a3b8;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           line-height: 1.6;
         }
 
@@ -549,7 +549,7 @@ export default function CyclingAnalyzer() {
           color: #64748b;
           text-decoration: underline;
         }
-        .special-link { font-size: 0.85rem; }
+        .special-link { font-size: 0.8rem; }
         .special-link a { color: #cbd5e1; text-decoration: underline; }
         @media (max-width: 480px) {
           .donation-btn-group {
