@@ -175,11 +175,11 @@ async function loadAndInitializeMenu() {
               </div>
             </div>
           </div>
-            <p className="copyright">
-            2026 Korea Triathlon Utils.<br className="mobile-br"/> 
+            <p class="copyright">
+            2026 Korea Triathlon Utils.<br class="mobile-br"/> 
             🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
             </p>
-            <p className="special-link">
+            <p class="special-link">
             특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a>
             </p>
         </footer>`;
