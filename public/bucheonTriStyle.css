@@ -40,6 +40,12 @@ body {
 /* ==========================================================================
    footer 스타일
    ========================================================================== */
+.main-footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+    font-size: 1rem;
+}
 .donation-section { max-width: 400px; margin: 0 auto 50px; padding: 0 15px; }
 .donation-card {
     background: white; padding: 24px; border-radius: 20px;
