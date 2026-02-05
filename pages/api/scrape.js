@@ -1,7 +1,6 @@
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 
-// Vercel 함수 타임아웃 설정 (최대 60초)
 export const config = {
   maxDuration: 60,
 };
@@ -17,10 +16,12 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // 1. 브라우저 실행 옵션 설정
-    // 그래픽 가속 등을 꺼서 서버 부하를 줄이고 호환성을 높입니다.
+    // 그래픽 가속 비활성화 (필수)
     chromium.setGraphicsMode = false;
-    
+
+    // Vercel 환경에 최적화된 실행 경로 가져오기
+    const executablePath = await chromium.executablePath();
+
     browser = await puppeteer.launch({
       args: [
         ...chromium.args,
@@ -28,36 +29,37 @@ export default async function handler(req, res) {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--single-process' // 서버리스 환경에서 중요
+        '--single-process', 
+        '--disable-features=site-per-process' // 추가된 안정성 옵션
       ],
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
+      executablePath: executablePath,
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
 
-    // 2. 불필요한 리소스 차단 (속도 및 메모리 최적화)
+    // 리소스 차단 (속도 최적화)
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      const resourceType = req.resourceType();
-      if (['image', 'stylesheet', 'font', 'media', 'other'].includes(resourceType)) {
+      const type = req.resourceType();
+      if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
         req.abort();
       } else {
         req.continue();
       }
     });
 
-    // 3. 페이지 접속 (최대 20초)
+    // 접속
     await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
-    // Race Splits 데이터 로딩 대기
+    // Race Splits 대기
     try {
         await page.waitForSelector('h3', { timeout: 4000 });
     } catch(e) {}
 
-    // 4. 데이터 추출
+    // 데이터 추출
     const data = await page.evaluate(() => {
         let result = { 
             name: 'Unknown', 
@@ -101,11 +103,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Scraping Error:', error);
-    // 에러 내용을 자세히 반환하여 디버깅 용이하게 함
     res.status(500).json({ 
         error: 'Failed to scrape', 
-        details: error.message,
-        stack: error.stack 
+        details: error.message 
     });
   } finally {
     if (browser) {
