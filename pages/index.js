@@ -373,7 +373,8 @@ const closeQrModal = (modalId) => {
 .qr-image {
   width: 100%;
   max-width: 200px;
-  margin: 15px 0;
+  margin: 15px auto;
+  display: block;
   border: 1px solid #f0f0f0;
   border-radius: 12px;
 }

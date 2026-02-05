@@ -208,7 +208,7 @@ async function loadAndInitializeMenu() {
                 <h3 style="color: #0064FF;">Toss로 후원하기</h3>
                 <p>계좌번호가 복사되었습니다!</p>
                 <div class="account-badge toss-bg">카카오뱅크 3333137635297</div>
-                <img src="toss_qr.jpg" alt="Toss QR" class="qr-image">
+                <img src="toss_qr.jpg" alt="Toss QR" class="qr-image" style="display:block; margin: 15px auto;">
                 <button class="qr-btn-close" onclick="closeQrModal('tossModal')">닫기</button>
             </div>
             </div>
@@ -218,7 +218,7 @@ async function loadAndInitializeMenu() {
                 <h3 style="color: #3C1E1E;">카카오페이 후원</h3>
                 <p>카카오톡 앱으로 QR코드를 스캔하세요.</p>
                 <div class="account-badge kakao-bg">카카오페이 송금코드</div>
-                <img src="Kakaopay_qr.png" alt="KakaoPay QR" class="qr-image">
+                <img src="Kakaopay_qr.png" alt="KakaoPay QR" class="qr-image" style="display:block; margin: 15px auto;">
                 <button class="qr-btn-close" onclick="closeQrModal('kakaoModal')">닫기</button>
             </div>
             </div>
