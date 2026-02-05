@@ -224,7 +224,7 @@ const closeQrModal = (modalId) => {
             <div id="kakaoModal" className="qr-modal-overlay" onClick={() => closeQrModal('kakaoModal')}>
             <div className="qr-modal-content" onclick="event.stopPropagation()">
                 <h3 style={{ color: '#3C1E1E' }}>카카오페이 후원</h3>
-                <p>카카오톡 앱으로 QR코드를 스캔하세요.</p>
+                <p>카톡앱으로 QR코드를 스캔하세요.</p>
                 <div className="account-badge kakao-bg">카카오페이 송금코드</div>
                 <img src="Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
                 <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>

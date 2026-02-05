@@ -216,7 +216,7 @@ async function loadAndInitializeMenu() {
             <div id="kakaoModal" class="qr-modal-overlay" onclick="closeQrModal('kakaoModal')">
             <div class="qr-modal-content" onclick="event.stopPropagation()">
                 <h3 style="color: #3C1E1E;">카카오페이 후원</h3>
-                <p>카카오톡 앱으로 QR코드를 스캔하세요.</p>
+                <p>카톡앱으로 QR코드를 스캔하세요.</p>
                 <div class="account-badge kakao-bg">카카오페이 송금코드</div>
                 <img src="Kakaopay_qr.png" alt="KakaoPay QR" class="qr-image" style="display:block; margin: 15px auto;">
                 <button class="qr-btn-close" onclick="closeQrModal('kakaoModal')">닫기</button>
