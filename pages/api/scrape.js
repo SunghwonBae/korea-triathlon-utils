@@ -1,8 +1,8 @@
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 import puppeteer from 'puppeteer-core';
 
 export const config = {
-  maxDuration: 60,
+  maxDuration: 60, // 최대 실행 시간 확보
 };
 
 export default async function handler(req, res) {
@@ -16,22 +16,24 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // 그래픽 가속 비활성화 (필수)
-    chromium.setGraphicsMode = false;
+    // ------------------------------------------------------------------
+    // 핵심 변경점: 크롬 바이너리를 원격(GitHub)에서 다운로드하여 사용
+    // ------------------------------------------------------------------
+    // Vercel 환경인지 확인 (로컬에서는 다운로드 안 함)
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Node 20 호환 바이너리 URL (v129)
+    // 이 URL의 파일이 /tmp 폴더로 다운로드되어 실행됩니다.
+    const remoteExecutablePath = 'https://github.com/Sparticuz/chromium/releases/download/v129.0.0/chromium-v129.0.0-pack.tar';
 
-    // Vercel 환경에 최적화된 실행 경로 가져오기
-    const executablePath = await chromium.executablePath();
+    const executablePath = isProduction
+      ? await chromium.executablePath(remoteExecutablePath)
+      : process.platform === 'win32'
+        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+        : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
     browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--single-process', 
-        '--disable-features=site-per-process' // 추가된 안정성 옵션
-      ],
+      args: isProduction ? chromium.args : [],
       defaultViewport: chromium.defaultViewport,
       executablePath: executablePath,
       headless: chromium.headless,
@@ -43,15 +45,14 @@ export default async function handler(req, res) {
     // 리소스 차단 (속도 최적화)
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      const type = req.resourceType();
-      if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
+      if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
         req.abort();
       } else {
         req.continue();
       }
     });
 
-    // 접속
+    // 페이지 접속
     await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
     // Race Splits 대기
