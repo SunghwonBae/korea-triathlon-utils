@@ -7,7 +7,6 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  // GET 요청에서 배번(bib)과 URL 패턴 받기
   const { bib, urlTemplate } = req.query;
 
   if (!bib || !urlTemplate) {
@@ -18,60 +17,60 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // Vercel(AWS Lambda) 환경에 맞는 크롬 실행 경로 설정
-    // 로컬 테스트 시에는 별도의 크롬 경로가 필요할 수 있으나, 
-    // Vercel 배포를 우선순위로 둡니다.
-    const executablePath = await chromium.executablePath();
-
+    // 1. 브라우저 실행 옵션 설정
+    // 그래픽 가속 등을 꺼서 서버 부하를 줄이고 호환성을 높입니다.
+    chromium.setGraphicsMode = false;
+    
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process' // 서버리스 환경에서 중요
+      ],
       defaultViewport: chromium.defaultViewport,
-      executablePath: executablePath,
+      executablePath: await chromium.executablePath(),
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
 
-    // 1. 리소스 최적화: 이미지, 폰트, 스타일시트 로딩 차단 (속도 향상)
+    // 2. 불필요한 리소스 차단 (속도 및 메모리 최적화)
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
+      const resourceType = req.resourceType();
+      if (['image', 'stylesheet', 'font', 'media', 'other'].includes(resourceType)) {
         req.abort();
       } else {
         req.continue();
       }
     });
 
-    // 2. 페이지 접속 (최대 15초 대기)
-    // waitUntil: 'domcontentloaded'는 HTML 구조가 다 로딩되면 즉시 진행
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    // 3. 페이지 접속 (최대 20초)
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
-    // 3. Race Splits 데이터 로딩 대기 (선택적)
-    // 데이터가 늦게 뜨는 경우를 대비해 h3 태그가 생길 때까지 잠시 기다림
+    // Race Splits 데이터 로딩 대기
     try {
         await page.waitForSelector('h3', { timeout: 4000 });
-    } catch(e) {
-        // 타임아웃 되어도 기본 정보라도 긁기 위해 에러 무시하고 진행
-    }
+    } catch(e) {}
 
-    // 4. 브라우저 내부에서 데이터 추출
+    // 4. 데이터 추출
     const data = await page.evaluate(() => {
         let result = { 
             name: 'Unknown', 
             swim: '-', t1: '-', bike: '-', t2: '-', run: '-', total: 'DNS/DNF' 
         };
         
-        // (1) 이름 추출
         const nameEl = document.querySelector('h1');
         if (nameEl) result.name = nameEl.innerText.trim();
         
-        // (2) Race Splits 테이블 파싱
         const headings = Array.from(document.querySelectorAll('h3'));
         const splitHeader = headings.find(h => h.innerText.includes('Race Splits'));
         
         if (splitHeader) {
-            // Race Splits 헤더 근처나 전체 문서에서 .row.mx-0 찾기
             const rows = Array.from(document.querySelectorAll('.row.mx-0'));
             let transitionCount = 0;
 
@@ -80,9 +79,7 @@ export default async function handler(req, res) {
                 const cols = row.querySelectorAll('.col');
                 if (cols.length === 0) return;
                 
-                // 시간 값은 보통 마지막 컬럼에 위치
                 const timeVal = cols[cols.length - 1].innerText.replace(/\n/g, '').trim();
-
                 if (!timeVal || timeVal === '--') return;
 
                 if (text.includes('Swim')) result.swim = timeVal;
@@ -100,12 +97,16 @@ export default async function handler(req, res) {
         return result;
     });
 
-    // 성공 응답
     res.status(200).json({ bib, ...data });
 
   } catch (error) {
     console.error('Scraping Error:', error);
-    res.status(500).json({ error: 'Failed to scrape', details: error.message });
+    // 에러 내용을 자세히 반환하여 디버깅 용이하게 함
+    res.status(500).json({ 
+        error: 'Failed to scrape', 
+        details: error.message,
+        stack: error.stack 
+    });
   } finally {
     if (browser) {
       await browser.close();
