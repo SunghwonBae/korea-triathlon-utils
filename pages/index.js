@@ -185,7 +185,25 @@ export default function MainIndex() {
             </div>
           </div>
         </div>
+          <div id="tossModal" class="qr-modal-overlay" onclick="closeQrModal('tossModal')">
+            <div className="qr-modal-content" onclick="event.stopPropagation()">
+                <h3 style="color: #0064FF;">Toss로 후원하기</h3>
+                <p>계좌번호가 복사되었습니다!</p>
+                <div className="account-badge toss-bg">카카오뱅크 3333137635297</div>
+                <img src="toss_qr.jpg" alt="Toss QR" className="qr-image"/>
+                <button className="qr-btn-close" onclick="closeQrModal('tossModal')">닫기</button>
+            </div>
+            </div>
 
+            <div id="kakaoModal" class="qr-modal-overlay" onclick="closeQrModal('kakaoModal')">
+            <div className="qr-modal-content" onclick="event.stopPropagation()">
+                <h3 style="color: #3C1E1E;">카카오페이 후원</h3>
+                <p>카카오톡 앱으로 QR코드를 스캔하세요.</p>
+                <div className="account-badge kakao-bg">카카오페이 송금코드</div>
+                <img src="Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
+                <button className="qr-btn-close" onclick="closeQrModal('kakaoModal')">닫기</button>
+            </div>
+            </div>
         <p className="copyright">
           2026 Korea Triathlon Utils.<br className="mobile-br"/> 
            🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
@@ -305,7 +323,55 @@ export default function MainIndex() {
           color: #9ca3af;
           font-size: 1rem;
         }
+/* 공통 모달 스타일 */
+.qr-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
 
+.qr-modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 24px;
+  text-align: center;
+  width: 90%;
+  max-width: 320px;
+}
+
+.qr-image {
+  width: 100%;
+  max-width: 200px;
+  margin: 15px 0;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+}
+
+/* 계좌 정보 뱃지 컬러 구분 */
+.account-badge {
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 14px;
+}
+.toss-bg { background: #f0f5ff; color: #0064FF; }
+.kakao-bg { background: #fff9c4; color: #3c1e1e; }
+
+.qr-btn-close {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-weight: bold;
+}
         .donation-section { max-width: 400px; margin: 0 auto 50px; padding: 0 15px; }
         .donation-card {
           background: white; padding: 24px; border-radius: 20px;
