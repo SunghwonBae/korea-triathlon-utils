@@ -258,11 +258,11 @@ export default function CyclingAnalyzer() {
     <div className="donation-card">
       <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
       <div className="donation-btn-group">
-        <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss">
-          <img src="Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" class="btn-icon"/>
+        <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss" onClick={(e) => handleTossClick(e, '3333137635297')}>
+          <img src="Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon"/>
           Toss 후원
         </a>
-        <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" className="btn-kakao">
+        <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" className="btn-kakao" onClick={handleKakaoClick}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#3C1E1E" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 3c-5.5 0-10 3.6-10 8 0 3 2 5.5 4.9 7l-1.2 4.5c-.1.4.3.7.6.5l5.4-3.5c.1 0 .3 0 .4 0 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/>
           </svg>
@@ -271,23 +271,23 @@ export default function CyclingAnalyzer() {
       </div>
     </div>
   </div>
-          <div id="tossModal" class="qr-modal-overlay" onclick="closeQrModal('tossModal')">
-            <div className="qr-modal-content" onclick="event.stopPropagation()">
-                <h3 style="color: #0064FF;">Toss로 후원하기</h3>
+          <div id="tossModal" className="qr-modal-overlay" onClick={() => closeQrModal('tossModal')}>
+            <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
+                <h3 style={{ color: '#0064FF' }}>Toss로 후원하기</h3>
                 <p>계좌번호가 복사되었습니다!</p>
                 <div className="account-badge toss-bg">카카오뱅크 3333137635297</div>
                 <img src="toss_qr.jpg" alt="Toss QR" className="qr-image"/>
-                <button className="qr-btn-close" onclick="closeQrModal('tossModal')">닫기</button>
+                <button className="qr-btn-close" onClick={() => closeQrModal('tossModal')}>닫기</button>
             </div>
             </div>
 
-            <div id="kakaoModal" class="qr-modal-overlay" onclick="closeQrModal('kakaoModal')">
-            <div className="qr-modal-content" onclick="event.stopPropagation()">
-                <h3 style="color: #3C1E1E;">카카오페이 후원</h3>
+            <div id="kakaoModal" className="qr-modal-overlay" onClick={() => closeQrModal('kakaoModal')}>
+            <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
+                <h3 style={{ color: '#3C1E1E' }}>카카오페이 후원</h3>
                 <p>카카오톡 앱으로 QR코드를 스캔하세요.</p>
                 <div className="account-badge kakao-bg">카카오페이 송금코드</div>
                 <img src="Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
-                <button className="qr-btn-close" onclick="closeQrModal('kakaoModal')">닫기</button>
+                <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
             </div>
             </div>
         <p className="copyright">

@@ -190,7 +190,7 @@ async function loadAndInitializeMenu() {
             <div class="donation-card">
               <p class="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
               <div class="donation-btn-group">
-                <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" class="btn-toss" onclick="handleTossClick(event, '3333137635297')>
+                <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" class="btn-toss" onclick="handleTossClick(event, '3333137635297')">
                     <img src="Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" class="btn-icon"/>
                     Toss 후원
                 </a>
