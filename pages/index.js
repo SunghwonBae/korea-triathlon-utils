@@ -40,6 +40,32 @@ export default function MainIndex() {
     setShowInstallLayer(false);
   };
 
+  // 모바일 기기 체크 공통 함수
+const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+// 토스 클릭 핸들러
+const handleTossClick = (event, accountNo) => {
+  if (!isMobile()) {
+    event.preventDefault();
+    navigator.clipboard.writeText(accountNo).then(() => {
+      document.getElementById('tossModal').style.display = 'flex';
+    });
+  }
+}
+
+// 카카오페이 클릭 핸들러
+const handleKakaoClick = (event) => {
+  if (!isMobile()) {
+    event.preventDefault();
+    document.getElementById('kakaoModal').style.display = 'flex';
+  }
+}
+
+// 모달 닫기 공통 함수
+const closeQrModal = (modalId) => {
+  document.getElementById(modalId).style.display = 'none';
+}
+
   const menuItems = [
     { icon: "📅", title: "D-Day", desc: "D-Day 관리", url: "/dday.html" },
     { icon: "🏆", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
