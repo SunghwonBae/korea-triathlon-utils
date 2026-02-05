@@ -365,7 +365,7 @@ const closeQrModal = (modalId) => {
   background: white;
   padding: 30px;
   border-radius: 24px;
-  text-align: center;
+  text-align: center !important;
   width: 90%;
   max-width: 320px;
 }
