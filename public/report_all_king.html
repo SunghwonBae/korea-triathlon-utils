@@ -340,8 +340,8 @@
                 <div id="yearStatsChart" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
-                <h3 class="chart-title" title="클릭하여 확대/축소">종목별 상관관계 (수영/사이클/런) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-                <div id="correlationChart" class="chart-box chart-minimized"></div>
+                <h3 class="chart-title" title="클릭하여 확대/축소">클럽별 완주 (규모vs기록) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+                <div id="clubTreemap" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
                 <h3 class="chart-title" title="클릭하여 확대/축소">사이클 vs 런 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
@@ -453,11 +453,11 @@
     let searchTerms = [];
 
     // 차트 인스턴스 변수
-    let distChart, ageChart, yearStatsChart, correlationChart, bikeRunScatterChart;
+    let distChart, ageChart, yearStatsChart, clubChart, bikeRunScatterChart;
     let transitionRankChart, raceDifficultyChart, sub10ListChart, sub10RateChart, legendaryFinishersChart;
     
     // 차트 옵션 변수
-    let distOptions, ageOptions, yearStatsOptions, correlationOptions, bikeRunScatterOptions;
+    let distOptions, ageOptions, yearStatsOptions, clubOptions, bikeRunScatterOptions;
     let transitionRankOptions, raceDifficultyOptions, sub10ListOptions, sub10RateOptions, legendaryFinishersOptions;
 
     // 모달 관련 함수
@@ -626,9 +626,9 @@
                 yearStatsOptions.data = processYearStatsData(filteredData);
                 AgChart.update(yearStatsChart, yearStatsOptions);
             }
-            if (correlationChart && correlationOptions) {
-                 correlationOptions.data = processCorrelationData(filteredData);
-                 AgChart.update(correlationChart, correlationOptions);
+            if (clubChart && clubOptions) {
+                 clubOptions.data = processClubData(filteredData);
+                 AgChart.update(clubChart, clubOptions);
             }
             if (bikeRunScatterChart && bikeRunScatterOptions) {
                 const sData = processBikeRunData(filteredData);
@@ -969,19 +969,25 @@
         };
         yearStatsChart = AgChart.create(yearStatsOptions);
 
-        // 4. 종목별 상관관계 (Pie) - 전체 시간 대비 비중
-        const corrData = processCorrelationData(rowData);
-        correlationOptions = {
-            container: document.getElementById('correlationChart'),
-            title: { text: '전체 기록 중 종목별 비중' },
-            data: corrData,
+        // 4. 클럽별 대항전 (Treemap)
+        clubOptions = {
+            container: document.getElementById('clubTreemap'),
+            data: processClubData(rowData),
             series: [{
-                type: 'pie', angleKey: 'value', legendItemKey: 'type',
-                fills: ['#3498db', '#2ecc71', '#f39c12', '#95a5a6'],
-                tooltip: { renderer: params => ({ title: params.datum.type, content: `${params.datum.value.toFixed(1)}%` }) }
+                type: 'treemap',
+                labelKey: 'name',
+                sizeKey: 'count',
+                colorKey: 'colorVal',
+                colorRange: ['#e3f2fd', '#0d47a1'],
+                tooltip: {
+                    renderer: (params) => ({
+                        title: params.datum.name,
+                        content: `인원: ${params.datum.count}명\n평균: ${formatSeconds(params.datum.avgTime)}`
+                    })
+                }
             }]
         };
-        correlationChart = AgChart.create(correlationOptions);
+        clubChart = AgChart.create(clubOptions);
 
         // 5. Bike vs Run Scatter
         const brData = processBikeRunData(rowData);
@@ -1146,24 +1152,28 @@
         return Object.keys(stats).sort().map(y => ({ year: y, count: stats[y].count, avgTime: stats[y].sum / stats[y].count }));
     }
 
-    function processCorrelationData(data) {
-        let s = 0, b = 0, r = 0, t = 0;
-        let count = 0;
+    function processClubData(data) {
+        const clubs = {};
         data.forEach(d => {
-            if (d.to && d.sw && d.bi && d.ru) {
-                s += d.sw; b += d.bi; r += d.ru;
-                t += (d.t1 || 0) + (d.t2 || 0);
-                count++;
+            const cName = d.c ? String(d.c).trim() : "Unknown";
+            if (!cName || cName === "-" || cName === "") return;
+            if (!clubs[cName]) clubs[cName] = { name: cName, sum: 0, count: 0 };
+            if (d.to) {
+                clubs[cName].sum += Number(d.to);
+                clubs[cName].count++;
             }
         });
-        if (count === 0) return [];
-        const total = s + b + r + t;
-        return [
-            { type: 'Swim', value: (s / total) * 100 },
-            { type: 'Bike', value: (b / total) * 100 },
-            { type: 'Run', value: (r / total) * 100 },
-            { type: 'Transition', value: (t / total) * 100 }
-        ];
+        
+        const children = Object.values(clubs)
+            .filter(c => c.count > 0)
+            .map(c => ({ 
+                name: c.name, 
+                count: c.count, 
+                colorVal: c.count * 3, 
+                avgTime: Math.floor(c.sum / c.count) 
+            }));
+        
+        return { name: 'Root', children: children };
     }
 
     function processBikeRunData(data) {

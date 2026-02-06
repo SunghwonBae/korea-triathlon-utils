@@ -340,8 +340,8 @@
                 <div id="yearStatsChart" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
-                <h3 class="chart-title" title="클릭하여 확대/축소">종목별 상관관계 (수영/사이클/런) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-                <div id="correlationChart" class="chart-box chart-minimized"></div>
+                <h3 class="chart-title" title="클릭하여 확대/축소">클럽별 완주 (규모vs기록) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+                <div id="clubTreemap" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
                 <h3 class="chart-title" title="클릭하여 확대/축소">사이클 vs 런 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
@@ -358,7 +358,7 @@
                 <h3 class="chart-title" title="클릭하여 확대/축소">대회별 난이도 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
                 <div id="raceDifficultyChart" class="chart-box chart-minimized" style="margin-bottom: 1px !important;"></div>
                 <div style="width: 100%; text-align: right; padding-right: 5px;">
-                    <label style="font-size: 11px; color: #555; cursor: pointer;"><input type="checkbox" id="toggleSmallRaces" style="vertical-align: middle;"> 50명이상</label>
+                    <label style="font-size: 11px; color: #555; cursor: pointer;"><input type="checkbox" id="toggleSmallRaces" style="vertical-align: middle;"> 50명 이하 제외</label>
                 </div>
             </div>
             <div class="chart-wrapper">
@@ -428,21 +428,24 @@
 <script>
     // [설정] 리포트 이미지 경로
     const reportImages = [
-        "data/back/대한민국_철인들의_전설0요약.pdf_page_1.jpg",
-        "data/back/대한민국_철인들의_전설1서론.pdf_page_2.jpg",
-        "data/back/대한민국_철인들의_전설1서론.pdf_page_3.jpg",
-        "data/back/대한민국_철인들의_전설1서론.pdf_page_4.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_1.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_2.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_3.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_4.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_5.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_6.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_7.jpg",
-        "data/back/대한민국_철인들의_전설2기록분석.pdf_page_8.jpg",
-        "data/back/대한민국_철인들의_전설3결론.pdf_page_1.jpg",
-        "data/back/대한민국_철인들의_전설3결론.pdf_page_2.jpg",
-        "data/back/대한민국_철인들의_전설3결론.pdf_page_3.jpg"
+    "data/back/대한민국_철인들의_전설0요약.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설1서론.pdf_page_2.jpg",
+    "data/back/대한민국_철인들의_전설1서론.pdf_page_3.jpg",
+    "data/back/대한민국_철인들의_전설1서론.pdf_page_4.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_2.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_3.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_4.jpg",
+    "data/back/대한민국_철인들의_전설2기록분석.pdf_page_5.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_2.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_3.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_4.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_5.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_6.jpg",
+    "data/back/대한민국_철인들의_전설3변동분석.pdf_page_7.jpg",
+    "data/back/대한민국_철인들의_전설4결론.pdf_page_1.jpg",
+    "data/back/대한민국_철인들의_전설4결론.pdf_page_2.jpg",
     ];
 
     let currentPageIdx = 0;
@@ -453,11 +456,11 @@
     let searchTerms = [];
 
     // 차트 인스턴스 변수
-    let distChart, ageChart, yearStatsChart, correlationChart, bikeRunScatterChart;
+    let distChart, ageChart, yearStatsChart, clubChart, bikeRunScatterChart;
     let transitionRankChart, raceDifficultyChart, sub10ListChart, sub10RateChart, legendaryFinishersChart;
     
     // 차트 옵션 변수
-    let distOptions, ageOptions, yearStatsOptions, correlationOptions, bikeRunScatterOptions;
+    let distOptions, ageOptions, yearStatsOptions, clubOptions, bikeRunScatterOptions;
     let transitionRankOptions, raceDifficultyOptions, sub10ListOptions, sub10RateOptions, legendaryFinishersOptions;
 
     // 모달 관련 함수
@@ -626,9 +629,9 @@
                 yearStatsOptions.data = processYearStatsData(filteredData);
                 AgChart.update(yearStatsChart, yearStatsOptions);
             }
-            if (correlationChart && correlationOptions) {
-                 correlationOptions.data = processCorrelationData(filteredData);
-                 AgChart.update(correlationChart, correlationOptions);
+            if (clubChart && clubOptions) {
+                 clubOptions.data = processClubData(filteredData);
+                 AgChart.update(clubChart, clubOptions);
             }
             if (bikeRunScatterChart && bikeRunScatterOptions) {
                 const sData = processBikeRunData(filteredData);
@@ -636,8 +639,6 @@
                 const tData = getTrendLineData(sData, slope, intercept);
                 const fData = sData.filter(d => d.run <= d.bike * slope + intercept);
                 const slData = sData.filter(d => d.run > d.bike * slope + intercept);
-                bikeRunScatterOptions.data = sData; 
-                // Scatter update requires series data update
                 bikeRunScatterOptions.series[0].data = fData;
                 bikeRunScatterOptions.series[1].data = slData;
                 bikeRunScatterOptions.series[2].data = tData;
@@ -887,25 +888,34 @@
 
     // Chart click expansion logic
     document.querySelectorAll('.chart-title').forEach(title => {
-        title.addEventListener('click', (e) => {
-            const wrapper = title.parentElement;
-            const box = wrapper.querySelector('.chart-box');
-            box.classList.toggle('chart-expanded');
-            box.classList.toggle('chart-minimized');
-            
-            const icon = title.querySelector('i');
-            if (box.classList.contains('chart-expanded')) {
-                icon.className = "fas fa-compress text-slate-400 text-xs ml-1";
-            } else {
-                icon.className = "fas fa-expand text-slate-400 text-xs ml-1";
-            }
-            
-            // Resize chart
-            const chartId = box.id;
-            const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
-            if (chartId && AgChart) {
-                // 특정 차트 인스턴스 찾아서 리사이즈 필요 시 처리
-                // AgCharts는 컨테이너 크기 변경 시 자동 반응형이지만, 명시적 크기가 필요할 수 있음
+        title.addEventListener('click', function() {
+            const wrapper = this.closest('.chart-wrapper');
+            const box = wrapper ? wrapper.querySelector('.chart-box') : null;
+            if (box) {
+                if (wrapper) wrapper.classList.toggle('w-full');
+
+                box.classList.toggle('chart-minimized');
+                box.classList.toggle('chart-expanded');
+                
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (box.classList.contains('chart-expanded')) {
+                        icon.className = "fas fa-compress text-slate-400 text-xs ml-1";
+                    } else {
+                        icon.className = "fas fa-expand text-slate-400 text-xs ml-1";
+                    }
+                }
+                
+                if (box.classList.contains('chart-expanded')) {
+                    let h = box.dataset.calculatedHeight;
+                    if (!h) {
+                        const winW = window.innerWidth;
+                        h = winW < 768 ? winW * 1.2 : 800;
+                    }
+                    box.style.height = `${h}px`;
+                } else {
+                    box.style.height = '';
+                }
             }
         });
     });
@@ -921,32 +931,91 @@
         const distData = processDistributionData(rowData);
         distOptions = {
             container: document.getElementById('distributionChart'),
-            title: { text: '완주 시간 분포 (30분 단위)' },
+            title: { text: '완주 시간대별 분포 (30분 단위)' },
             data: distData,
             series: [{
-                type: 'bar', xKey: 'range', yKey: 'count', fill: '#3498db',
-                tooltip: { renderer: params => ({ title: params.datum.range, content: `${params.datum.count}명` }) }
+                type: 'bar',
+                xKey: 'range',
+                yKey: 'count',
+                formatter: (params) => {
+                    const timeStr = params.datum.range;
+                    const [h, m] = timeStr.split(':').map(Number);
+                    const timeInHours = h + m / 60;
+                    if (timeInHours < 10) return { fill: '#2ecc71' }; // 10시간 미만
+                    if (timeInHours < 12) return { fill: '#3498db' }; // 12시간 미만
+                    if (timeInHours < 15) return { fill: '#f1c40f' }; // 15시간 미만
+                    return { fill: '#e74c3c' }; // 15시간 이상
+                },
+                label: { enabled: false },
+                tooltip: {
+                    renderer: (params) => ({
+                        title: `시간대: ${params.xValue}`,
+                        content: `${params.yValue}명`
+                    })
+                }
             }],
             axes: [
-                { type: 'category', position: 'bottom' },
-                { type: 'number', position: 'left' }
+                {
+                    type: 'category',
+                    position: 'left',
+                    title: { text: '완주 시간' }
+                },
+                {
+                    type: 'number',
+                    position: 'bottom',
+                    title: { text: '인원 수 (명)' }
+                }
             ]
         };
         distChart = AgChart.create(distOptions);
 
         // 2. 연령대별 평균
-        const ageData = processAgeData(rowData);
         ageOptions = {
             container: document.getElementById('ageChart'),
             title: { text: '연령대별 평균 완주 기록' },
-            data: ageData,
+            data: processAgeData(rowData),
             series: [{
-                type: 'bar', xKey: 'group', yKey: 'avgTime',
-                tooltip: { renderer: params => ({ title: params.datum.group, content: formatSeconds(params.datum.avgTime) }) }
+                type: 'bar',
+                xKey: 'group',
+                yKey: 'avgTime',
+                formatter: (params) => {
+                    const g = params.datum.group;
+                    if (g.startsWith('M')) return { fill: '#3498db' }; // Male
+                    if (g.startsWith('F')) return { fill: '#e74c3c' }; // Female
+                    if (g.startsWith('PRO')) return { fill: '#f1c40f' }; // Pro
+                    return { fill: '#95a5a6' }; // Others
+                },
+                label: {
+                    enabled: true,
+                    color: '#333',
+                    position: 'top',
+                    fontWeight: 'bold',
+                    formatter: (params) => {
+                        if (!params.value) return '';
+                        return `${formatSecondsFull(params.value)}`;
+                    }
+                },
+                tooltip: {
+                    renderer: (params) => ({
+                        title: params.datum.group,
+                        content: `평균: ${formatSecondsFull(params.datum.avgTime)}<br>건수: ${params.datum.count}건`
+                    })
+                }
             }],
             axes: [
-                { type: 'category', position: 'bottom' },
-                { type: 'number', position: 'left', label: { formatter: params => formatSeconds(params.value) } }
+                {
+                    type: 'category',
+                    position: 'left',
+                    title: { text: '연령대' }
+                },
+                {
+                    type: 'number',
+                    position: 'bottom',
+                    title: { text: '평균 기록 (시:분)' },
+                    label: {
+                        formatter: (params) => formatSeconds(params.value)
+                    }
+                }
             ]
         };
         ageChart = AgChart.create(ageOptions);
@@ -958,91 +1027,188 @@
             title: { text: '연도별 완주자 수 및 평균 기록' },
             data: yearData,
             series: [
-                { type: 'bar', xKey: 'year', yKey: 'count', yName: '완주자 수', fill: '#95a5a6' },
-                { type: 'line', xKey: 'year', yKey: 'avgTime', yName: '평균 기록', stroke: '#e74c3c', marker: { fill: '#e74c3c' } }
+                {
+                    type: 'area',
+                    xKey: 'year',
+                    yKey: 'count',
+                    yName: '완주자 수',
+                    fill: '#f1c40f',
+                    stroke: '#f39c12',
+                    fillOpacity: 0.6,
+                    marker: { enabled: true },
+                    tooltip: {
+                        renderer: (params) => ({
+                            title: `${params.datum.year}년`,
+                            content: `완주자: ${params.datum.count}명`
+                        })
+                    }
+                },
+                {
+                    type: 'line',
+                    xKey: 'year',
+                    yKey: 'avgTime',
+                    yName: '평균 기록',
+                    stroke: '#8e44ad',
+                    strokeWidth: 3,
+                    marker: { enabled: true, fill: '#8e44ad' },
+                    tooltip: {
+                        renderer: (params) => ({
+                            title: `${params.datum.year}년`,
+                            content: `평균 기록: ${formatSeconds(params.datum.avgTime)}`
+                        })
+                    }
+                }
             ],
             axes: [
-                { type: 'category', position: 'bottom' },
-                { type: 'number', position: 'left', keys: ['count'] },
-                { type: 'number', position: 'right', keys: ['avgTime'], label: { formatter: params => formatSeconds(params.value) } }
-            ]
+                { type: 'category', position: 'bottom', title: { text: '연도' } },
+                { 
+                    type: 'number', 
+                    position: 'left', 
+                    title: { text: '완주자 수 (명)' },
+                    keys: ['count']
+                },
+                { 
+                    type: 'number', 
+                    position: 'right', 
+                    title: { text: '평균 기록' },
+                    keys: ['avgTime'],
+                    label: { formatter: (params) => formatSeconds(params.value) } 
+                }
+            ],
+            legend: { position: 'bottom' }
         };
         yearStatsChart = AgChart.create(yearStatsOptions);
 
-        // 4. 종목별 상관관계 (Pie) - 전체 시간 대비 비중
-        const corrData = processCorrelationData(rowData);
-        correlationOptions = {
-            container: document.getElementById('correlationChart'),
-            title: { text: '전체 기록 중 종목별 비중' },
-            data: corrData,
+        // 4. 클럽별 대항전 (Treemap)
+        clubOptions = {
+            container: document.getElementById('clubTreemap'),
+            data: processClubData(rowData),
             series: [{
-                type: 'pie', angleKey: 'value', legendItemKey: 'type',
-                fills: ['#3498db', '#2ecc71', '#f39c12', '#95a5a6'],
-                tooltip: { renderer: params => ({ title: params.datum.type, content: `${params.datum.value.toFixed(1)}%` }) }
+                type: 'treemap',
+                labelKey: 'name',
+                sizeKey: 'count',
+                colorKey: 'colorVal',
+                colorRange: ['#e3f2fd', '#0d47a1'],
+                tooltip: {
+                    renderer: (params) => ({
+                        title: params.datum.name,
+                        content: `인원: ${params.datum.count}명\n평균: ${formatSeconds(params.datum.avgTime)}`
+                    })
+                }
             }]
         };
-        correlationChart = AgChart.create(correlationOptions);
+        clubChart = AgChart.create(clubOptions);
 
         // 5. Bike vs Run Scatter
         const brData = processBikeRunData(rowData);
+        const { slope, intercept } = getTrendParams(brData);
+        const trendData = getTrendLineData(brData, slope, intercept);
+        
+        const fastData = brData.filter(d => d.run <= d.bike * slope + intercept);
+        const slowData = brData.filter(d => d.run > d.bike * slope + intercept);
+
         bikeRunScatterOptions = {
             container: document.getElementById('bikeRunScatterChart'),
-            title: { text: 'Bike vs Run 상관관계' },
-            data: brData, // 초기 데이터
             series: [
-                 { type: 'scatter', xKey: 'bike', yKey: 'run', title: 'Fast Run', fill: '#e74c3c', size: 4, fillOpacity: 0.6 },
-                 { type: 'scatter', xKey: 'bike', yKey: 'run', title: 'Slow Run', fill: '#3498db', size: 4, fillOpacity: 0.6 },
-                 { type: 'line', xKey: 'bike', yKey: 'trend', stroke: '#2c3e50', strokeWidth: 2 }
+                 { 
+                    type: 'scatter', 
+                    title: 'Fast Run (Below Trend)', 
+                    data: fastData, 
+                    xKey: 'bike', 
+                    yKey: 'run', 
+                    fill: 'rgba(52, 152, 219, 0.7)', 
+                    stroke: 'rgba(52, 152, 219, 1)',
+                    size: 5,
+                    tooltip: { renderer: params => ({ title: params.datum.name, content: `Bike: ${formatSeconds(params.datum.bike)}\nRun: ${formatSeconds(params.datum.run)}` }) }
+                 },
+                 { 
+                    type: 'scatter', 
+                    title: 'Slow Run (Above Trend)', 
+                    data: slowData, 
+                    xKey: 'bike', 
+                    yKey: 'run', 
+                    fill: 'rgba(231, 76, 60, 0.7)', 
+                    stroke: 'rgba(231, 76, 60, 1)',
+                    size: 5,
+                    tooltip: { renderer: params => ({ title: params.datum.name, content: `Bike: ${formatSeconds(params.datum.bike)}\nRun: ${formatSeconds(params.datum.run)}` }) }
+                 },
+                 { type: 'line', title: 'Trend Line', data: trendData, xKey: 'bike', yKey: 'run', stroke: '#2c3e50', strokeWidth: 2, marker: { enabled: false }, tooltip: { enabled: false } }
             ],
             axes: [
-                { type: 'number', position: 'bottom', title: { text: 'Bike (초)' }, label: { formatter: params => formatSeconds(params.value) } },
-                { type: 'number', position: 'left', title: { text: 'Run (초)' }, label: { formatter: params => formatSeconds(params.value) } }
-            ]
+                { type: 'number', position: 'bottom', title: { text: 'Bike Time' }, label: { formatter: params => formatSeconds(params.value) } },
+                { type: 'number', position: 'left', title: { text: 'Run Time' }, label: { formatter: params => formatSeconds(params.value) } }
+            ],
+            legend: { position: 'bottom' }
         };
-        // 초기 렌더링 시 시리즈 데이터 분리 로직 수행
-        {
-            const { slope, intercept } = getTrendParams(brData);
-            const tData = getTrendLineData(brData, slope, intercept);
-            const fData = brData.filter(d => d.run <= d.bike * slope + intercept);
-            const slData = brData.filter(d => d.run > d.bike * slope + intercept);
-            bikeRunScatterOptions.series[0].data = fData;
-            bikeRunScatterOptions.series[1].data = slData;
-            bikeRunScatterOptions.series[2].data = tData;
-        }
         bikeRunScatterChart = AgChart.create(bikeRunScatterOptions);
 
         // 6. 바꿈터 순위
-        const transData = processTransitionData(rowData, 200);
-        adjustChartHeight('transitionRankChart', transData.length);
+        const toggleT = document.getElementById('toggleSmall100');
+        const limitT = (toggleT && toggleT.checked) ? 100 : 200;
+        const transData = processTransitionData(rowData, limitT);
+        adjustChartHeight('transitionRankChart', transData.length, 20);
         transitionRankOptions = {
             container: document.getElementById('transitionRankChart'),
-            title: { text: '바꿈터(T1+T2) Top Rank' },
             data: transData,
             series: [{
-                type: 'bar', direction: 'horizontal', xKey: 'name', yKey: 'total',
-                tooltip: { renderer: params => ({ title: params.datum.name, content: formatSeconds(params.datum.total) }) }
+                type: 'bar',
+                xKey: 'name',
+                yKey: 'total',
+                formatter: (params) => {
+                    const t = params.datum.total;
+                    if (t <= 120) return { fill: '#2ecc71' }; // 2분 이하
+                    if (t <= 180) return { fill: '#3498db' }; // 3분 이하
+                    if (t <= 240) return { fill: '#9b59b6' }; // 4분 이하
+                    if (t <= 300) return { fill: '#f1c40f' }; // 5분 이하
+                    return { fill: '#e74c3c' }; // 5분 초과
+                },
+                tooltip: {
+                    renderer: (params) => ({
+                        title: params.datum.name,
+                        content: `Total Transition: ${Math.floor(params.datum.total / 60)}:${Math.floor(params.datum.total % 60).toString().padStart(2, '0')}`
+                    })
+                }
             }],
             axes: [
-                { type: 'category', position: 'left' },
-                { type: 'number', position: 'bottom', label: { formatter: params => formatSeconds(params.value) } }
+                { type: 'category', position: 'left', title: { text: '선수' } },
+                { 
+                    type: 'number', position: 'bottom', title: { text: '시간 (분:초)' }, 
+                    label: { formatter: (params) => `${Math.floor(params.value / 60)}:${Math.floor(params.value % 60).toString().padStart(2, '0')}` } 
+                }
             ]
         };
         transitionRankChart = AgChart.create(transitionRankOptions);
 
         // 7. 대회별 난이도
         const raceDiffData = processRaceDifficultyData(rowData);
-        adjustChartHeight('raceDifficultyChart', raceDiffData.length);
+        adjustChartHeight('raceDifficultyChart', raceDiffData.length, 20);
         raceDifficultyOptions = {
             container: document.getElementById('raceDifficultyChart'),
-            title: { text: '대회별 평균 기록 (난이도)' },
             data: raceDiffData,
             series: [{
-                type: 'bar', direction: 'horizontal', xKey: 'race', yKey: 'avgTime',
-                tooltip: { renderer: params => ({ title: params.datum.race, content: formatSeconds(params.datum.avgTime) }) }
+                type: 'bar',
+                xKey: 'raceName',
+                yKey: 'median',
+                yName: 'Median Time',
+                formatter: (params) => {
+                    const h = params.datum.median / 3600;
+                    if (h <= 13) return { fill: '#2ecc71' }; // 13시간 이하
+                    if (h <= 14) return { fill: '#3498db' }; // 14시간 이하
+                    if (h <= 15) return { fill: '#f1c40f' }; // 15시간 이하
+                    if (h <= 16) return { fill: '#e67e22' }; // 16시간 이하
+                    if (h <= 17) return { fill: '#e74c3c' }; // 17시간 이하
+                    return { fill: '#8e44ad' }; // 17시간 초과
+                },
+                tooltip: {
+                    renderer: (params) => ({
+                        title: params.datum.raceName,
+                        content: `Median: ${formatSeconds(params.datum.median)}<br>Min: ${formatSeconds(params.datum.min)}<br>Max: ${formatSeconds(params.datum.max)}<br>Count: ${params.datum.count}`
+                    })
+                }
             }],
             axes: [
-                { type: 'category', position: 'left' },
-                { type: 'number', position: 'bottom', label: { formatter: params => formatSeconds(params.value) } }
+                { type: 'category', position: 'left', title: { text: '대회명' } },
+                { type: 'number', position: 'bottom', title: { text: '중앙값 (시간)' }, label: { formatter: (params) => formatSeconds(params.value) } }
             ]
         };
         raceDifficultyChart = AgChart.create(raceDifficultyOptions);
@@ -1109,66 +1275,122 @@
     // (이 함수들은 원본 로직을 그대로 유지해야 함)
 
     function processDistributionData(data) {
-        // 30분 단위 (1800초)
         const bins = {};
         data.forEach(d => {
-            if (!d.to) return;
-            const binStart = Math.floor(d.to / 1800) * 1800;
-            const binKey = formatSeconds(binStart) + "~" + formatSeconds(binStart + 1800);
-            bins[binKey] = (bins[binKey] || 0) + 1;
+            let val = Number(d.to);
+            if (!val || isNaN(val)) return;
+            
+            const halfHour = Math.floor(val / 1800) * 0.5; // 30분 단위 버킷
+            bins[halfHour] = (bins[halfHour] || 0) + 1;
         });
-        return Object.keys(bins).sort().map(k => ({ range: k, count: bins[k] }));
+        return Object.keys(bins).sort((a, b) => parseFloat(a) - parseFloat(b)).map(k => {
+            const h = Math.floor(parseFloat(k));
+            const m = (parseFloat(k) - h) * 60;
+            const label = `${h}:${m.toString().padStart(2, '0')}`;
+            return {
+                range: label,
+                count: bins[k]
+            };
+        });
     }
 
     function processAgeData(data) {
-        const groups = {};
+            const groups = {};
         data.forEach(d => {
-            if (!d.to) return;
-            let gName = d.d || "Unknown";
-            // 간단 그룹핑
-            if (!groups[gName]) groups[gName] = { sum: 0, count: 0 };
-            groups[gName].sum += d.to;
-            groups[gName].count++;
+            let val = Number(d.to);
+            if (!val || isNaN(val)) return;
+            
+            let rawGroup = d.d ? String(d.d).trim().toUpperCase() : "";
+            let groupName = "[연대별무]";
+
+            if (rawGroup.includes("PRO")) {
+                groupName = "PRO";
+            } else {
+                // M/F + 숫자 패턴 추출 (예: M30, M30-34, M30~34)
+                const match = rawGroup.match(/^([MF])\s*(\d+)/);
+                if (match) {
+                    const gender = match[1];
+                    const age = parseInt(match[2], 10);
+                    // 10세 단위 통합 (30~39 -> 30-39)
+                    const startAge = Math.floor(age / 10) * 10;
+                    const endAge = startAge + 9;
+                    groupName = `${gender}${startAge}-${endAge}`;
+                }
+            }
+
+            if (!groups[groupName]) groups[groupName] = { sum: 0, count: 0 };
+            groups[groupName].sum += val;
+            groups[groupName].count += 1;
         });
-        return Object.keys(groups).sort().map(g => ({ group: g, avgTime: groups[g].sum / groups[g].count }));
+        return Object.keys(groups).sort().map(g => ({
+            group: `${g} (${groups[g].count}건)`,
+            count: groups[g].count,
+            avgTime: Math.floor(groups[g].sum / groups[g].count)
+        }));
     }
 
     function processYearStatsData(data) {
-        const stats = {};
+        const years = {};
         data.forEach(d => {
-            const yr = d.rd ? d.rd.substring(0, 4) : "Unknown"; // YYYY 가정
-            if (!stats[yr]) stats[yr] = { sum: 0, count: 0 };
-            if (d.to) {
-                stats[yr].sum += d.to;
-                stats[yr].count++;
+            if (!d.rd) return;
+            
+            // 날짜 문자열에서 숫자 그룹 추출 (예: "06/08/27" -> ["06", "08", "27"])
+            const parts = String(d.rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
+            if (parts.length === 0) return;
+
+            const val = parts[0];
+            let year = '';
+
+            if (val.length === 4 || val.length === 8) {
+                year = val.substring(0, 4);
+            } else if (val.length === 2 || val.length === 6) {
+                const yy = val.substring(0, 2);
+                year = yy.startsWith('9') ? '19' + yy : '20' + yy;
+            }
+
+            if (year && year.length === 4) {
+                if (!years[year]) years[year] = { count: 0, sum: 0, timeCount: 0 };
+                years[year].count++;
+                if (d.to) {
+                    years[year].sum += Number(d.to);
+                    years[year].timeCount++;
+                }
             }
         });
-        return Object.keys(stats).sort().map(y => ({ year: y, count: stats[y].count, avgTime: stats[y].sum / stats[y].count }));
+        return Object.keys(years).sort().map(y => ({
+            year: y,
+            count: years[y].count,
+            avgTime: years[y].timeCount > 0 ? Math.floor(years[y].sum / years[y].timeCount) : null
+        }));
     }
 
-    function processCorrelationData(data) {
-        let s = 0, b = 0, r = 0, t = 0;
-        let count = 0;
+    function processClubData(data) {
+        const clubs = {};
         data.forEach(d => {
-            if (d.to && d.sw && d.bi && d.ru) {
-                s += d.sw; b += d.bi; r += d.ru;
-                t += (d.t1 || 0) + (d.t2 || 0);
-                count++;
+            const cName = d.c ? String(d.c).trim() : "Unknown";
+            if (!cName || cName === "-" || cName === "") return;
+            if (!clubs[cName]) clubs[cName] = { name: cName, sum: 0, count: 0 };
+            if (d.to) {
+                clubs[cName].sum += Number(d.to);
+                clubs[cName].count++;
             }
         });
-        if (count === 0) return [];
-        const total = s + b + r + t;
-        return [
-            { type: 'Swim', value: (s / total) * 100 },
-            { type: 'Bike', value: (b / total) * 100 },
-            { type: 'Run', value: (r / total) * 100 },
-            { type: 'Transition', value: (t / total) * 100 }
-        ];
+        
+        const children = Object.values(clubs)
+            .filter(c => c.count > 0)
+            .map(c => ({ 
+                name: c.name, 
+                count: c.count, 
+                colorVal: c.count * 3, 
+                avgTime: Math.floor(c.sum / c.count) 
+            }));
+        
+        return { name: 'Root', children: children };
     }
 
     function processBikeRunData(data) {
         return data.filter(d => d.bi > 0 && d.ru > 0).map(d => ({
-            bike: d.bi, run: d.ru, trend: 0 // trend calculated later
+            name: d.n, bike: Number(d.bi), run: Number(d.ru)
         }));
     }
     
@@ -1193,18 +1415,31 @@
         const minB = Math.min(...data.map(d => d.bike));
         const maxB = Math.max(...data.map(d => d.bike));
         return [
-            { bike: minB, trend: slope * minB + intercept },
-            { bike: maxB, trend: slope * maxB + intercept }
+            { bike: minB, run: slope * minB + intercept },
+            { bike: maxB, run: slope * maxB + intercept }
         ];
     }
 
-    function processTransitionData(data, limit) {
-        // (t1+t2) small to large
-        const list = data.filter(d => (d.t1 || 0) + (d.t2 || 0) > 0)
-            .map(d => ({ name: d.n, total: (d.t1 || 0) + (d.t2 || 0) }))
+    function processTransitionData(data, limit = 200) {
+        return data
+            .filter(d => (d.t1 || 0) > 0 && (d.t2 || 0) > 0)
+            .map(d => {
+                let year = "";
+                if (d.rd) {
+                    const parts = String(d.rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
+                    if (parts.length > 0) {
+                         const p0 = parts[0];
+                         if (p0.length === 4) year = p0;
+                         else if (p0.length === 2) year = (p0.startsWith('9') ? '19' : '20') + p0;
+                    }
+                }
+                return {
+                    name: `${d.n} (${d.rn} ${year})`,
+                    total: (d.t1 || 0) + (d.t2 || 0)
+                };
+            })
             .sort((a, b) => a.total - b.total)
             .slice(0, limit);
-        return list;
     }
     
     function updateTransitionRankChart(data) {
@@ -1212,21 +1447,55 @@
         const toggle = document.getElementById('toggleSmall100');
         const limit = toggle.checked ? 100 : 200;
         const newData = processTransitionData(data, limit);
-        adjustChartHeight('transitionRankChart', newData.length);
+        adjustChartHeight('transitionRankChart', newData.length, 20);
         transitionRankOptions.data = newData;
         window.AgChart.update(transitionRankChart, transitionRankOptions);
     }
 
     function processRaceDifficultyData(data) {
-        const races = {};
+        const raceGroups = {};
         data.forEach(d => {
-            if (!d.to || !d.rn) return;
-            if (!races[d.rn]) races[d.rn] = { sum: 0, count: 0 };
-            races[d.rn].sum += d.to;
-            races[d.rn].count++;
+            const rDate = d.rd;
+            const rName = d.rn || "Unknown";
+            const time = Number(d.to);
+            if (!time || time <= 0) return;
+            
+            const key = rDate ? rDate : rName;
+            
+            if (!raceGroups[key]) {
+                raceGroups[key] = { name: rName, date: rDate, times: [] };
+            }
+            raceGroups[key].times.push(time);
         });
-        return Object.keys(races).map(r => ({ race: r, avgTime: races[r].sum / races[r].count, count: races[r].count }))
-            .sort((a, b) => a.avgTime - b.avgTime); // Fast to Slow
+
+        const chartData = Object.values(raceGroups).map(group => {
+            const times = group.times.sort((a, b) => a - b);
+            const count = times.length;
+            if (count === 0) return null;
+
+            let year = "";
+            if (group.date) {
+                const parts = String(group.date).trim().split(/[^0-9]+/);
+                if (parts.length > 0) {
+                     const p0 = parts[0];
+                     if (p0.length === 4) year = p0;
+                     else if (p0.length === 2) year = (p0.startsWith('9') ? '19' : '20') + p0;
+                }
+            }
+            const label = year ? `${group.name} (${year})` : group.name;
+
+            return {
+                raceName: label,
+                min: times[0],
+                q1: times[Math.floor(count * 0.25)],
+                median: times[Math.floor(count * 0.5)],
+                q3: times[Math.floor(count * 0.75)],
+                max: times[count - 1],
+                count: count
+            };
+        }).filter(item => item !== null);
+        
+        return chartData.sort((a, b) => b.median - a.median);
     }
 
     function updateRaceDifficultyChart(data) {
@@ -1235,7 +1504,7 @@
         const toggle = document.getElementById('toggleSmallRaces');
         if (toggle.checked) pData = pData.filter(d => d.count >= 50);
         
-        adjustChartHeight('raceDifficultyChart', pData.length);
+        adjustChartHeight('raceDifficultyChart', pData.length, 20);
         raceDifficultyOptions.data = pData;
         window.AgChart.update(raceDifficultyChart, raceDifficultyOptions);
     }
@@ -1285,12 +1554,15 @@
         };
     }
 
-    function adjustChartHeight(id, itemCount) {
+    function adjustChartHeight(id, itemCount, itemHeight = 25, minHeight = 300) {
         const box = document.getElementById(id);
         if (!box) return;
         // 높이 자동 조절 로직 (항목당 20px + 여백)
-        const newHeight = Math.max(300, itemCount * 25 + 50);
-        box.style.height = `${newHeight}px`;
+        const newHeight = Math.max(minHeight, itemCount * itemHeight + 50);
+        box.dataset.calculatedHeight = newHeight;
+        if (box.classList.contains('chart-expanded')) {
+            box.style.height = `${newHeight}px`;
+        }
     }
 
     function saveRowToMemory(params) {
