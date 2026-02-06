@@ -420,11 +420,12 @@
                 </div>
             </div>
 
-            <div id="rowCount" style="margin-bottom: 10px; font-weight: bold; text-align: center; color: #2c3e50;">총 0건 / 필터링 0건</div>
-            <div id="myGrid" class="ag-theme-alpine"></div>
+
         </div>
     </div>
 
+    <div id="rowCount" style="margin-bottom: 10px; font-weight: bold; text-align: center; color: #2c3e50;">총 0건 / 필터링 0건</div>
+    <div id="myGrid" class="ag-theme-alpine"></div>
 <script>
     // [설정] 리포트 이미지 경로
     const reportImages = [
@@ -545,6 +546,7 @@
         {
             headerName: "Save",
             width: 70,
+            pinned: 'left',
             cellRenderer: params => {
                 const btn = document.createElement('button');
                 btn.innerHTML = '<i class="fas fa-save"></i>';
@@ -555,11 +557,9 @@
             },
             cellStyle: { 'text-align': 'center' }
         },
-        { headerName: "완주순", field: "fi", width: 90, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: zeroToEmptyFormatter },
-        { headerName: "완주횟수", field: "fn", width: 90, sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: "이름", field: "n", width: 110, sortable: true, filter: 'agTextColumnFilter', cellClass: 'bold-cell', pinned: 'left' },
         { headerName: "성별", field: "g", width: 90, filter: true },
         { headerName: "배번", field: "b", width: 90, sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: "이름", field: "n", width: 110, sortable: true, filter: 'agTextColumnFilter', cellClass: 'bold-cell', pinned: 'left' },
         { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true },
         { headerName: "소속", field: "c", width: 130, sortable: true, filter: 'agTextColumnFilter' },
         { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter' },
@@ -699,8 +699,8 @@
                         let gender = "";
                         if(d.d) {
                             const dStr = String(d.d).toUpperCase();
-                            if(dStr.startsWith("M")) gender = "남";
-                            else if(dStr.startsWith("F") || dStr.startsWith("W")) gender = "여";
+                            if(dStr.includes("Male") || dStr.startsWith("M")) gender = "남";
+                            else if(dStr.includes("Female") || dStr.startsWith("W") || dStr.startsWith("F")) gender = "여";
                         }
                         
                         return {
@@ -924,6 +924,33 @@
     // 데이터 처리 및 차트 생성 함수들 (기존 로직 유지)
     // -----------------------------------------------------------
     
+    function sub10ListTooltipRenderer(params) {
+        const d = params.datum;
+        const formatMinSec = (sec) => {
+            if (!sec) return "00:00";
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        };
+        if (params.yKey === 'unknown_t') {
+            return {
+                title: d.label,
+                content: `t1+t2 : ${formatMinSec(d.unknown_t)}`
+            };
+        }
+        return {
+            title: d.label,
+            content: `
+                total : ${formatSecondsFull(d.to)}<br>
+                swim : ${formatSecondsFull(d.sw)}<br>
+                t1: ${formatMinSec(d.t1)}<br>
+                bike : ${formatSecondsFull(d.bi)}<br>
+                t2: ${formatMinSec(d.t2)}<br>
+                run : ${formatSecondsFull(d.ru)}
+            `
+        };
+    }
+
     function initCharts(rowData) {
         const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
 
@@ -1218,17 +1245,23 @@
         adjustChartHeight('sub10ListChart', sub10Data.length);
         sub10ListOptions = {
             container: document.getElementById('sub10ListChart'),
-            title: { text: `Sub-10 달성 (${sub10Data.length}건)` },
             data: sub10Data,
+            title: {
+                text: `총 ${sub10Data.length}건`,
+                fontSize: 13,
+                color: '#666'
+            },
             series: [
-                { type: 'bar', xKey: 'label', yKey: 'sw', yName: 'Swim', stacked: true },
-                { type: 'bar', xKey: 'label', yKey: 'bi', yName: 'Bike', stacked: true },
-                { type: 'bar', xKey: 'label', yKey: 'ru', yName: 'Run', stacked: true },
-                { type: 'bar', xKey: 'label', yKey: 'tr', yName: 'Transition', stacked: true }
+                { type: 'bar', xKey: 'label', yKey: 'sw', yName: 'Swim', fill: '#3498db', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } },
+                { type: 'bar', xKey: 'label', yKey: 't1', yName: 'T1', fill: '#bdc3c7', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } },
+                { type: 'bar', xKey: 'label', yKey: 'bi', yName: 'Bike', fill: '#2ecc71', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } },
+                { type: 'bar', xKey: 'label', yKey: 't2', yName: 'T2', fill: '#bdc3c7', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } },
+                { type: 'bar', xKey: 'label', yKey: 'ru', yName: 'Run', fill: '#e67e22', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } },
+                { type: 'bar', xKey: 'label', yKey: 'unknown_t', yName: 't1+t2', fill: '#95a5a6', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } }
             ],
             axes: [
-                { type: 'category', position: 'bottom' },
-                { type: 'number', position: 'left', label: { formatter: params => formatSeconds(params.value) } }
+                { type: 'category', position: 'left', title: { text: '선수 (대회-연도)' } },
+                { type: 'number', position: 'bottom', title: { text: '완주 시간' }, label: { formatter: (params) => formatSeconds(params.value) } }
             ]
         };
         sub10ListChart = AgChart.create(sub10ListOptions);
@@ -1510,13 +1543,45 @@
     }
 
     function processSub10ListData(data) {
-        // Sub-10: < 36000 sec
-        return data.filter(d => d.to && d.to < 36000).map(d => ({
-            label: `${d.n} (${formatSeconds(d.to)})`,
-            sw: d.sw, bi: d.bi, ru: d.ru,
-            tr: (d.t1||0) + (d.t2||0),
-            to: d.to
-        })).sort((a, b) => a.to - b.to);
+        return data
+            .filter(d => d.to && d.to < 36000 && d.to > 0 && d.sw > 0)
+            .sort((a, b) => a.to - b.to)
+            .map(d => {
+                let year = "";
+                if (d.rd) {
+                    const parts = String(d.rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
+                    if (parts.length > 0) {
+                         const p0 = parts[0];
+                         if (p0.length === 4) year = p0;
+                         else if (p0.length === 2) year = (p0.startsWith('9') ? '19' : '20') + p0;
+                    }
+                }
+
+                let t1 = d.t1 || 0;
+                let t2 = d.t2 || 0;
+                let unknown_t = 0;
+
+                if (t1 === 0 && t2 === 0) {
+                    const sumParts = (d.sw || 0) + (d.bi || 0) + (d.ru || 0);
+                    if (d.to > sumParts) {
+                        unknown_t = d.to - sumParts;
+                    }
+                }
+
+                return {
+                    label: `${d.n} (${d.rn}-${year})`,
+                    n: d.n,
+                    rn: d.rn,
+                    year: year,
+                    to: d.to,
+                    sw: d.sw,
+                    t1: t1,
+                    bi: d.bi,
+                    t2: t2,
+                    ru: d.ru,
+                    unknown_t: unknown_t
+                };
+            });
     }
 
     function processSub10RateData(data) {
