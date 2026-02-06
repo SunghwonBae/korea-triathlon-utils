@@ -73,7 +73,7 @@ const closeQrModal = (modalId) => {
     { icon: "🏁", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
     { icon: "💾", title: "T-Memory", desc: "기록 저장 및 분석", url: "/triathlon_memory.html" },
     { icon: "🗂️", title: "T-Memory Report", desc: "기록 보고서 생성", url: "/memory_report.html" },
-    { icon: "📈", title: "대회 통계 비교", desc: "여러 대회 기록 비교 분석", url: "/report_all.html" },
+    { icon: "📈", title: "대회 통계 비교", desc: "여러 대회 기록 비교 분석", url: "/report_all_v2.html" },
     { icon: "👑", title: "킹코스 완주 기록", desc: "2019년까지 킹완주자 기록", url: "/report_old_king.html" },
     { icon: "🔍", title: "아이언맨 통합 기록검색기", desc: "아이언맨 대회기록검색", url: "/ironman_records_search_all.html" },
     { icon: "📸", title: "IM 트래커 캡처기록", desc: "트래커 캡처에서 기록 추출", url: "/ironman_tracker_capture_records.html" },
