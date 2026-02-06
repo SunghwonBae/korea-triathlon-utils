@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>V3 초슬림 데이터 통합기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-10">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">V3 초슬림 데이터 통합</h2>
+        <p class="text-sm text-slate-500 mb-6">파일을 합치고 용량을 최소화(Minify)하여 10MB 이하로 유지합니다.</p>
+        
+        <div class="space-y-4 my-6">
+            <div class="p-4 border rounded-lg bg-blue-50">
+                <label class="block text-xs font-semibold text-blue-600 mb-1">1. 기존 all_records_v2.json (필수)</label>
+                <input type="file" id="fAll" class="w-full text-sm">
+            </div>
+            <div class="p-4 border rounded-lg bg-orange-50">
+                <label class="block text-xs font-semibold text-orange-600 mb-1">2. 기존 race_meta_v2.json (필수)</label>
+                <input type="file" id="fMeta" class="w-full text-sm">
+            </div>
+            <div class="p-4 border-2 border-dashed rounded-lg border-slate-300">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">3. 추가할 Ironman JSON 파일들 (다중 선택)</label>
+                <input type="file" id="fNews" multiple class="w-full text-sm">
+            </div>
+        </div>
+
+        <button onclick="processData()" class="w-full bg-slate-800 text-white py-4 rounded-xl font-bold hover:bg-black transition-all shadow-lg">
+            데이터 통합 및 압축 실행
+        </button>
+
+        <div id="log" class="mt-6 p-4 bg-gray-900 text-green-400 rounded-lg font-mono text-xs h-48 overflow-y-auto">
+            > 대기 중...
+        </div>
+    </div>
+
+    <script>
+        const logArea = document.getElementById('log');
+        function print(msg) {
+            const d = document.createElement('div');
+            d.textContent = `> ${msg}`;
+            logArea.appendChild(d);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        async function processData() {
+            const fAll = document.getElementById('fAll').files[0];
+            const fMeta = document.getElementById('fMeta').files[0];
+            const fNews = document.getElementById('fNews').files;
+
+            if(!fAll || !fMeta || fNews.length === 0) return alert("모든 파일을 선택해주세요.");
+
+            try {
+                let records = JSON.parse(await fAll.text());
+                let meta = JSON.parse(await fMeta.text());
+                let metaIds = new Set(meta.map(m => m.id));
+
+                for(let file of fNews) {
+                    const data = JSON.parse(await file.text());
+                    const fName = file.name.replace('.json', '');
+                    const year = fName.match(/\d{4}/)?.[0] || "2025";
+                    const rid = fName; // 파일명을 대회 ID로 사용
+
+                    print(`${file.name} 변환 중...`);
+
+                    data.forEach(item => {
+                        // Ironman 포맷(ot, st, bt..)을 표준 포맷(t, s, bk..)으로 매핑
+                        records.push({
+                            n: item.n || "",
+                            t: parseInt(item.ot || item.t || 0),
+                            s: parseInt(item.st || item.s || 0),
+                            bk: parseInt(item.bt || item.bk || 0),
+                            r: parseInt(item.rt || item.r || 0),
+                            t1: parseInt(item.t1t || item.t1 || 0),
+                            t2: parseInt(item.t2t || item.t2 || 0),
+                            rn: rid,
+                            y: year,
+                            rt: "Ironman",
+                            b: String(item.bi || item.b || ""),
+                            d: item.di || item.d || "",
+                            c: item.c || "",
+                            q: item.fs || item.q || ""
+                        });
+                    });
+
+                    if(!metaIds.has(rid)) {
+                        meta.push({ id: rid, name: rid, year: year, type: "Ironman" });
+                        metaIds.add(rid);
+                    }
+                }
+
+                print(`통합 완료. 총 ${records.length}건.`);
+                
+                // [핵심] JSON.stringify의 세 번째 인자를 빼서 공백을 제거함 (용량 절감)
+                download(records, 'all_records_v2.json');
+                setTimeout(() => download(meta, 'race_meta_v2.json'), 1000);
+
+            } catch(e) {
+                print(`에러: ${e.message}`);
+            }
+        }
+
+        function download(obj, name) {
+            // 공백 없이 한 줄로 저장 (Minify)
+            const blob = new Blob([JSON.stringify(obj)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name; a.click();
+            URL.revokeObjectURL(url);
+            print(`${name} 다운로드 시작 (압축됨)`);
+        }
+    </script>
+</body>
+</html>
