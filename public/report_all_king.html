@@ -679,7 +679,7 @@
             // ============================================================
             // [수정됨] 데이터 소스 변경: ironman_data.json -> all_records_v2.json
             // ============================================================
-            fetch('all_records_v2.json')
+            fetch('/data/all_records_v2.json')
                 .then(response => response.json())
                 .then(rawData => {
                     // 1. King Course (Ironman / Full) 필터링
