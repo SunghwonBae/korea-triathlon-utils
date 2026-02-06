@@ -230,7 +230,13 @@ async function loadAndInitializeMenu() {
             특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a>
             </p>
         </footer>`;
-        document.body.insertAdjacentHTML('beforeend', footerHtml);
+        
+        const controlPanel = document.querySelector('.control-panel');
+        if (controlPanel) {
+            controlPanel.insertAdjacentHTML('beforeend', footerHtml);
+        } else {
+            document.body.insertAdjacentHTML('beforeend', footerHtml);
+        }
         // --- 푸터 자동 주입 코드 끝 ---
 
         initializeMenuController();
