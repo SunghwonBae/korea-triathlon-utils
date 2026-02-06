@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>V3 대회 데이터 통합기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">대회 데이터 통합 도구 V3</h1>
+        
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="p-4 border rounded-lg bg-blue-50">
+                <label class="block text-sm font-bold text-blue-700 mb-1">1. 기존 all_records_v2.json</label>
+                <input type="file" id="masterRecords" class="w-full text-sm">
+            </div>
+            <div class="p-4 border rounded-lg bg-green-50">
+                <label class="block text-sm font-bold text-green-700 mb-1">2. 기존 race_meta_v2.json</label>
+                <input type="file" id="masterMeta" class="w-full text-sm">
+            </div>
+        </div>
+
+        <div class="p-6 border-2 border-dashed border-gray-300 rounded-xl mb-6">
+            <label class="block text-sm font-bold text-gray-700 mb-2">3. 추가할 대회 JSON 파일들 (다중 선택)</label>
+            <input type="file" id="newFiles" multiple accept=".json" class="w-full">
+        </div>
+
+        <button onclick="runMerge()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700">
+            데이터 통합 및 업데이트 파일 생성
+        </button>
+
+        <div id="status" class="mt-6 p-4 bg-black text-green-400 rounded-lg font-mono text-xs h-40 overflow-y-auto">
+            > 파일을 선택하고 시작 버튼을 눌러주세요.
+        </div>
+    </div>
+
+    <script>
+        const statusBox = document.getElementById('status');
+        function log(msg) {
+            const div = document.createElement('div');
+            div.textContent = `> ${msg}`;
+            statusBox.appendChild(div);
+            statusBox.scrollTop = statusBox.scrollHeight;
+        }
+
+        function timeToSec(val) {
+            if (!val || typeof val !== 'string') return typeof val === 'number' ? val : 0;
+            const parts = val.replace('.', ':').split(':');
+            if (parts.length === 3) return parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2]);
+            if (parts.length === 2) return parseInt(parts[0])*60 + parseInt(parts[1]);
+            return parseInt(val) || 0;
+        }
+
+        async function runMerge() {
+            const fMaster = document.getElementById('masterRecords').files[0];
+            const fMeta = document.getElementById('masterMeta').files[0];
+            const fNews = document.getElementById('newFiles').files;
+
+            if (!fMaster || !fMeta || fNews.length === 0) {
+                alert("모든 파일을 선택해야 합니다.");
+                return;
+            }
+
+            let allRecords = JSON.parse(await fMaster.text());
+            let raceMeta = JSON.parse(await fMeta.text());
+            let metaIds = new Set(raceMeta.map(m => m.id));
+
+            for (let file of fNews) {
+                log(`${file.name} 처리 중...`);
+                const data = JSON.parse(await file.text());
+                
+                // 파일명에서 기본 정보 추출
+                let year = file.name.match(/\d{4}/)?.[0] || "2025";
+                let rawName = file.name.split('_')[0];
+                let raceKo = rawName === 'hankook' ? "한국철인" : rawName === 'naju' ? "나주" : rawName === 'sun' ? "태양" : rawName;
+                let rid = `${raceKo}_${year}`;
+
+                data.forEach(item => {
+                    // 필드 매핑 및 시간 변환
+                    let rec = {
+                        n: item.n || item.name_ko || item.name || "",
+                        t: item.t && typeof item.t === 'number' ? item.t : timeToSec(item.total_record || item.total || item.finish || item.t),
+                        s: item.s && typeof item.s === 'number' ? item.s : timeToSec(item.swim || item.s),
+                        bk: item.bk && typeof item.bk === 'number' ? item.bk : timeToSec(item.bike || item.bk),
+                        r: item.r && typeof item.r === 'number' ? item.r : timeToSec(item.run || item.r),
+                        t1: item.t1 || 0,
+                        t2: item.t2 || 0,
+                        rn: item.rn || rid,
+                        y: item.y || year,
+                        rt: item.rt || "Ironman",
+                        b: String(item.b || item.number || ""),
+                        d: item.d || item.gender || "",
+                        c: item.c || item.location || "",
+                        q: item.q || item.status || item.note || ""
+                    };
+                    allRecords.push(rec);
+                });
+
+                const finalRid = data[0]?.rn || rid;
+                if (!metaIds.has(finalRid)) {
+                    raceMeta.push({ id: finalRid, name: finalRid, year: year, type: "Ironman" });
+                    metaIds.add(finalRid);
+                    log(`[신규 메타] ${finalRid} 등록`);
+                }
+            }
+
+            log(`통합 완료! 총 레코드 수: ${allRecords.length}`);
+            download(allRecords, 'all_records_v2.json');
+            setTimeout(() => download(raceMeta, 'race_meta_v2.json'), 800);
+        }
+
+        function download(data, name) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = name; a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
