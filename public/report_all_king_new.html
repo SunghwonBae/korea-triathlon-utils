@@ -1676,10 +1676,13 @@
                              else if (p0.length === 2) year = parseInt((p0.startsWith('9') ? '19' : '20') + p0);
                         }
                     }
-                    
+                    console.log(`Year: ${year}, Country: ${d.c}`);
                     if (year > 2019) {
                         const c = (d.c || "").toUpperCase();
-                        if (!c.includes('KOR')) return false;
+                        if (!c.includes('KOR')) {
+                            console.log(`${d.n} (${d.rn}: ${year}, Country: ${d.c}`);
+                            return false;
+                        }
                     }
                 }
                 return true;
