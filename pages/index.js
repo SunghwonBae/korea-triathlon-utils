@@ -421,7 +421,7 @@ const closeQrModal = (modalId) => {
         .special-link { font-size: 0.8rem; }
         .special-link a { color: #cbd5e1; text-decoration: underline; }
         @media (max-width: 480px) {
-          .donation-btn-group { flex-direction: column; }
+            .btn-toss, .btn-kakao {height:38px;}
         }
 
         @media (max-width: 1024px) {

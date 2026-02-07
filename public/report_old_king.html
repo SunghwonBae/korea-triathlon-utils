@@ -664,7 +664,7 @@ document.addEventListener('keydown', (e) => {
             { headerName: "클럽", field: "c", width: 150, filter: true, sortable: true },
             { headerName: "대회명", field: "rn", width: 150, filter: true , sortable: true },
             { headerName: "개최일", field: "rd", width: 100, filter: true , sortable: true },
-            { headerName: "TOTAL", field: "to", width: 110, valueFormatter: timeFormatter, filter: 'agNumberColumnFilter', cellClass: 'bold-cell' },
+            { headerName: "TOTAL", field: "to", width: 110, valueFormatter: timeFormatter, cellClass: 'bold-cell' },
             { headerName: "SWIM", field: "sw", width: 100, valueFormatter: timeFormatter, cellClass: 'swim-cell' },
             { headerName: "T1", field: "t1", width: 100, valueFormatter: params => sToMs(params.value) },
             { headerName: "BIKE", field: "bi", width: 100, valueFormatter: timeFormatter, cellClass: 'bike-cell' },

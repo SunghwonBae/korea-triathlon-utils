@@ -336,12 +336,12 @@
                 <div id="ageChart" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
-                <h3 class="chart-title" title="클릭하여 확대/축소">연도별 완주자 및 평균기록 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-                <div id="yearStatsChart" class="chart-box chart-minimized"></div>
-            </div>
-            <div class="chart-wrapper">
                 <h3 class="chart-title" title="클릭하여 확대/축소">클럽별 완주 (규모vs기록) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
                 <div id="clubTreemap" class="chart-box chart-minimized"></div>
+            </div>
+            <div class="chart-wrapper">
+                <h3 class="chart-title" title="클릭하여 확대/축소">연도별 완주수 및 평균기록 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+                <div id="yearStatsChart" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
                 <h3 class="chart-title" title="클릭하여 확대/축소">사이클 vs 런 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
@@ -362,16 +362,19 @@
                 </div>
             </div>
             <div class="chart-wrapper">
-                <h3 class="chart-title" title="클릭하여 확대/축소">서브-10 명예의 전당 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+                <h3 class="chart-title" title="클릭하여 확대/축소">연령대별 12언더 달성 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+                <div id="sub10RateChart" class="chart-box chart-minimized"></div>
+            </div>            
+            <div class="chart-wrapper">
+                <h3 class="chart-title" title="클릭하여 확대/축소">10언더 완주자 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
                 <div id="sub10ListChart" class="chart-box chart-minimized"></div>
             </div>
             <div class="chart-wrapper">
-                <h3 class="chart-title" title="클릭하여 확대/축소">연령대별 Sub-10 달성률 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-                <div id="sub10RateChart" class="chart-box chart-minimized"></div>
-            </div>
-            <div class="chart-wrapper">
-                <h3 class="chart-title" title="클릭하여 확대/축소">전설의 완주자 (10회 이상) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-                <div id="legendaryFinishersChart" class="chart-box chart-minimized"></div>
+                <h3 class="chart-title" title="클릭하여 확대/축소">10회이상 완주 (평균기록) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
+                <div id="legendaryFinishersChart" class="chart-box chart-minimized" style="margin-bottom: 1px !important;"></div>
+                <div style="width: 100%; text-align: right; padding-right: 5px;">
+                    <label style="font-size: 11px; color: #555; cursor: pointer;"><input type="checkbox" id="toggleSmall15" style="vertical-align: middle;"> 15회이상</label>
+                </div>
             </div>
         </div>
     </div>
@@ -423,9 +426,10 @@
 
         </div>
     </div>
-
-    <div id="rowCount" style="margin-bottom: 10px; font-weight: bold; text-align: center; color: #2c3e50;">총 0건 / 필터링 0건</div>
-    <div id="myGrid" class="ag-theme-alpine"></div>
+    <div class="section-box">
+        <div id="rowCount" style="margin-bottom: 10px; font-weight: bold; text-align: center; color: #2c3e50;">총 0건 / 필터링 0건</div>
+        <div id="myGrid" class="ag-theme-alpine"></div>
+    </div>
 <script>
     // [설정] 리포트 이미지 경로
     const reportImages = [
@@ -454,7 +458,7 @@
     let currentFilteredData = [];
     let gridApi = null;
     let currentLogic = 'AND';
-    let searchTerms = [];
+    let searchFilters = [];
 
     // 차트 인스턴스 변수
     let distChart, ageChart, yearStatsChart, clubChart, bikeRunScatterChart;
@@ -536,16 +540,35 @@
         const s = sec % 60;
         return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
+
+    const sToMs = (s) => {
+        const val = Number(s);
+        if (!Number.isFinite(val) || val <= 0) return "00:00";
+        const m = Math.floor(val / 60);
+        const sec = Math.floor(val % 60);
+        return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    };
+
     function zeroToEmptyFormatter(params) {
         if (!params.value || params.value === 0) return "";
         return params.value;
+    }
+    
+    function getRowSearchString(data) {
+        return columnDefs.map(col => {
+            const val = data[col.field];
+            if (col.valueFormatter) {
+                return col.valueFormatter({ value: val });
+            }
+            return val ? String(val) : '';
+        }).join(' ').toLowerCase();
     }
 
     // Grid Column Definitions
     const columnDefs = [
         {
-            headerName: "Save",
-            width: 70,
+            headerName: "",
+            width: 50,
             pinned: 'left',
             cellRenderer: params => {
                 const btn = document.createElement('button');
@@ -558,18 +581,18 @@
             cellStyle: { 'text-align': 'center' }
         },
         { headerName: "이름", field: "n", width: 110, sortable: true, filter: 'agTextColumnFilter', cellClass: 'bold-cell', pinned: 'left' },
-        { headerName: "성별", field: "g", width: 90, filter: true },
-        { headerName: "배번", field: "b", width: 90, sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: "성별", field: "g", width: 80, filter: true },
         { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true },
-        { headerName: "소속", field: "c", width: 130, sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: "국가/클럽", field: "c", width: 130, sortable: true, filter: 'agTextColumnFilter' },
         { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: "Total", field: "to", width: 110, sortable: true,  valueFormatter: timeFormatter, cellStyle: { 'font-weight': 'bold' } },
+        { headerName: "Swim", field: "sw", width: 100, sortable: true,  valueFormatter: timeFormatter, cellClass: 'swim-cell' },
+        { headerName: "T1", field: "t1", width: 80, sortable: true, valueFormatter: params => sToMs(params.value) },
+        { headerName: "Bike", field: "bi", width: 100, sortable: true, valueFormatter: timeFormatter, cellClass: 'bike-cell' },
+        { headerName: "T2", field: "t2", width: 80, sortable: true, valueFormatter: params => sToMs(params.value) },
+        { headerName: "Run", field: "ru", width: 100, sortable: true,  valueFormatter: timeFormatter, cellClass: 'run-cell' },
+        { headerName: "배번", field: "b", width: 90, sortable: true, filter: 'agTextColumnFilter' },
         { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: "Total", field: "to", width: 110, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: timeFormatter, cellStyle: { 'font-weight': 'bold' } },
-        { headerName: "Swim", field: "sw", width: 100, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: timeFormatter, cellClass: 'swim-cell' },
-        { headerName: "T1", field: "t1", width: 90, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: timeFormatter },
-        { headerName: "Bike", field: "bi", width: 100, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: timeFormatter, cellClass: 'bike-cell' },
-        { headerName: "T2", field: "t2", width: 90, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: timeFormatter },
-        { headerName: "Run", field: "ru", width: 100, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: timeFormatter, cellClass: 'run-cell' }
     ];
 
     const KR_LOCALE = {
@@ -591,6 +614,19 @@
         animateRows: true,
         pagination: true,
         paginationPageSize: 100,
+        isExternalFilterPresent: () => searchFilters.length > 0,
+        doesExternalFilterPass: (node) => {
+            if (searchFilters.length === 0) return true;
+            const rowString = getRowSearchString(node.data);
+            let result = rowString.includes(searchFilters[0].term);
+            for (let i = 1; i < searchFilters.length; i++) {
+                const filter = searchFilters[i];
+                const match = rowString.includes(filter.term);
+                if (filter.logic === 'AND') result = result && match;
+                else result = result || match;
+            }
+            return result;
+        },
         onFilterChanged: () => {
              // gridApi 리스너로 처리
         }
@@ -658,17 +694,13 @@
                 AgChart.update(sub10ListChart, sub10ListOptions);
             }
             if (sub10RateChart && sub10RateOptions) {
-                sub10RateOptions.data = processSub10RateData(filteredData);
-                AgChart.update(sub10RateChart, sub10RateOptions);
+                const newData = processSub10RateData(filteredData);
+                adjustChartHeight('sub10RateChart', newData.length);
+                sub10RateOptions.data = newData;
+                window.AgChart.update(sub10RateChart, sub10RateOptions);
             }
             if (legendaryFinishersChart && legendaryFinishersOptions) {
-                 // 전설의 완주자는 전체 데이터 기준이 의미가 있으므로 필터링 영향을 받을지 여부는 선택사항이나
-                 // 여기서는 필터링된 데이터 내에서 10회 이상으로 재산출하거나 전체 유지 가능.
-                 // 기존 로직 유지: 필터링된 데이터 기준 재산출
-                 const lData = processLegendaryFinishersData(filteredData);
-                 // 시리즈 동적 재생성이 필요할 수 있음
-                 // 간단히 업데이트
-                 // (전설 차트는 구조가 복잡하여 전체 재생성이 나을 수 있으나 여기선 생략)
+                 updateLegendaryFinishersChart(filteredData);
             }
         });
     });
@@ -699,8 +731,8 @@
                         let gender = "";
                         if(d.d) {
                             const dStr = String(d.d).toUpperCase();
-                            if(dStr.includes("Male") || dStr.startsWith("M")) gender = "남";
-                            else if(dStr.includes("Female") || dStr.startsWith("W") || dStr.startsWith("F")) gender = "여";
+                            if(((!dStr.includes("FEMALE")) && dStr.includes("MALE")) || dStr.startsWith("M")|| dStr.includes("FULLM")) gender = "남";
+                            else if(dStr.includes("FEMALE") || dStr.startsWith("W") || dStr.includes("FULLF") || (dStr.startsWith("F")&&(!dStr.includes("FULLM"))) ) gender = "여";
                         }
                         
                         return {
@@ -755,50 +787,37 @@
         if (e.key === 'Enter') {
             const val = input.value.trim();
             if (val) {
-                addSearchTag(val);
+                addFilter(val, currentLogic);
                 input.value = '';
             }
         }
     });
 
-    function addSearchTag(term) {
-        if (searchTerms.includes(term)) return;
-        searchTerms.push(term);
+    function addFilter(term, logic) {
+        searchFilters.push({ term: term.toLowerCase(), logic });
         renderTags();
-        applyQuickFilter();
+        gridApi.onFilterChanged();
     }
 
-    function removeSearchTag(term) {
-        searchTerms = searchTerms.filter(t => t !== term);
+    function removeFilter(index) {
+        searchFilters.splice(index, 1);
         renderTags();
-        applyQuickFilter();
+        gridApi.onFilterChanged();
     }
 
     function renderTags() {
         tagsContainer.innerHTML = '';
-        searchTerms.forEach(term => {
+        searchFilters.forEach((filter, index) => {
             const tag = document.createElement('div');
             tag.className = 'search-tag';
+            const logicHtml = index > 0 ? `<span class="tag-logic ${filter.logic.toLowerCase()}">${filter.logic}</span>` : `<span class="tag-logic and" style="background:#95a5a6">BASE</span>`;
             tag.innerHTML = `
-                <span class="tag-logic ${currentLogic.toLowerCase()}">${currentLogic}</span>
-                <span class="tag-term">${term}</span>
-                <span class="tag-close" onclick="removeSearchTag('${term}')">&times;</span>
+                ${logicHtml}
+                <span class="tag-term">${filter.term}</span>
+                <span class="tag-close" onclick="removeFilter(${index})">&times;</span>
             `;
             tagsContainer.appendChild(tag);
         });
-    }
-
-    function applyQuickFilter() {
-        if (searchTerms.length === 0) {
-            gridApi.setGridOption('quickFilterText', null);
-            return;
-        }
-        // ag-grid 기본 quickFilter는 OR 로직임. AND 로직 구현을 위해선 커스텀 필터링 필요하나
-        // 기존 코드가 복잡해지므로 여기선 ag-grid의 quickFilterText 기능을 활용하되 
-        // AND 조건 등은 외부 필터링 로직(doesExternalFilterPass)을 사용하는 것이 일반적임.
-        // *주의: 원본 report_old_king.html의 상세 구현에 따라 이 부분은 다를 수 있음.
-        // 편의상 텍스트 결합으로 처리 시도
-        gridApi.setGridOption('quickFilterText', searchTerms.join(" ")); 
     }
 
     function setupSectionToggle(btnId, contentId, isDefaultCollapsed) {
@@ -844,9 +863,9 @@
                 if (slider && slider.noUiSlider) slider.noUiSlider.reset();
             });
             gridApi.setFilterModel(null);
-            gridApi.setGridOption('quickFilterText', '');
-            searchTerms = [];
+            searchFilters = [];
             renderTags();
+            gridApi.onFilterChanged();
             input.value = '';
         };
     }
@@ -1260,7 +1279,7 @@
                 { type: 'bar', xKey: 'label', yKey: 'unknown_t', yName: 't1+t2', fill: '#95a5a6', stacked: true, tooltip: { renderer: sub10ListTooltipRenderer } }
             ],
             axes: [
-                { type: 'category', position: 'left', title: { text: '선수 (대회-연도)' } },
+                { type: 'category', position: 'left', title: { text: '선수 (대회)' } },
                 { type: 'number', position: 'bottom', title: { text: '완주 시간' }, label: { formatter: (params) => formatSeconds(params.value) } }
             ]
         };
@@ -1268,40 +1287,77 @@
 
         // 9. Sub-10 달성률
         const sub10RateData = processSub10RateData(rowData);
+        adjustChartHeight('sub10RateChart', sub10RateData.length);
         sub10RateOptions = {
             container: document.getElementById('sub10RateChart'),
-            title: { text: '연령대별 Sub-10 달성률' },
             data: sub10RateData,
-            series: [{
-                type: 'bar', xKey: 'group', yKey: 'rate',
-                tooltip: { renderer: params => ({ title: params.datum.group, content: `${params.datum.rate}%` }) }
-            }],
+            series: [
+                {
+                    type: 'bar',
+                    xKey: 'group',
+                    yKey: 'sub10',
+                    yName: 'Sub 10h',
+                    stacked: true,
+                    normalizedTo: 100,
+                    fill: '#e74c3c', // Red for sub-10
+                    tooltip: {
+                        renderer: (params) => ({
+                            title: params.datum.group,
+                            content: `Sub 10h: ${params.datum.rawSub10}명 (${params.datum.sub10.toFixed(1)}%)`
+                        })
+                    }
+                },
+                {
+                    type: 'bar',
+                    xKey: 'group',
+                    yKey: 'sub12',
+                    yName: '10-12h',
+                    stacked: true,
+                    normalizedTo: 100,
+                    fill: '#f1c40f', // Yellow for sub-12
+                    tooltip: {
+                        renderer: (params) => ({
+                            title: params.datum.group,
+                            content: `10-12h: ${params.datum.rawSub12}명 (${params.datum.sub12.toFixed(1)}%)`
+                        })
+                    }
+                },
+                { type: 'bar', xKey: 'group', yKey: 'other', yName: '> 12h', stacked: true, normalizedTo: 100, fill: '#bdc3c7', tooltip: { renderer: (params) => ({ title: params.datum.group, content: `> 12h: ${params.datum.rawOther}명 (${params.datum.other.toFixed(1)}%)` }) } }
+            ],
             axes: [
-                { type: 'category', position: 'bottom' },
-                { type: 'number', position: 'left', label: { formatter: params => `${params.value}%` } }
+                { type: 'category', position: 'left', title: { text: '연령대 그룹' } },
+                { type: 'number', position: 'bottom', title: { text: '달성률 (%)' }, 
+                    label: { 
+                        formatter: (params) => {
+                            const val = Number(params.value);
+                            return (isNaN(val) ? '0' : val.toFixed(0)) + '%';
+                        }
+                    }
+                }
             ]
         };
         sub10RateChart = AgChart.create(sub10RateOptions);
 
         // 10. 전설의 완주자
-        // (이 차트는 복잡한 데이터 구조를 가짐, 간략화된 로직 적용)
-        const legendaryData = processLegendaryFinishersData(rowData);
-        // 시리즈 동적 생성 필요
         legendaryFinishersOptions = {
             container: document.getElementById('legendaryFinishersChart'),
-            title: { text: '10회 이상 완주자' },
-            data: legendaryData.data,
-            series: legendaryData.series,
+            series: [], // Populated by updateLegendaryFinishersChart
             axes: [
-                { type: 'category', position: 'bottom' },
-                { type: 'number', position: 'left', label: { formatter: params => formatSeconds(params.value) } }
-            ]
+                { type: 'category', position: 'left', title: { text: '선수 (완주 횟수)' } },
+                { type: 'number', position: 'bottom', title: { text: '완주평균시간' }, label: { formatter: (params) => formatSeconds(params.value) } }
+            ],
+            legend: {
+                position: 'bottom',
+                item: { label: { fontStyle: 'normal' } }
+            }
         };
         legendaryFinishersChart = AgChart.create(legendaryFinishersOptions);
+        updateLegendaryFinishersChart(rowData);
 
         // 토글 리스너 연결
         document.getElementById('toggleSmall100').addEventListener('change', () => updateTransitionRankChart(currentFilteredData));
         document.getElementById('toggleSmallRaces').addEventListener('change', () => updateRaceDifficultyChart(currentFilteredData));
+        document.getElementById('toggleSmall15').addEventListener('change', () => updateLegendaryFinishersChart(currentFilteredData));
     }
 
     // --- Helper Processing Functions ---
@@ -1467,7 +1523,7 @@
                     }
                 }
                 return {
-                    name: `${d.n} (${d.rn} ${year})`,
+                    name: `${d.n} (${d.rn})`,
                     total: (d.t1 || 0) + (d.t2 || 0)
                 };
             })
@@ -1515,7 +1571,7 @@
                      else if (p0.length === 2) year = (p0.startsWith('9') ? '19' : '20') + p0;
                 }
             }
-            const label = year ? `${group.name} (${year})` : group.name;
+            const label = year ? `${group.name}` : group.name;
 
             return {
                 raceName: label,
@@ -1569,7 +1625,7 @@
                 }
 
                 return {
-                    label: `${d.n} (${d.rn}-${year})`,
+                    label: `${d.n} (${d.rn})`,
                     n: d.n,
                     rn: d.rn,
                     year: year,
@@ -1586,37 +1642,177 @@
 
     function processSub10RateData(data) {
         const groups = {};
+        // Use the same grouping logic as processAgeData
         data.forEach(d => {
-            if (!d.to) return;
-            let g = d.d || "Unknown";
-            if (!groups[g]) groups[g] = { total: 0, sub10: 0 };
-            groups[g].total++;
-            if (d.to < 36000) groups[g].sub10++;
+            let val = Number(d.to);
+            if (!val || isNaN(val)) return;
+            
+            let rawGroup = d.d ? String(d.d).trim().toUpperCase() : "";
+            let groupName = "[연대별무]";
+
+            if (rawGroup.includes("PRO")) {
+                groupName = "PRO";
+            } else {
+                const match = rawGroup.match(/^([MF])\s*(\d+)/);
+                if (match) {
+                    const gender = match[1];
+                    const age = parseInt(match[2], 10);
+                    const startAge = Math.floor(age / 10) * 10;
+                    const endAge = startAge + 9;
+                    groupName = `${gender}${startAge}-${endAge}`;
+                }
+            }
+
+            if (!groups[groupName]) {
+                groups[groupName] = { sub10: 0, sub12: 0, other: 0, total: 0 };
+            }
+
+            groups[groupName].total++;
+            if (val < 36000) { // 10 hours
+                groups[groupName].sub10++;
+            } else if (val < 43200) { // 12 hours
+                groups[groupName].sub12++;
+            } else {
+                groups[groupName].other++;
+            }
         });
-        return Object.keys(groups).sort().map(g => ({
-            group: g, rate: Math.round((groups[g].sub10 / groups[g].total) * 100)
-        }));
+
+        const chartData = Object.keys(groups).map(g => { const group = groups[g]; return { group: g, sub10: (group.sub10 / group.total) * 100, sub12: (group.sub12 / group.total) * 100, other: (group.other / group.total) * 100, rawSub10: group.sub10, rawSub12: group.sub12, rawOther: group.other, total: group.total }; });
+        
+        // 정렬: 성별(연령대) -> PRO -> 나머지
+        return chartData.sort((a, b) => {
+            const getPriority = (name) => {
+                if (name === 'PRO') return 2;
+                if (name === '[연대별무]') return 3;
+                return 1; // Age Groups
+            };
+
+            const pA = getPriority(a.group);
+            const pB = getPriority(b.group);
+            if (pA !== pB) return pA - pB;
+
+            if (pA === 1) {
+                const matchA = a.group.match(/^([MF])(\d+)/);
+                const matchB = b.group.match(/^([MF])(\d+)/);
+                if (matchA && matchB) {
+                    if (matchA[1] !== matchB[1]) return matchA[1].localeCompare(matchB[1]);
+                    return parseInt(matchA[2]) - parseInt(matchB[2]);
+                }
+            }
+            return a.group.localeCompare(b.group);
+        });
     }
 
-    function processLegendaryFinishersData(data) {
-        // Group by Name
-        const people = {};
-        data.forEach(d => {
-            if (!d.n || !d.to) return;
-            if (!people[d.n]) people[d.n] = { count: 0, sum: 0 };
-            people[d.n].count++;
-            people[d.n].sum += d.to;
-        });
-        const legends = Object.keys(people).filter(n => people[n].count >= 10).map(n => ({
-            name: n, count: people[n].count, avg: people[n].sum / people[n].count
-        })).sort((a, b) => b.count - a.count);
-        
-        // For stacked bar chart, we need structure like { label: Name, val1: time, val2: time ... }
-        // Simplified here to just show Avg Time
-        return {
-            data: legends,
-            series: [{ type: 'bar', xKey: 'name', yKey: 'avg', yName: '평균기록' }]
+    // 10회 이상 완주자 차트 업데이트 함수
+    function updateLegendaryFinishersChart(data) {
+        const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+        if (!legendaryFinishersOptions || !AgChart) return;
+
+        const toggle = document.getElementById('toggleSmall15');
+        const minCount = (toggle && toggle.checked) ? 15 : 10;
+
+        const finishGroups = {
+            g10: { label: '10-14회', color: '#74b9ff' },
+            g15: { label: '15-19회', color: '#0984e3' },
+            g20: { label: '20-24회', color: '#6c5ce7' },
+            g25: { label: '25-29회', color: '#d63031' },
+            g30: { label: '30회+', color: '#b71540' }
         };
+
+        const legendaryData = processLegendaryFinishersData(data, minCount);
+        
+        adjustChartHeight('legendaryFinishersChart', legendaryData.length);
+
+        const transformedData = legendaryData.map(d => {
+            const newRecord = { label: d.label, originalData: d };
+            for (const groupKey in finishGroups) {
+                newRecord[`avgTime_${groupKey}`] = (d.finishGroup === groupKey) ? d.avgTime : null;
+            }
+            return newRecord;
+        });
+
+        const series = Object.keys(finishGroups).map(key => ({
+            type: 'bar',
+            xKey: 'label',
+            yKey: `avgTime_${key}`,
+            yName: finishGroups[key].label,
+            fill: finishGroups[key].color,
+            stacked: true,
+            tooltip: {
+                renderer: (params) => {
+                    const d = params.datum.originalData;
+                    if (!d) return { title: '', content: '' };
+                    return {
+                        title: d.label,
+                        content: `
+                            기간 : ${d.firstYear}~${d.lastYear}<br>
+                            평균 : ${formatSecondsFull(d.avgTime)}<br>
+                            최고 : ${formatSecondsFull(d.bestTime)}
+                        `
+                    };
+                }
+            }
+        }));
+
+        legendaryFinishersOptions = { 
+            ...legendaryFinishersOptions, 
+            data: transformedData, 
+            series: series,
+            title: {
+                text: `총 ${legendaryData.length}명`,
+                fontSize: 13,
+                color: '#666'
+            }
+        };
+        
+        if (legendaryFinishersChart) {
+            AgChart.update(legendaryFinishersChart, legendaryFinishersOptions);
+        }
+    }
+
+    function processLegendaryFinishersData(data, minCount = 10) {
+        const athletes = {};
+        data.forEach(d => {
+            if (!d.n) return;
+            if (!athletes[d.n]) {
+                athletes[d.n] = { name: d.n, records: [] };
+            }
+            athletes[d.n].records.push(d);
+        });
+
+        const parseYearFromRd = (rd) => {
+            if (!rd) return null;
+            const parts = String(rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
+            if (parts.length === 0) return null;
+            const val = parts[0];
+            let year = '';
+            if (val.length === 4 || val.length === 8) { year = val.substring(0, 4); } 
+            else if (val.length === 2 || val.length === 6) { const yy = val.substring(0, 2); year = yy.startsWith('9') ? '19' + yy : '20' + yy; }
+            return year ? parseInt(year) : null;
+        };
+
+        return Object.values(athletes)
+            .map(athlete => {
+                const count = athlete.records.length;
+                if (count < minCount) return null;
+
+                const validRecords = athlete.records.filter(r => r.to > 0);
+                if (validRecords.length === 0) return null;
+
+                const totalTime = validRecords.reduce((sum, rec) => sum + rec.to, 0);
+                const avgTime = totalTime / validRecords.length;
+                const bestTime = Math.min(...validRecords.map(rec => rec.to));
+                const years = validRecords.map(rec => parseYearFromRd(rec.rd)).filter(y => y);
+                const firstYear = years.length > 0 ? Math.min(...years) : 'N/A';
+                const lastYear = years.length > 0 ? Math.max(...years) : 'N/A';
+
+                let finishGroup = 'g30';
+                if (count < 15) finishGroup = 'g10'; else if (count < 20) finishGroup = 'g15'; else if (count < 25) finishGroup = 'g20'; else if (count < 30) finishGroup = 'g25';
+
+                return { label: `${athlete.name} (${count}회)`, count, avgTime, bestTime, firstYear, lastYear, finishGroup };
+            })
+            .filter(d => d !== null)
+            .sort((a, b) => b.count - a.count);
     }
 
     function adjustChartHeight(id, itemCount, itemHeight = 25, minHeight = 300) {
