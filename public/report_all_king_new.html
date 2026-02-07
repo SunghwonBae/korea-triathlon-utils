@@ -367,7 +367,10 @@
             </div>            
             <div class="chart-wrapper">
                 <h3 class="chart-title" title="클릭하여 확대/축소">10언더 완주자 <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
-                <div id="sub10ListChart" class="chart-box chart-minimized"></div>
+                <div id="sub10ListChart" class="chart-box chart-minimized" style="margin-bottom: 1px !important;"></div>
+                <div style="width: 100%; text-align: right; padding-right: 5px;">
+                    <label style="font-size: 11px; color: #555; cursor: pointer;"><input type="checkbox" id="toggleOtherKor" style="vertical-align: middle;"> 다른국가 제외</label>
+                </div>
             </div>
             <div class="chart-wrapper">
                 <h3 class="chart-title" title="클릭하여 확대/축소">10회이상 완주 (평균기록) <i class="fas fa-expand text-slate-400 text-xs ml-1"></i></h3>
@@ -1407,6 +1410,13 @@
         // 토글 리스너 연결
         document.getElementById('toggleSmall100').addEventListener('change', () => updateTransitionRankChart(currentFilteredData));
         document.getElementById('toggleSmallRaces').addEventListener('change', () => updateRaceDifficultyChart(currentFilteredData));
+        document.getElementById('toggleOtherKor').addEventListener('change', () => {
+            const s10Data = processSub10ListData(currentFilteredData);
+            adjustChartHeight('sub10ListChart', s10Data.length);
+            sub10ListOptions.data = s10Data;
+            sub10ListOptions.title.text = `총 ${s10Data.length}건`;
+            window.AgChart.update(sub10ListChart, sub10ListOptions);
+        });
         document.getElementById('toggleSmall15').addEventListener('change', () => updateLegendaryFinishersChart(currentFilteredData));
     }
 
@@ -1649,8 +1659,31 @@
     }
 
     function processSub10ListData(data) {
+        const toggle = document.getElementById('toggleOtherKor');
+        const filterForeigners = toggle && toggle.checked;
+
         return data
-            .filter(d => d.to && d.to < 36000 && d.to > 0 && d.sw > 0)
+            .filter(d => {
+                if (!(d.to && d.to < 36000 && d.to > 0 && d.sw > 0)) return false;
+                
+                if (filterForeigners) {
+                    let year = 0;
+                    if (d.rd) {
+                        const parts = String(d.rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
+                        if (parts.length > 0) {
+                             const p0 = parts[0];
+                             if (p0.length === 4) year = parseInt(p0);
+                             else if (p0.length === 2) year = parseInt((p0.startsWith('9') ? '19' : '20') + p0);
+                        }
+                    }
+                    
+                    if (year > 2019) {
+                        const c = (d.c || "").toUpperCase();
+                        if (!c.includes('KOR') && !c.includes('KOREA')) return false;
+                    }
+                }
+                return true;
+            })
             .sort((a, b) => a.to - b.to)
             .map(d => {
                 let year = "";
@@ -1675,7 +1708,7 @@
                 }
 
                 return {
-                    label: `${d.n} (${d.rn})`,
+                    label: `${d.n} (${d.rn} ${d.c || ''})`,
                     n: d.n,
                     rn: d.rn,
                     year: year,
