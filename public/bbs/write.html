@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글쓰기</title>
+    <style>
+        body { max-width: 600px; margin: 0 auto; padding: 20px; font-family: sans-serif; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 15px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px;}
+        textarea { height: 200px; resize: vertical; }
+        button { width: 100%; padding: 12px; background: #333; color: white; border: none; cursor: pointer; font-size: 16px; border-radius: 4px;}
+    </style>
+</head>
+<body>
+    <h2>✏️ 글쓰기</h2>
+    <input type="text" id="title" placeholder="제목">
+    <textarea id="content" placeholder="내용을 입력하세요"></textarea>
+    <button onclick="save()">등록하기</button>
+
+    <script>
+        async function save() {
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            if(!title || !content) return alert('제목과 내용을 입력해주세요.');
+
+            const res = await fetch('/api/bbs/posts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, content })
+            });
+
+            if (res.ok) window.location.href = 'list.html';
+            else alert('로그인이 필요하거나 오류가 발생했습니다.');
+        }
+    </script>
+</body>
+</html>

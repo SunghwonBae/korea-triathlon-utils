@@ -47,3 +47,5 @@ build/
 .DS_Store
 *.local
 .env*.local
+
+/lib/generated/prisma

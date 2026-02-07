@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글 보기</title>
+    <style>
+        body { max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif; }
+        .post-box { border: 1px solid #eee; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .meta { color: #888; font-size: 0.9em; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .comment-wrap { margin-top: 30px; background: #fafafa; padding: 20px; border-radius: 8px; }
+        .comment-item { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 0.95em; }
+        .input-group { display: flex; margin-top: 15px; gap: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <button onclick="location.href='list.html'" style="background:none; border:1px solid #ddd; color:#333; margin-bottom:15px;">&lt; 목록으로</button>
+    
+    <div class="post-box">
+        <h2 id="title" style="margin-top:0;">로딩중...</h2>
+        <div class="meta">작성자: <span id="author"></span></div>
+        <div id="content" style="white-space: pre-wrap; line-height: 1.6;"></div>
+    </div>
+
+    <div class="comment-wrap">
+        <h3>💬 댓글</h3>
+        <div id="comments"></div>
+        <div class="input-group">
+            <input type="text" id="cmt-input" placeholder="댓글 내용을 입력하세요">
+            <button onclick="saveComment()">등록</button>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const postId = params.get('id');
+
+        fetch(`/api/bbs/posts?id=${postId}`)
+            .then(res => res.json())
+            .then(post => {
+                document.getElementById('title').innerText = post.title;
+                document.getElementById('author').innerText = post.author;
+                document.getElementById('content').innerText = post.content;
+            });
+
+        function loadComments() {
+            fetch(`/api/bbs/comments?postId=${postId}`)
+                .then(res => res.json())
+                .then(cmts => {
+                    const html = cmts.map(c => `
+                        <div class="comment-item">
+                            <strong>${c.author}</strong>: ${c.content}
+                        </div>
+                    `).join('');
+                    document.getElementById('comments').innerHTML = html;
+                });
+        }
+
+        async function saveComment() {
+            const content = document.getElementById('cmt-input').value;
+            if(!content) return;
+            
+            const res = await fetch(`/api/bbs/comments?postId=${postId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ content })
+            });
+            if (res.ok) {
+                document.getElementById('cmt-input').value = '';
+                loadComments();
+            } else {
+                alert('로그인이 필요합니다.');
+            }
+        }
+
+        loadComments();
+    </script>
+</body>
+</html>
