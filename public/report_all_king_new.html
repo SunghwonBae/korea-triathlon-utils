@@ -1653,7 +1653,7 @@
     }
     function updateprocessSub10ListData(data) {
         if (!sub10ListChart) return;
-        const pData = processSub10ListData(data);
+        let pData = processSub10ListData(data);
         const toggle = document.getElementById('toggleOtherKor');
 
         if (toggle.checked) {
