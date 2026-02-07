@@ -416,8 +416,8 @@
                         <div class="mt-2 text-sm text-gray-600 text-center" id="valRun"></div>
                     </div>
                 </div>
-                <div class="mt-6 text-center">
-                    <button id="resetFilters" style="background:#95a5a6; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold; font-size:0.85rem; transition:background 0.2s;">
+                <div style="text-align:center; margin-top:25px;">
+                    <button onclick="resetSliders()" style="background:#f1f2f6; border:none; padding:8px 20px; border-radius:20px; color:#7f8c8d; font-weight:bold; cursor:pointer; font-size:0.85rem; transition:background 0.2s;">
                         <i class="fas fa-undo mr-1"></i> 필터 초기화
                     </button>
                 </div>
@@ -427,8 +427,8 @@
         </div>
     </div>
     <div class="section-box">
-        <div id="rowCount" style="margin-bottom: 10px; font-weight: bold; text-align: center; color: #2c3e50;">총 0건 / 필터링 0건</div>
-        <div id="myGrid" class="ag-theme-alpine"></div>
+        <div id="rowCount" style="margin: 10px; font-weight: bold; text-align: center; color: #2c3e50;">총 0건 / 필터링 0건</div>
+        <div id="myGrid" class="ag-theme-alpine" style="padding: 0px 10px 10px;"></div>
     </div>
 <script>
     // [설정] 리포트 이미지 경로
@@ -564,6 +564,18 @@
         }).join(' ').toLowerCase();
     }
 
+    function showToast(msg) {
+        const el = document.createElement('div');
+        el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
+        el.innerText = msg;
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
+        setTimeout(() => {
+            el.classList.add('opacity-0', 'translate-y-4');
+            setTimeout(() => el.remove(), 300);
+        }, 3000);
+    }
+
     // Grid Column Definitions
     const columnDefs = [
         {
@@ -595,6 +607,8 @@
         { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' },
     ];
 
+    let sliders = {};
+
     const KR_LOCALE = {
         contains: '포함', notContains: '포함하지 않음', equals: '일치', notEqual: '일치하지 않음',
         startsWith: '시작 단어', endsWith: '끝 단어', lessThan: '미만', greaterThan: '초과',
@@ -616,6 +630,34 @@
         paginationPageSize: 100,
         isExternalFilterPresent: () => searchFilters.length > 0,
         doesExternalFilterPass: (node) => {
+            const data = node.data;
+
+            // 헬퍼 함수: 슬라이더가 전체 범위인지 확인
+            const isFullRange = (slider) => {
+                const [currentMin, currentMax] = slider.get().map(Number);
+                const { min, max } = slider.options.range;
+                return (Math.abs(currentMin - min) < 0.1 && Math.abs(currentMax - max) < 0.1);
+            };
+
+            // 1. 슬라이더 필터 체크
+            if (sliders.to && !isFullRange(sliders.to)) {
+                const [min, max] = sliders.to.get().map(Number);
+                if (data.to < min || data.to > max) return false;
+            }
+            if (sliders.sw && !isFullRange(sliders.sw)) {
+                const [min, max] = sliders.sw.get().map(Number);
+                if (data.sw < min || data.sw > max) return false;
+            }
+            if (sliders.bi && !isFullRange(sliders.bi)) {
+                const [min, max] = sliders.bi.get().map(Number);
+                if (data.bi < min || data.bi > max) return false;
+            }
+            if (sliders.ru && !isFullRange(sliders.ru)) {
+                const [min, max] = sliders.ru.get().map(Number);
+                if (data.ru < min || data.ru > max) return false;
+            }
+
+            // 2. 검색어 필터 체크
             if (searchFilters.length === 0) return true;
             const rowString = getRowSearchString(node.data);
             let result = rowString.includes(searchFilters[0].term);
@@ -627,10 +669,10 @@
             }
             return result;
         },
-        onFilterChanged: () => {
-             // gridApi 리스너로 처리
-        }
     };
+
+    gridOptions.isExternalFilterPresent = () => searchFilters.length > 0 || (sliders.to && isSliderActive());
+    function isSliderActive() { return true; }
 
     function updateRowCount(total, filtered) {
         const rowCountEl = document.getElementById('rowCount');
@@ -856,18 +898,6 @@
         createSlider('sliderSwim', 'valSwim', 'sw', data);
         createSlider('sliderBike', 'valBike', 'bi', data);
         createSlider('sliderRun', 'valRun', 'ru', data);
-        
-        document.getElementById('resetFilters').onclick = () => {
-            ['sliderTotal', 'sliderSwim', 'sliderBike', 'sliderRun'].forEach(id => {
-                const slider = document.getElementById(id);
-                if (slider && slider.noUiSlider) slider.noUiSlider.reset();
-            });
-            gridApi.setFilterModel(null);
-            searchFilters = [];
-            renderTags();
-            gridApi.onFilterChanged();
-            input.value = '';
-        };
     }
 
     function createSlider(id, labelId, field, data) {
@@ -884,26 +914,46 @@
             start: [min, max],
             connect: true,
             range: { 'min': min, 'max': max },
-            tooltips: false,
-            format: { to: v => Math.round(v), from: v => Number(v) }
+            step: 60, // 1분 단위
+            tooltips: false
         });
 
+        sliders[field] = slider.noUiSlider;
+
         const labelDiv = document.getElementById(labelId);
-        slider.noUiSlider.on('update', (vals) => {
-            labelDiv.innerText = `${formatSeconds(vals[0])} ~ ${formatSeconds(vals[1])}`;
+        slider.noUiSlider.on('update', (values) => {
+            labelDiv.innerText = `${formatSeconds(parseInt(values[0]))} ~ ${formatSeconds(parseInt(values[1]))}`;
         });
         
-        slider.noUiSlider.on('change', (vals) => {
-             const filterModel = gridApi.getFilterModel() || {};
-             filterModel[field] = {
-                 filterType: 'number',
-                 type: 'inRange',
-                 filter: Number(vals[0]),
-                 filterTo: Number(vals[1])
-             };
-             gridApi.setFilterModel(filterModel);
+        slider.noUiSlider.on('change', () => {
+             gridApi.onFilterChanged();
         });
     }
+
+    window.resetSliders = function() {
+        // 검색 필터도 초기화
+        searchFilters = [];
+        renderTags();
+        
+        ['to', 'sw', 'bi', 'ru'].forEach(k => {
+            if (sliders[k]) {
+                const range = sliders[k].options.range;
+                sliders[k].set([range.min, range.max]);
+            }
+        });
+        gridApi.onFilterChanged();
+        showToast("초기화 되었습니다.");
+        setTimeout(() => {
+            const panel = document.getElementById('filterPanel');
+            const arrow = document.getElementById('filterArrow');
+            panel.style.maxHeight = '0';
+            setTimeout(() => {
+                panel.style.display = 'none';
+                panel.style.maxHeight = '';
+                arrow.innerText = '▼';
+            }, 500);
+        }, 1000);
+    };
 
     // Chart click expansion logic
     document.querySelectorAll('.chart-title').forEach(title => {
@@ -1827,7 +1877,46 @@
     }
 
     function saveRowToMemory(params) {
-        alert(`[T-Memory] ${params.data.n}님의 기록이 저장되었습니다. (데모 기능)`);
+        const athlete = params.data;
+        if (!athlete) return;
+
+        const fullTitle = athlete.rn || "Unknown Race";
+        
+        let year = "";
+        if (athlete.rd) {
+            const parts = String(athlete.rd).trim().split(/[^0-9]+/);
+            if (parts.length > 0) {
+                const p0 = parts[0];
+                if (p0.length === 4) year = p0;
+                else if (p0.length === 2) year = (p0.startsWith('9') ? '19' : '20') + p0;
+            }
+        }
+        const raceYear = year;
+
+        const raceType = 'Ironman';
+
+        let memory = JSON.parse(localStorage.getItem('triathlon_memory') || '[]');
+        
+        if (memory.some(m => m.b == athlete.b && m.raceYear == raceYear && m.t == athlete.to)) {
+            showToast("이미 T-Memory에 저장된 기록입니다.");
+            return;
+        }
+
+        const sameTypeItems = memory.filter(m => m.raceType === raceType);
+        const maxOrder = sameTypeItems.length > 0 ? Math.max(...sameTypeItems.map(m => m.sortOrder || 0)) : 0;
+        const sortOrder = maxOrder + 1;
+
+        const memoryItem = {
+            b: athlete.b, n: athlete.n, d: athlete.d, c: athlete.c,
+            t: athlete.to, s: athlete.sw, t1: athlete.t1, bk: athlete.bi, t2: athlete.t2, rn: athlete.ru,
+            ro: athlete.fi || 0, ra: 0, q: '0',
+            raceName: fullTitle, raceYear: raceYear, raceType: raceType,
+            sortOrder: sortOrder, savedAt: new Date().toISOString()
+        };
+
+        memory.push(memoryItem);
+        localStorage.setItem('triathlon_memory', JSON.stringify(memory));
+        showToast(`${athlete.n} 선수의 기록을 T-Memory에 저장했습니다.`);
     }
 
 </script>
