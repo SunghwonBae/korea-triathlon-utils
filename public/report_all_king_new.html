@@ -1410,13 +1410,7 @@
         // 토글 리스너 연결
         document.getElementById('toggleSmall100').addEventListener('change', () => updateTransitionRankChart(currentFilteredData));
         document.getElementById('toggleSmallRaces').addEventListener('change', () => updateRaceDifficultyChart(currentFilteredData));
-        document.getElementById('toggleOtherKor').addEventListener('change', () => {
-            const s10Data = processSub10ListData(currentFilteredData);
-            adjustChartHeight('sub10ListChart', s10Data.length);
-            sub10ListOptions.data = s10Data;
-            sub10ListOptions.title.text = `총 ${s10Data.length}건`;
-            window.AgChart.update(sub10ListChart, sub10ListOptions);
-        });
+        document.getElementById('toggleOtherKor').addEventListener('change', () => updateprocessSub10ListData(currentFilteredData));
         document.getElementById('toggleSmall15').addEventListener('change', () => updateLegendaryFinishersChart(currentFilteredData));
     }
 
@@ -1657,16 +1651,13 @@
         raceDifficultyOptions.data = pData;
         window.AgChart.update(raceDifficultyChart, raceDifficultyOptions);
     }
+    function updateprocessSub10ListData(data) {
+        if (!sub10ListChart) return;
+        const pData = processSub10ListData(data);
+        const toggle = document.getElementById('toggleSmallSub10');
 
-    function processSub10ListData(data) {
-        const toggle = document.getElementById('toggleOtherKor');
-        const filterForeigners = toggle && toggle.checked;
-
-        return data
-            .filter(d => {
-                if (!(d.to && d.to < 36000 && d.to > 0 && d.sw > 0)) return false;
-                
-                if (filterForeigners) {
+        if (toggle.checked) {
+            pData = pData.filter( d => {
                     let year = 0;
                     if (d.rd) {
                         const parts = String(d.rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
@@ -1685,6 +1676,21 @@
                         }
                     }
                 }
+            );
+        }
+        adjustChartHeight('sub10ListChart', pData.length);
+        sub10ListOptions.data = pData;
+        sub10ListOptions.title.text = `총 ${pData.length}건`;
+        window.AgChart.update(sub10ListChart, sub10ListOptions);
+    }
+
+    function processSub10ListData(data) {
+        const toggle = document.getElementById('toggleOtherKor');
+
+
+        return data
+            .filter(d => {
+                if (!(d.to && d.to < 36000 && d.to > 0 && d.sw > 0)) return false;
                 return true;
             })
             .sort((a, b) => a.to - b.to)
