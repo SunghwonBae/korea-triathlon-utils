@@ -67,8 +67,14 @@ export default async function handler(req, res) {
     });
     
     // (2) 화면 표시용 쿠키 (JS 접근 가능)
-    const userInfo = JSON.stringify({ name: userName, image: userImage });
-    const userCookie = serialize('user_info', encodeURIComponent(userInfo), { 
+    const userInfo = JSON.stringify({ 
+        name: userName, 
+        image: userImage, 
+        id: uniqueId 
+    });
+
+// ▼ [수정] encodeURIComponent(...)를 제거하고 userInfo 변수만 넣으세요!
+    const userCookie = serialize('user_info', userInfo, { 
       path: '/', 
       httpOnly: false, 
       maxAge: 86400 
