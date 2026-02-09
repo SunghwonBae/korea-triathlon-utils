@@ -43,7 +43,7 @@ if (currentUser && currentUser.name) {
                     <path d="M11.5 10.2V18H18V0H11.5V7.8L6.5 0H0V18H6.5V10.2L11.5 18V10.2Z" fill="white"/>
                 </svg>
             </span>
-            <span>네이버 아이디로 로그인</span>
+            <span>네이버 로그인</span>
         </a>
     `;
 }
