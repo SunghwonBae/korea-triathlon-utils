@@ -19,10 +19,23 @@ model Post {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
-  content   String
-  author    String
-  createdAt DateTime @default(now())
-  postId    Int
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+  content     String
+  author      String
+  authorImage String?  // 작성자 프로필 사진
+  createdAt   DateTime @default(now())
+  postId      Int
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  naverId      String   @unique // 네이버 고유 식별값 (불변)
+  name         String
+  gender       String?
+  birthyear    String?  // 출생년도 (YYYY)
+  mobile       String?  // [추가] 휴대전화번호 (010-0000-0000)
+  profileImage String?  // 프로필 사진 URL
+  lastLogin    DateTime @default(now())
+  createdAt    DateTime @default(now())
 }
