@@ -15,96 +15,135 @@ function getUserInfo() {
     return null;
 }
 
-// 3. 로그인 상태 체크 및 UI 생성
+// 3. 로그인 상태 체크 및 UI 생성 (네이버 가이드라인 준수)
 const currentUser = getUserInfo();
 let authHtml = '';
 
 if (currentUser && currentUser.name) {
+    // [로그인 상태] 프로필 카드 디자인
     const imgTag = currentUser.image 
-        ? `<img src="${currentUser.image}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1px solid #ddd;">` 
-        : `<span style="font-size:1.2rem;">👤</span>`;
+        ? `<img src="${currentUser.image}" class="bbs-profile-img-large">` 
+        : `<div class="bbs-profile-img-placeholder">👤</div>`;
 
     authHtml = `
-        <div style="display:flex; align-items:center; gap:8px;">
+        <div class="bbs-profile-card">
             ${imgTag}
-            <span style="font-weight:bold; color:#333; font-size:0.9rem;">${currentUser.name}님</span>
-            <button onclick="bbsLogout()" class="bbs-btn-basic" style="background:#555; font-size:0.75rem; padding:4px 8px;">로그아웃</button>
+            <div class="bbs-profile-info">
+                <div class="bbs-user-name">${currentUser.name}님</div>
+                <button onclick="bbsLogout()" class="bbs-btn-logout">로그아웃</button>
+            </div>
         </div>
     `;
 } else {
+    // [비로그인 상태] 네이버 공식 가이드라인 버튼 (SVG 로고 사용)
     authHtml = `
-        <a href="/api/auth/login" onclick="bbsSaveReturnUrl()" class="bbs-btn-login">
-            <span style="background:white; color:#03C75A; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px; font-weight:bold;">N</span>
-            로그인
+        <a href="/api/auth/login" onclick="bbsSaveReturnUrl()" class="naver-login-btn">
+            <span class="n-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11.5 10.2V18H18V0H11.5V7.8L6.5 0H0V18H6.5V10.2L11.5 18V10.2Z" fill="white"/>
+                </svg>
+            </span>
+            <span>네이버 아이디로 로그인</span>
         </a>
     `;
 }
 
-// 4. 레이어 UI (CSS 수정됨)
+// 4. 레이어 UI (CSS 구조 개편)
 const bbsHTML = `
 <style>
-    /* [핵심] 가로 스크롤 방지: 모든 요소의 크기 계산에 패딩 포함 */
+    /* 초기화 및 공통 */
     #bbs-layer * { box-sizing: border-box; }
-
-    /* 플로팅 버튼 */
-    #bbs-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #03C75A; color: white; border-radius: 50%; font-size: 28px; border: none; cursor: pointer; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    
+    /* 플로팅 버튼 (z-index: 9999) */
+    #bbs-btn { 
+        position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; 
+        background: #03C75A; color: white; border-radius: 50%; font-size: 28px; border: none; cursor: pointer; 
+        z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+        display: flex; align-items: center; justify-content: center; transition: transform 0.2s; 
+    }
     #bbs-btn:hover { transform: scale(1.1); }
     
-    /* 배경 오버레이 */
-    #bbs-overlay-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 10000; display: none; }
+    /* 배경 오버레이 (z-index: 10000) */
+    #bbs-overlay-bg { 
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); 
+        z-index: 10000; display: none; 
+    }
     
-    /* [수정] 게시판 레이어 (PC 기본) */
+    /* 게시판 레이어 (z-index: 10001) */
     #bbs-layer { 
-        position: fixed; 
-        top: 0; 
-        right: -520px; /* 너비보다 조금 더 숨김 */
-        width: 500px;  /* 요청하신 500px */
-        height: 100vh; 
-        background: #fff; 
-        z-index: 10001; 
-        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        position: fixed; top: 0; right: -520px; width: 500px; height: 100vh; background: #fff; 
+        z-index: 10001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         box-shadow: -4px 0 15px rgba(0,0,0,0.1); 
-        display: flex; 
-        flex-direction: column; 
-        font-family: sans-serif; 
+        display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    
-    /* 레이어 열림 상태 */
     #bbs-layer.open { right: 0; }
-
-    /* [수정] 모바일 반응형 (768px 이하) */
     @media (max-width: 768px) {
-        #bbs-layer {
-            width: 100%;       /* 모바일은 꽉 채우기 */
-            right: -100%;      /* 화면 밖으로 완전히 숨김 */
-            max-width: 100%;
-        }
+        #bbs-layer { width: 100%; right: -100%; max-width: 100%; }
     }
     
-    /* 헤더 */
-    .bbs-header { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-    .bbs-header h3 { margin: 0; font-size: 1.1rem; color: #333; font-weight: bold; }
-    .bbs-close-btn { background: none; border: 1px solid #ddd; border-radius: 4px; padding: 5px 10px; font-size: 14px; cursor: pointer; color: #555; font-weight: bold; }
+    /* [Header] 고정 영역 */
+    .bbs-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .bbs-header h3 { margin: 0; font-size: 1.1rem; color: #111; font-weight: bold; }
+    .bbs-close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #333; padding: 5px; }
     
-    /* 내용 영역 (스크롤 가능) */
-    .bbs-content-wrap { flex: 1; overflow-y: auto; padding: 20px; width: 100%; }
+    /* [Content] 스크롤 영역 */
+    .bbs-content-wrap { flex: 1; overflow-y: auto; padding: 20px; width: 100%; display: flex; flex-direction: column; }
     
-    /* 테이블 */
-    .bbs-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; table-layout: fixed; /* 텍스트 넘침 방지 */ }
-    .bbs-table th, .bbs-table td { padding: 10px 5px; border-bottom: 1px solid #eee; text-align: left; }
-    .bbs-table a { color: #333; text-decoration: none; cursor: pointer; }
-    .bbs-table a:hover { text-decoration: underline; color: #03C75A; }
+    /* [Footer] 하단 고정 액션바 (글쓰기 버튼 등) */
+    .bbs-footer-action {
+        padding: 15px 20px; border-top: 1px solid #eee; background: #fff;
+        flex-shrink: 0; /* 크기 줄어들지 않음 */
+    }
+
+    /* --- 네이버 로그인 버튼 스타일 (가이드 준수) --- */
+    .naver-login-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; height: 50px;
+        background-color: #03C75A; color: white;
+        text-decoration: none; border-radius: 4px;
+        font-weight: bold; font-size: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .naver-login-btn:hover { background-color: #02b351; }
+    .n-icon { margin-right: 12px; display: flex; align-items: center; }
+
+    /* --- 로그인 프로필 카드 스타일 --- */
+    .bbs-profile-card {
+        display: flex; align-items: center; padding: 15px; 
+        background: #f9fafb; border-radius: 8px; border: 1px solid #eee;
+        margin-bottom: 20px;
+    }
+    .bbs-profile-img-large { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; margin-right: 12px; }
+    .bbs-profile-img-placeholder { width: 45px; height: 45px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 12px; }
+    .bbs-profile-info { display: flex; flex-direction: column; flex: 1; }
+    .bbs-user-name { font-weight: bold; font-size: 1rem; color: #333; margin-bottom: 4px; }
+    .bbs-btn-logout { background: #fff; border: 1px solid #ccc; padding: 4px 10px; font-size: 12px; color: #666; border-radius: 4px; cursor: pointer; align-self: flex-start; }
+    .bbs-btn-logout:hover { background: #f1f1f1; }
+
+    /* --- 게시판 테이블 스타일 --- */
+    .bbs-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; table-layout: fixed; }
+    .bbs-table th, .bbs-table td { padding: 12px 5px; border-bottom: 1px solid #f1f1f1; text-align: left; }
+    .bbs-table th { color: #888; font-weight: normal; font-size: 0.85rem; border-bottom: 1px solid #ddd; }
+    .bbs-table tr:hover td { background-color: #fafafa; }
+    .bbs-list-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 500; color: #333; margin-bottom: 4px;}
+    .bbs-list-meta { display: flex; align-items: center; font-size: 0.8rem; color: #888; }
+    .bbs-list-img-small { width: 18px; height: 18px; border-radius: 50%; margin-right: 5px; vertical-align: middle; border: 1px solid #eee; object-fit: cover; }
+
+    /* --- 버튼 및 입력창 --- */
+    .bbs-btn-primary { width: 100%; padding: 14px; background: #333; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+    .bbs-btn-primary:hover { background: #111; }
     
-    /* 버튼 및 입력창 */
-    .bbs-btn-basic { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; background: #333; color: white; white-space: nowrap; }
-    .bbs-btn-login { background: #03C75A; color: white; text-decoration: none; padding: 8px 12px; border-radius: 4px; font-size: 0.9rem; display: inline-flex; align-items: center; }
-    
-    .bbs-input, .bbs-textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
-    .bbs-textarea { height: 150px; resize: none; }
-    
-    /* 댓글 */
-    .bbs-comment-item { border-bottom: 1px solid #f0f0f0; padding: 10px 0; font-size: 0.9rem; word-break: break-all; /* 긴 단어 줄바꿈 */ }
-    .bbs-meta { font-size: 0.8rem; color: #888; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+    .bbs-btn-basic { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; color: #555; font-size: 0.8rem; }
+    .bbs-btn-basic:hover { background: #f9f9f9; color: #333; }
+    .bbs-btn-del { color: #d9534f; border-color: #f5c6cb; }
+    .bbs-btn-del:hover { background: #f8d7da; }
+
+    .bbs-input, .bbs-textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+    .bbs-textarea { height: 200px; resize: none; line-height: 1.5; }
+
+    /* --- 댓글 스타일 --- */
+    .bbs-comment-item { border-bottom: 1px solid #f5f5f5; padding: 12px 0; font-size: 0.9rem; word-break: break-all; }
 </style>
 
 <button id="bbs-btn" onclick="bbsToggleLayer()">💬</button>
@@ -112,44 +151,52 @@ const bbsHTML = `
 
 <div id="bbs-layer">
     <div class="bbs-header">
-        <h3 id="bbs-top-title">💬 의견 나누기</h3>
-        <button class="bbs-close-btn" onclick="bbsToggleLayer()">닫기 ✖</button>
+        <h3 id="bbs-top-title">자유게시판</h3>
+        <button class="bbs-close-btn" onclick="bbsToggleLayer()">✕</button>
     </div>
     
     <div class="bbs-content-wrap" id="bbs-view-list">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            ${authHtml}
-            <button class="bbs-btn-basic" onclick="bbsChangeView('write')">✏️ 글쓰기</button>
-        </div>
+        ${authHtml}
+        
         <table class="bbs-table">
             <colgroup><col width="*"/><col width="90"/></colgroup>
-            <thead><tr><th>제목</th><th>작성자</th></tr></thead>
+            <thead><tr><th>주제</th><th>작성자</th></tr></thead>
             <tbody id="bbs-list-tbody"></tbody>
         </table>
     </div>
 
+    <div class="bbs-footer-action" id="bbs-footer-list">
+        <button class="bbs-btn-primary" onclick="bbsChangeView('write')">🖊️ 새 글 쓰기</button>
+    </div>
+
     <div class="bbs-content-wrap" id="bbs-view-write" style="display:none;">
-        <div style="margin-bottom:15px;">
-            <button class="bbs-btn-basic" style="background:#fff; color:#555; border:1px solid #ddd;" onclick="bbsChangeView('list')">◀ 목록으로</button>
+        <input type="text" id="bbs-write-title" class="bbs-input" placeholder="제목">
+        <textarea id="bbs-write-content" class="bbs-textarea" placeholder="건전한 커뮤니티를 위해 매너를 지켜주세요."></textarea>
+    </div>
+    <div class="bbs-footer-action" id="bbs-footer-write" style="display:none;">
+        <div style="display:flex; gap: 10px;">
+            <button class="bbs-btn-basic" style="flex:1; height:45px;" onclick="bbsChangeView('list')">취소</button>
+            <button class="bbs-btn-primary" id="bbs-btn-save" style="flex:2; height:45px;" onclick="bbsSavePost()">등록</button>
         </div>
-        <input type="text" id="bbs-write-title" class="bbs-input" placeholder="제목을 입력하세요">
-        <textarea id="bbs-write-content" class="bbs-textarea" placeholder="내용을 자유롭게 적어주세요"></textarea>
-        <button class="bbs-btn-basic" id="bbs-btn-save" style="width:100%; background:#03C75A; font-weight:bold;" onclick="bbsSavePost()">등록하기</button>
     </div>
 
     <div class="bbs-content-wrap" id="bbs-view-detail" style="display:none;">
-        <button class="bbs-btn-basic" style="background:#fff; color:#555; border:1px solid #ddd; margin-bottom:15px;" onclick="bbsChangeView('list')">◀ 목록으로</button>
-        <h3 id="bbs-detail-title" style="margin-top:0; font-size:1.2rem; word-break: keep-all;"></h3>
-        <div class="bbs-meta" id="bbs-detail-author-wrap" style="display:flex; align-items:center; min-height:40px;">
+        <h3 id="bbs-detail-title" style="margin: 0 0 15px 0; font-size:1.3rem; word-break: keep-all; line-height:1.4;"></h3>
+        
+        <div class="bbs-meta" id="bbs-detail-author-wrap" style="display:flex; align-items:center; min-height:40px; margin-bottom: 20px; padding-bottom:15px; border-bottom:1px solid #eee;">
             <span id="bbs-detail-author" style="width:100%;"></span>
         </div>
-        <div id="bbs-detail-content" style="white-space: pre-wrap; font-size:0.95rem; line-height:1.6; min-height:100px; word-break: break-word;"></div>
+
+        <div id="bbs-detail-content" style="white-space: pre-wrap; font-size:1rem; line-height:1.7; min-height:100px; word-break: break-word; color:#333;"></div>
         
-        <h4 style="margin-top:30px; border-top:2px solid #eee; padding-top:15px;">댓글</h4>
-        <div id="bbs-comment-list"></div>
-        <div style="display:flex; gap:5px; margin-top:10px;">
-            <input type="text" id="bbs-cmt-input" class="bbs-input" style="margin:0;" placeholder="댓글 입력">
-            <button class="bbs-btn-basic" onclick="bbsSaveComment()">등록</button>
+        <h4 style="margin-top:40px; border-top:1px solid #eee; padding-top:20px; font-size:1rem;">댓글</h4>
+        <div id="bbs-comment-list" style="margin-bottom: 20px;"></div>
+    </div>
+    <div class="bbs-footer-action" id="bbs-footer-detail" style="display:none;">
+        <div style="display:flex; gap:8px;">
+            <button class="bbs-btn-basic" onclick="bbsChangeView('list')" style="width: 40px;">◀</button>
+            <input type="text" id="bbs-cmt-input" class="bbs-input" style="margin:0; flex:1;" placeholder="댓글 입력">
+            <button class="bbs-btn-primary" style="width: 60px; padding:0;" onclick="bbsSaveComment()">등록</button>
         </div>
     </div>
 </div>
@@ -192,19 +239,24 @@ function bbsToggleLayer() {
     
     if (layer.classList.contains('open')) {
         layer.classList.remove('open');
-        setTimeout(() => { overlay.style.display = 'none'; }, 300); // 애니메이션 후 숨김
+        setTimeout(() => { overlay.style.display = 'none'; }, 300);
     } else {
         overlay.style.display = 'block';
-        // 약간의 딜레이를 줘야 transition이 먹힘 (display:none -> block 직후에는 transition 안됨)
         setTimeout(() => layer.classList.add('open'), 10);
         bbsChangeView('list');
     }
 }
 
 function bbsChangeView(viewName, postData = null) {
-    document.getElementById('bbs-view-list').style.display = viewName === 'list' ? 'block' : 'none';
+    // 뷰 영역 제어
+    document.getElementById('bbs-view-list').style.display = viewName === 'list' ? 'flex' : 'none'; // flex로 변경
     document.getElementById('bbs-view-write').style.display = viewName === 'write' ? 'block' : 'none';
     document.getElementById('bbs-view-detail').style.display = viewName === 'detail' ? 'block' : 'none';
+
+    // 푸터 영역 제어 (하단 고정 버튼들)
+    document.getElementById('bbs-footer-list').style.display = viewName === 'list' ? 'block' : 'none';
+    document.getElementById('bbs-footer-write').style.display = viewName === 'write' ? 'block' : 'none';
+    document.getElementById('bbs-footer-detail').style.display = viewName === 'detail' ? 'block' : 'none';
 
     if (viewName === 'list') {
         bbsLoadPosts();
@@ -233,24 +285,22 @@ async function bbsLoadPosts() {
     const tbody = document.getElementById('bbs-list-tbody');
     
     if (posts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#888; padding:20px;">첫 번째 글을 남겨보세요!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#888; padding:40px 0;">첫 번째 글의 주인공이 되어보세요!</td></tr>';
         return;
     }
 
     tbody.innerHTML = posts.map(p => {
         const profileImg = p.authorImage 
-            ? `<img src="${p.authorImage}" style="width:20px; height:20px; border-radius:50%; margin-right:6px; vertical-align:middle; border:1px solid #eee; object-fit:cover;">` 
-            : `<span style="display:inline-block; width:20px; text-align:center; margin-right:4px; vertical-align:middle; font-size:1.1rem;">👤</span>`;
+            ? `<img src="${p.authorImage}" class="bbs-list-img-small">` 
+            : `<span class="bbs-list-img-small" style="display:inline-flex; align-items:center; justify-content:center; background:#eee;">👤</span>`;
 
         return `
         <tr>
-            <td style="padding:10px 5px;">
-                <a onclick="bbsLoadDetail(${p.id})" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;">
-                    ${p.title}
-                </a>
+            <td>
+                <a onclick="bbsLoadDetail(${p.id})" class="bbs-list-title">${p.title}</a>
             </td>
-            <td style="font-size:0.8rem; color:#555; vertical-align:middle; padding:10px 5px;">
-                <div style="display:flex; align-items:center;">
+            <td>
+                <div class="bbs-list-meta">
                     ${profileImg}
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60px;">${p.author}</span>
                 </div>
@@ -277,7 +327,7 @@ async function bbsSavePost() {
     if (res.ok) {
         bbsChangeView('list');
     } else {
-        alert('처리 중 오류가 발생했습니다. (로그인 확인)');
+        alert('로그인 세션이 만료되었거나 오류가 발생했습니다.');
     }
 }
 
@@ -289,37 +339,31 @@ async function bbsLoadDetail(id) {
     const currentUser = getUserInfo();
     let btnHtml = '';
     
-    // 내 글이면 수정/삭제 버튼 생성
     if (currentUser && currentUser.id === post.authorId) {
         btnHtml = `
             <span style="margin-left:auto;">
-                <button onclick='bbsEditPost(${JSON.stringify(post).replace(/'/g, "&#39;")})' class="bbs-btn-basic" style="background:#555; font-size:0.75rem; padding:4px 8px;">수정</button>
-                <button onclick="bbsDeletePost(${post.id})" class="bbs-btn-basic" style="background:#d9534f; font-size:0.75rem; padding:4px 8px;">삭제</button>
+                <button onclick='bbsEditPost(${JSON.stringify(post).replace(/'/g, "&#39;")})' class="bbs-btn-basic">수정</button>
+                <button onclick="bbsDeletePost(${post.id})" class="bbs-btn-basic bbs-btn-del">삭제</button>
             </span>
         `;
     }
 
-    // [추가] 프로필 이미지 HTML 생성
     const profileImg = post.authorImage 
-        ? `<img src="${post.authorImage}" style="width:32px; height:32px; border-radius:50%; margin-right:10px; border:1px solid #ddd; object-fit:cover;">` 
-        : `<span style="font-size:1.8rem; margin-right:8px;">👤</span>`;
+        ? `<img src="${post.authorImage}" style="width:36px; height:36px; border-radius:50%; margin-right:10px; border:1px solid #ddd; object-fit:cover;">` 
+        : `<span style="font-size:2rem; margin-right:10px;">👤</span>`;
 
-    // 제목 넣기
     document.getElementById('bbs-detail-title').innerText = post.title;
-
-    // [수정] 작성자 영역 (이미지 + 이름 + 버튼)
     document.getElementById('bbs-detail-author').innerHTML = `
-        <div style="display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; width:100%;">
             ${profileImg}
             <div style="display:flex; flex-direction:column;">
                 <span style="font-weight:bold; color:#333; font-size:0.95rem;">${post.author}</span>
-                <span style="font-size:0.75rem; color:#888;">${post.date || ''}</span>
+                <span style="font-size:0.75rem; color:#999;">${post.date || ''}</span>
             </div>
             ${btnHtml}
         </div>
     `;
 
-    // 내용 넣기
     document.getElementById('bbs-detail-content').innerText = post.content;
     
     bbsLoadComments();
@@ -350,14 +394,14 @@ async function bbsLoadComments() {
 
     document.getElementById('bbs-comment-list').innerHTML = cmts.map(c => {
         const profileImg = c.authorImage 
-            ? `<img src="${c.authorImage}" style="width:24px; height:24px; border-radius:50%; margin-right:8px; vertical-align:middle;">`
-            : `<span style="display:inline-block; width:24px; text-align:center;">👤</span>`;
+            ? `<img src="${c.authorImage}" style="width:28px; height:28px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #eee;">`
+            : `<span style="display:inline-block; width:28px; text-align:center;">👤</span>`;
         
         let actionBtns = '';
         if (currentUser && currentUser.id === c.authorId) {
             actionBtns = `
                 <span id="bbs-cmt-actions-${c.id}" style="font-size:0.8rem; margin-left:10px;">
-                    <a onclick="bbsEditComment(${c.id})" style="color:#555; cursor:pointer;">수정</a> | 
+                    <a onclick="bbsEditComment(${c.id})" style="color:#888; cursor:pointer;">수정</a> | 
                     <a onclick="bbsDeleteComment(${c.id})" style="color:#d9534f; cursor:pointer;">삭제</a>
                 </span>
             `;
@@ -365,14 +409,14 @@ async function bbsLoadComments() {
 
         return `
         <div class="bbs-comment-item">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="display:flex; align-items:center;">
                     ${profileImg}
-                    <strong>${c.author}</strong>
+                    <strong style="font-size:0.9rem;">${c.author}</strong>
                 </div>
                 ${actionBtns}
             </div>
-            <div id="bbs-cmt-text-${c.id}" style="padding-left:34px; margin-top:5px; color:#555; white-space: pre-wrap;">${c.content}</div>
+            <div id="bbs-cmt-text-${c.id}" style="padding-left:38px; margin-top:4px; color:#555; white-space: pre-wrap; font-size:0.95rem;">${c.content}</div>
         </div>
         `;
     }).join('');
@@ -383,7 +427,7 @@ function bbsEditComment(id) {
     const actionsEl = document.getElementById(`bbs-cmt-actions-${id}`);
     const originalText = contentEl.innerText;
 
-    contentEl.innerHTML = `<input type="text" id="bbs-cmt-input-${id}" class="bbs-input" style="margin-bottom:0; padding:5px; font-size:0.9rem;">`;
+    contentEl.innerHTML = `<input type="text" id="bbs-cmt-input-${id}" class="bbs-input" style="margin-bottom:0; padding:8px;" value="">`;
     document.getElementById(`bbs-cmt-input-${id}`).value = originalText;
 
     actionsEl.innerHTML = `
@@ -407,7 +451,7 @@ async function bbsSaveEditedComment(id) {
     if (res.ok) {
         bbsLoadComments();
     } else {
-        alert('수정 권한이 없거나 오류가 발생했습니다.');
+        alert('오류가 발생했습니다.');
         bbsLoadComments();
     }
 }
