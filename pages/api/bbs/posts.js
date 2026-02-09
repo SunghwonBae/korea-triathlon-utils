@@ -1,11 +1,11 @@
-import prisma from '../../../lib/prisma'; // 방금 만든 파일 불러오기
+import prisma from '../../../lib/prisma';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
   try {
-    // GET 요청
+    // GET 요청: 목록 및 상세 조회
     if (req.method === 'GET') {
-      // 1. 상세 조회
+      // 1. 상세 조회 (기존 동일)
       if (req.query.id) {
         const post = await prisma.post.findUnique({
           where: { id: Number(req.query.id) },
@@ -13,19 +13,15 @@ export default async function handler(req, res) {
         return res.json(post);
       }
 
-      // 2. 목록 조회
+      // 2. 목록 조회 (targetPage 기준 필터링 추가)
+      const targetPage = req.query.targetPage || 'common';
       const posts = await prisma.post.findMany({
+        where: { targetPage: targetPage }, // 해당 페이지의 글만 가져오기
         take: 50,
         orderBy: { id: 'desc' },
-        select: {
-          id: true,
-          title: true,
-          author: true,
-          createdAt: true, // 프론트에서 날짜 포맷팅 필요할 수 있음
-        }
+        select: { id: true, title: true, author: true, createdAt: true }
       });
       
-      // 날짜 포맷팅해서 보내기 (YYYY-MM-DD)
       const formattedPosts = posts.map(p => ({
         ...p,
         date: p.createdAt.toISOString().split('T')[0]
@@ -34,7 +30,7 @@ export default async function handler(req, res) {
       return res.json(formattedPosts);
     }
 
-    // POST 요청 (글쓰기)
+    // POST 요청: 글쓰기
     if (req.method === 'POST') {
       const token = req.cookies.auth_token;
       if (!token) return res.status(401).json({ error: '로그인 필요' });
@@ -44,6 +40,7 @@ export default async function handler(req, res) {
 
       await prisma.post.create({
         data: {
+          targetPage: body.targetPage || 'common', // 넘어온 페이지명 저장
           title: body.title,
           content: body.content,
           author: user.name,

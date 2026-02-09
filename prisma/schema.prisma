@@ -10,6 +10,7 @@ datasource db {
 
 model Post {
   id        Int       @id @default(autoincrement())
+  targetPage String    @default("common") 
   title     String
   content   String
   author    String
