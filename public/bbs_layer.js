@@ -47,11 +47,11 @@ const bbsHTML = `
     #bbs-layer * { box-sizing: border-box; }
 
     /* 플로팅 버튼 */
-    #bbs-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #03C75A; color: white; border-radius: 50%; font-size: 28px; border: none; cursor: pointer; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    #bbs-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #03C75A; color: white; border-radius: 50%; font-size: 28px; border: none; cursor: pointer; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
     #bbs-btn:hover { transform: scale(1.1); }
     
     /* 배경 오버레이 */
-    #bbs-overlay-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; display: none; }
+    #bbs-overlay-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 10000; display: none; }
     
     /* [수정] 게시판 레이어 (PC 기본) */
     #bbs-layer { 
@@ -61,7 +61,7 @@ const bbsHTML = `
         width: 500px;  /* 요청하신 500px */
         height: 100vh; 
         background: #fff; 
-        z-index: 1001; 
+        z-index: 10001; 
         transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         box-shadow: -4px 0 15px rgba(0,0,0,0.1); 
         display: flex; 
