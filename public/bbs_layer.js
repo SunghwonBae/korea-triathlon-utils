@@ -140,7 +140,9 @@ const bbsHTML = `
     <div class="bbs-content-wrap" id="bbs-view-detail" style="display:none;">
         <button class="bbs-btn-basic" style="background:#fff; color:#555; border:1px solid #ddd; margin-bottom:15px;" onclick="bbsChangeView('list')">◀ 목록으로</button>
         <h3 id="bbs-detail-title" style="margin-top:0; font-size:1.2rem; word-break: keep-all;"></h3>
-        <div class="bbs-meta">작성자: <span id="bbs-detail-author" style="color:#333; font-weight:bold;"></span></div>
+        <div class="bbs-meta" id="bbs-detail-author-wrap" style="display:flex; align-items:center; min-height:40px;">
+            <span id="bbs-detail-author" style="width:100%;"></span>
+        </div>
         <div id="bbs-detail-content" style="white-space: pre-wrap; font-size:0.95rem; line-height:1.6; min-height:100px; word-break: break-word;"></div>
         
         <h4 style="margin-top:30px; border-top:2px solid #eee; padding-top:15px;">댓글</h4>
@@ -287,18 +289,37 @@ async function bbsLoadDetail(id) {
     const currentUser = getUserInfo();
     let btnHtml = '';
     
-    // 내 글이면 수정/삭제 버튼 노출
+    // 내 글이면 수정/삭제 버튼 생성
     if (currentUser && currentUser.id === post.authorId) {
         btnHtml = `
-            <span style="margin-left:10px; font-weight:normal;">
-                <button onclick='bbsEditPost(${JSON.stringify(post).replace(/'/g, "&#39;")})' class="bbs-btn-basic" style="background:#555; font-size:0.7rem; padding:3px 6px;">수정</button>
-                <button onclick="bbsDeletePost(${post.id})" class="bbs-btn-basic" style="background:#d9534f; font-size:0.7rem; padding:3px 6px;">삭제</button>
+            <span style="margin-left:auto;">
+                <button onclick='bbsEditPost(${JSON.stringify(post).replace(/'/g, "&#39;")})' class="bbs-btn-basic" style="background:#555; font-size:0.75rem; padding:4px 8px;">수정</button>
+                <button onclick="bbsDeletePost(${post.id})" class="bbs-btn-basic" style="background:#d9534f; font-size:0.75rem; padding:4px 8px;">삭제</button>
             </span>
         `;
     }
 
+    // [추가] 프로필 이미지 HTML 생성
+    const profileImg = post.authorImage 
+        ? `<img src="${post.authorImage}" style="width:32px; height:32px; border-radius:50%; margin-right:10px; border:1px solid #ddd; object-fit:cover;">` 
+        : `<span style="font-size:1.8rem; margin-right:8px;">👤</span>`;
+
+    // 제목 넣기
     document.getElementById('bbs-detail-title').innerText = post.title;
-    document.getElementById('bbs-detail-author').innerHTML = `${post.author} ${btnHtml}`;
+
+    // [수정] 작성자 영역 (이미지 + 이름 + 버튼)
+    document.getElementById('bbs-detail-author').innerHTML = `
+        <div style="display:flex; align-items:center;">
+            ${profileImg}
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-weight:bold; color:#333; font-size:0.95rem;">${post.author}</span>
+                <span style="font-size:0.75rem; color:#888;">${post.date || ''}</span>
+            </div>
+            ${btnHtml}
+        </div>
+    `;
+
+    // 내용 넣기
     document.getElementById('bbs-detail-content').innerText = post.content;
     
     bbsLoadComments();
