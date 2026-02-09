@@ -50,10 +50,10 @@ const bbsHTML = `
     /* 기존 스타일 유지 */
     #bbs-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #03C75A; color: white; border-radius: 50%; font-size: 28px; border: none; cursor: pointer; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
     #bbs-btn:hover { transform: scale(1.1); }
-    #bbs-overlay-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1000; display: none; }
+    #bbs-overlay-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 10000; display: none; }
     
     /* 레이어 스타일 */
-    #bbs-layer { position: fixed; top: 0; right: -420px; width: 400px; max-width: 100vw; height: 100vh; background: #fff; z-index: 1001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -4px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; font-family: sans-serif; }
+    #bbs-layer { position: fixed; top: 0; right: -420px; width: 400px; max-width: 100vw; height: 100vh; background: #fff; z-index: 10001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -4px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; font-family: sans-serif; }
     #bbs-layer.open { right: 0; }
     
     /* 상단 헤더 (닫기 버튼 강화) */
@@ -187,12 +187,27 @@ async function bbsLoadPosts() {
         return;
     }
 
-    tbody.innerHTML = posts.map(p => `
+    tbody.innerHTML = posts.map(p => {
+        // 작성자 이미지 HTML 생성 (없으면 기본 아이콘)
+        const profileImg = p.authorImage 
+            ? `<img src="${p.authorImage}" style="width:20px; height:20px; border-radius:50%; margin-right:6px; vertical-align:middle; border:1px solid #eee; object-fit:cover;">` 
+            : `<span style="display:inline-block; width:20px; text-align:center; margin-right:4px; vertical-align:middle; font-size:1.1rem;">👤</span>`;
+
+        return `
         <tr>
-            <td><a onclick="bbsLoadDetail(${p.id})">${p.title}</a></td>
-            <td style="font-size:0.8rem; color:#666;">${p.author}</td>
+            <td style="padding:10px 5px;">
+                <a onclick="bbsLoadDetail(${p.id})" style="display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    ${p.title}
+                </a>
+            </td>
+            <td style="font-size:0.8rem; color:#555; vertical-align:middle; padding:10px 5px;">
+                <div style="display:flex; align-items:center;">
+                    ${profileImg}
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70px;">${p.author}</span>
+                </div>
+            </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 async function bbsSavePost() {
