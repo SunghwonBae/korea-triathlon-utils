@@ -597,32 +597,30 @@
         }
 
         function addToCalendar(type, title, dateStr) {
-            // dateStr이 "2026-02-15" 형태라고 가정합니다.
             const date = new Date(dateStr);
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             
-            // 네이버용 날짜 (YYYY-MM-DD)
-            const naverDate = `${year}-${month}-${day}`;
-            
-            // 구글용 날짜 (YYYYMMDD)
-            const googleDate = naverDate.replace(/-/g, '');
+            // 네이버는 하이픈(-)이 포함된 날짜를 선호합니다.
+            const fullDate = `${year}-${month}-${day}`;
+            // 구글/애플은 붙어있는 형식을 선호합니다.
+            const basicDate = `${year}${month}${day}`;
 
             let url = "";
             if (type === 'google') {
-                // 구글은 시작일/종료일 형식이 YYYYMMDD/YYYYMMDD (종일 일정)
                 const nextDay = new Date(date);
                 nextDay.setDate(date.getDate() + 1);
-                const googleNextDate = `${nextDay.getFullYear()}${String(nextDay.getMonth() + 1).padStart(2, '0')}${String(nextDay.getDate()).padStart(2, '0')}`;
-                url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${googleDate}/${googleNextDate}`;
+                const googleNextDate = nextDay.toISOString().slice(0,10).replace(/-/g, '');
+                url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${basicDate}/${googleNextDate}`;
             } 
             else if (type === 'naver') {
-                // 네이버 핵심: 'isAllDay=true'와 하이픈이 들어간 날짜 포맷
-                url = `https://calendar.naver.com/record/standardForm.nhn?title=${encodeURIComponent(title)}&startDate=${naverDate}&endDate=${naverDate}&isAllDay=true`;
+                // 네이버 전용 개선된 URL 파라미터
+                // st_date(시작일), en_date(종료일), all_day(종일여부)
+                url = `https://calendar.naver.com/record/standardForm.nhn?title=${encodeURIComponent(title)}&st_date=${fullDate}&en_date=${fullDate}&all_day=1`;
             } 
             else if (type === 'apple') {
-                const icsMsg = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:${googleDate}\nSUMMARY:${title}\nEND:VEVENT\nEND:VCALENDAR`;
+                const icsMsg = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:${basicDate}\nSUMMARY:${title}\nEND:VEVENT\nEND:VCALENDAR`;
                 const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
@@ -632,10 +630,7 @@
             }
 
             if (url) {
-                const win = window.open(url, '_blank');
-                if (!win) {
-                    alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.');
-                }
+                window.open(url, '_blank');
             }
         }
 
