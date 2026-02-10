@@ -602,8 +602,10 @@
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             
-            const fullDate = `${year}-${month}-${day}`; // YYYY-MM-DD
-            const basicDate = `${year}${month}${day}`;   // YYYYMMDD
+            // 네이버 규격: YYYY-MM-DD
+            const fullDate = `${year}-${month}-${day}`;
+            // 구글/애플 규격: YYYYMMDD
+            const basicDate = `${year}${month}${day}`;
 
             let url = "";
 
@@ -614,14 +616,9 @@
                 url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${basicDate}/${googleNextDate}`;
             } 
             else if (type === 'naver') {
-                /**
-                 * 네이버 캘린더 신규 URL 방식 (모바일/웹 공용)
-                 * st_date/en_date 대신 시작일시(startTime), 종료일시(endTime)를 사용합니다.
-                 */
-                const startTime = `${fullDate}T09:00:00`;
-                const endTime = `${fullDate}T10:00:00`;
-                
-                url = `https://m.calendar.naver.com/action/register.nhn?title=${encodeURIComponent(title)}&startDateTime=${startTime}&endDateTime=${endTime}&isAllDay=true`;
+                // v2/record/form은 입력 폼을 띄워주는 URL입니다.
+                // 분석하신 API 필드와 대응되는 UI 파라미터를 적용했습니다.
+                url = `https://calendar.naver.com/v2/record/form?title=${encodeURIComponent(title)}&stdt=${fullDate}&endt=${fullDate}&isAllDay=true`;
             } 
             else if (type === 'apple') {
                 const icsMsg = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:${basicDate}\nSUMMARY:${title}\nEND:VEVENT\nEND:VCALENDAR`;
@@ -633,13 +630,7 @@
                 return;
             }
 
-            if (url) {
-                // 새 창에서 열기
-                const newWindow = window.open(url, '_blank');
-                if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                    alert('팝업이 차단되어 캘린더로 연결할 수 없습니다. 브라우저 설정에서 팝업을 허용해 주세요.');
-                }
-            }
+            if (url) window.open(url, '_blank');
         }
 
         // 3. 통합 로드 및 초기화
