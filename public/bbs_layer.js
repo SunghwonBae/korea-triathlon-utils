@@ -166,7 +166,7 @@ const bbsHTML = `
     </div>
     <div class="bbs-footer-action" id="bbs-footer-detail" style="display:none;">
         <div style="display:flex; gap:8px;">
-            <button class="bbs-btn-basic" onclick="bbsChangeView('list')" style="width: 40px;">◀</button>
+            <button class="bbs-btn-basic" onclick="bbsChangeView('list')" style="min-width: 70px;">글목록</button>
             <input type="text" id="bbs-cmt-input" class="bbs-input" style="margin:0; flex:1;" placeholder="댓글 입력">
             <button class="bbs-btn-primary" style="width: 60px; padding:0;" onclick="bbsSaveComment()">등록</button>
         </div>
