@@ -602,8 +602,6 @@
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             
-            // 네이버 규격: YYYY-MM-DD
-            const fullDate = `${year}-${month}-${day}`;
             // 구글/애플 규격: YYYYMMDD
             const basicDate = `${year}${month}${day}`;
 
@@ -614,12 +612,7 @@
                 nextDay.setDate(date.getDate() + 1);
                 const googleNextDate = nextDay.toISOString().slice(0,10).replace(/-/g, '');
                 url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${basicDate}/${googleNextDate}`;
-            } 
-            else if (type === 'naver') {
-                // v2/record/form은 입력 폼을 띄워주는 URL입니다.
-                // 분석하신 API 필드와 대응되는 UI 파라미터를 적용했습니다.
-                url = `https://calendar.naver.com/v2/record/form?title=${encodeURIComponent(title)}&stdt=${fullDate}&endt=${fullDate}&isAllDay=true`;
-            } 
+            }  
             else if (type === 'apple') {
                 const icsMsg = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:${basicDate}\nSUMMARY:${title}\nEND:VEVENT\nEND:VCALENDAR`;
                 const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
@@ -842,16 +835,11 @@
                             <div class="date" style="font-size: 11px; font-weight: bold; color: ${dateColor};">${dateString}</div>
                         </div>
                         ${actionBtnHtml}
-                        <div class="calendar-sync-group">
-                            <button class="sync-btn google" onclick="addToCalendar('google', '${e.title}', '${e.startDate}')" title="구글 캘린더">
-                                <i class="fab fa-google"></i>
-                            </button>
-                            <button class="sync-btn naver" onclick="addToCalendar('naver', '${e.title}', '${e.startDate}')" title="네이버 캘린더">
-                                <b>N</b>
-                            </button>
-                            <button class="sync-btn apple" onclick="addToCalendar('apple', '${e.title}', '${e.startDate}')" title="애플 캘린더">
-                                <i class="fab fa-apple"></i>
-                            </button>
+                        <div class="calendar-sync-group" style="display: flex; gap: 8px; margin-top: 10px; width: 100%;">
+                            <button class="sync-btn" onclick="addToCalendar('google', '${e.title}', '${e.startDate}')" 
+                                    style="flex: 1; padding: 8px 0; font-size: 11px; border: 1px solid #4285F4; color: #4285F4; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold;">Google 연동</button>
+                            <button class="sync-btn" onclick="addToCalendar('apple', '${e.title}', '${e.startDate}')" 
+                                    style="flex: 1; padding: 8px 0; font-size: 11px; border: 1px solid #000; color: #000; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold;">애플/파일 저장</button>
                         </div>
                     </div>
                 `;
