@@ -16,6 +16,7 @@ model Post {
   author    String
   authorId    String?
   authorImage String?  // 작성자 프로필 사진
+  noticeType  Int       @default(2) // [추가] 0:전체공지, 1:페이지공지, 2:일반
   createdAt DateTime  @default(now())
   comments  Comment[]
 }

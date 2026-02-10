@@ -51,8 +51,10 @@ export default async function handler(req, res) {
       const comment = await prisma.comment.findUnique({ where: { id: body.id } });
       if (!comment) return res.status(404).json({ error: '댓글을 찾을 수 없습니다.' });
 
-      // 권한 확인
-      if (comment.authorId !== user.naverId) return res.status(403).json({ error: '권한 없음' });
+      // [수정됨] 본인X AND 관리자X -> 차단
+      if (comment.authorId !== user.naverId && !user.isAdmin) {
+          return res.status(403).json({ error: '권한 없음' });
+      }
 
       await prisma.comment.update({
         where: { id: body.id },
@@ -70,8 +72,10 @@ export default async function handler(req, res) {
       const comment = await prisma.comment.findUnique({ where: { id: commentId } });
       if (!comment) return res.status(404).json({ error: '이미 삭제된 댓글입니다.' });
 
-      // 본인 확인
-      if (comment.authorId !== user.naverId) return res.status(403).json({ error: '권한 없음' });
+      // [수정됨] 본인X AND 관리자X -> 차단
+      if (comment.authorId !== user.naverId && !user.isAdmin) {
+          return res.status(403).json({ error: '권한 없음' });
+      }
 
       await prisma.comment.delete({ where: { id: commentId } });
       return res.status(200).json({ success: true });

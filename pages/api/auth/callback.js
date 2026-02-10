@@ -26,6 +26,9 @@ export default async function handler(req, res) {
     const userGender = naverUser.gender || '';
     const userMobile = naverUser.mobile || ''; // [추가] 010-0000-0000 형태
 
+    // ★ 관리자 체크 로직 (이메일 아이디가 fool93 인지 확인)
+    const isAdmin = userEmail.startsWith('fool93');
+
     // 3. DB 저장 (Upsert)
     // naverId가 있으면 업데이트, 없으면 새로 생성
     await prisma.user.upsert({
@@ -54,8 +57,8 @@ export default async function handler(req, res) {
     const jwtPayload = { 
         name: userName, 
         naverId: uniqueId,
-        profileImage: userImage
-        // mobile은 민감정보라 토큰/쿠키에는 담지 않는 것이 보안상 안전합니다.
+        profileImage: userImage, 
+        isAdmin: isAdmin
     };
     const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
@@ -70,7 +73,8 @@ export default async function handler(req, res) {
     const userInfo = JSON.stringify({ 
         name: userName, 
         image: userImage, 
-        id: uniqueId 
+        id: uniqueId,
+        isAdmin: isAdmin // ★ 프론트엔드에 관리자 여부 전달
     });
 
 // ▼ [수정] encodeURIComponent(...)를 제거하고 userInfo 변수만 넣으세요!
