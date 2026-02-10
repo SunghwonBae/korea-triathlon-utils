@@ -76,7 +76,6 @@ const bbsHTML = `
     .bbs-content-wrap { flex: 1; overflow-y: auto; padding: 10px 20px; width: 100%; display: flex; flex-direction: column; }
     .bbs-footer-action { padding: 10px 20px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
 
-    /* [수정] 로그인/프로필 영역 컴팩트하게 변경 */
     .naver-login-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 40px; background-color: #03C75A; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .n-icon { margin-right: 8px; display: flex; align-items: center; }
     .bbs-profile-card { display: flex; align-items: center; padding: 10px; background: #f9fafb; border-radius: 6px; border: 1px solid #eee; margin-bottom: 10px; }
@@ -86,13 +85,41 @@ const bbsHTML = `
     .bbs-user-name { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 2px; }
     .bbs-btn-logout { background: #fff; border: 1px solid #ccc; padding: 2px 8px; font-size: 11px; color: #666; border-radius: 3px; cursor: pointer; align-self: flex-start; }
 
-    /* [수정] 테이블 행 높이 축소 */
     .bbs-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed; }
     .bbs-table th, .bbs-table td { padding: 6px 4px; border-bottom: 1px solid #f1f1f1; text-align: left; }
     .bbs-table th { color: #888; font-weight: normal; font-size: 0.8rem; border-bottom: 1px solid #ddd; padding: 8px 4px; }
     
-    .bbs-list-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font-weight: 500; color: #333; margin-bottom: 1px; line-height: 1.2;}
-    .bbs-comment-count { color: #03C75A; font-weight: bold; font-size: 0.75rem; margin-left: 3px; }
+    /* [수정] 제목 영역 Flexbox 적용 (말줄임 + 댓글수 고정) */
+    .bbs-list-title { 
+        display: flex; 
+        align-items: center; 
+        width: 100%; 
+        cursor: pointer; 
+        text-decoration: none; 
+        color: #333; 
+    }
+
+    /* 제목 텍스트 (줄어드는 영역) */
+    .bbs-list-title-text { 
+        display: block; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        white-space: nowrap; 
+        flex: 1; /* 남은 공간 차지 */
+        min-width: 0; /* 내용이 길어도 줄어들 수 있게 함 */
+        font-weight: 500; 
+        margin-bottom: 1px; 
+        line-height: 1.2;
+    }
+
+    /* 댓글 수 (고정 영역) */
+    .bbs-comment-count { 
+        color: #03C75A; 
+        font-weight: bold; 
+        font-size: 0.75rem; 
+        margin-left: 5px; 
+        flex-shrink: 0; /* 절대 줄어들지 않음 */
+    }
     
     .notice-badge-global { color: #d9534f; font-weight: bold; margin-right: 4px; font-size: 0.85rem; }
     .notice-badge-local { color: #03C75A; font-weight: bold; margin-right: 4px; font-size: 0.85rem; }
@@ -288,7 +315,7 @@ function renderPostRow(p, isNotice) {
 
     if (isNotice) {
         if (p.noticeType === 0) {
-            titlePrefix = `<span class="notice-badge-global">[전체]</span>`; // 공간 절약 위해 '전체공지' -> '전체'
+            titlePrefix = `<span class="notice-badge-global">[전체]</span>`; 
             rowStyle = 'background-color:#fff8f8;';
         } else if (p.noticeType === 1) {
             titlePrefix = `<span class="notice-badge-local">[공지]</span>`;
@@ -302,11 +329,13 @@ function renderPostRow(p, isNotice) {
             ? `<img src="${p.authorImage}" class="bbs-list-img-small">` 
             : `<span class="bbs-list-img-small" style="display:inline-flex; align-items:center; justify-content:center; background:#eee;">👤</span>`;
 
+    // [수정] HTML 구조 변경 (제목 텍스트와 댓글 수를 span으로 분리)
     return `
     <tr style="${rowStyle}">
         <td>
             <a onclick="bbsLoadDetail(${p.id})" class="bbs-list-title">
-                ${titlePrefix} ${p.title} ${cmtCount}
+                <span class="bbs-list-title-text">${titlePrefix} ${p.title}</span>
+                ${cmtCount}
             </a>
         </td>
         <td>
@@ -366,6 +395,10 @@ async function bbsSavePost() {
     });
 
     if (res.ok) {
+        // [수정] 새 글(POST)인 경우 1페이지로 강제 이동
+        if (!isEditMode) {
+            currentPage = 1;
+        }
         bbsChangeView('list');
     } else {
         alert('오류가 발생했습니다.');
