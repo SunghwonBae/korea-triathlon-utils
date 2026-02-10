@@ -56,33 +56,36 @@
         .action-btn.copy { color: var(--primary); }
         .action-btn.remove { color: var(--copied); }
 
-        /* 캘린더 연동 버튼 컨테이너 */
+        /* 캘린더 버튼 그룹 컨테이너 */
         .calendar-sync-group {
             display: flex;
-            gap: 4px;
-            margin-top: 5px;
-            width: 100%;
+            gap: 6px;
+            margin-top: 10px;
+            justify-content: flex-end; /* 오른쪽 정렬 */
         }
 
-        /* 각 버튼 스타일 */
+        /* 작고 동그란 아이콘 버튼 스타일 */
         .sync-btn {
-            flex: 1; /* 3개 버튼이 동일한 너비를 가짐 */
-            font-size: 11px;
-            padding: 5px 0;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%; /* 동그랗게 */
+            border: 1px solid #ddd;
             background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
         }
 
-        .sync-btn:hover { background: #f8f9fa; }
-        .sync-btn.google { color: #4285F4; }
-        .sync-btn.naver { color: #03C75A; }
-        .sync-btn.apple { color: #000000; }
+        .sync-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .sync-btn.google { color: #4285F4; border-color: #4285F4; }
+        .sync-btn.apple { color: #000; border-color: #333; }
 
         /* 달력 헤더 */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -322,7 +325,7 @@
                     <li style="margin-bottom: 6px;">철인대회 아닌 마라톤, 그란폰도 등을 누구나 공개일정으로 등록 할 수 있습니다. 대신 한번 등록된 공개일정은 관리자만 수정/삭제 할 수 있습니다.</li>
                     <li style="margin-bottom: 6px;">철인대회 또는 공개일정이 날짜변경이 생기면 자동으로 '내 일정'으로 복사된 경우 날짜변경 업데이트 알림이 표시됩니다.</li>
                     <li style="margin-bottom: 6px;">내일정에서 일정카드를 클릭하면 해당월로 바로 이동 할 수 있습니다.</li>
-                    <li style="margin-bottom: 6px;">내일정에서 구글,네이버,애플로 연동 등록 할 수 있습니다.</li>
+                    <li style="margin-bottom: 6px;">내일정에서 구글,애플로 연동 등록 할 수 있습니다.</li>
                     <li style="margin-bottom: 6px;">달력에 날짜를 클릭하면 그 날의 개인/공개 일정을 등록하는 창이 열립니다.</li>
                     <li>달력에서 이전달 다음달로 이동할 때 해당하는 대회일정으로 자동스크롤 연동됩니다.</li>
                 </ul>
@@ -835,11 +838,13 @@
                             <div class="date" style="font-size: 11px; font-weight: bold; color: ${dateColor};">${dateString}</div>
                         </div>
                         ${actionBtnHtml}
-                        <div class="calendar-sync-group" style="display: flex; gap: 8px; margin-top: 10px; width: 100%;">
-                            <button class="sync-btn" onclick="addToCalendar('google', '${e.title}', '${e.startDate}')" 
-                                    style="flex: 1; padding: 8px 0; font-size: 11px; border: 1px solid #4285F4; color: #4285F4; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold;">Google 연동</button>
-                            <button class="sync-btn" onclick="addToCalendar('apple', '${e.title}', '${e.startDate}')" 
-                                    style="flex: 1; padding: 8px 0; font-size: 11px; border: 1px solid #000; color: #000; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold;">애플/파일 저장</button>
+                        <div class="calendar-sync-group">
+                            <button class="sync-btn google" onclick="addToCalendar('google', '${e.title}', '${e.startDate}')" title="구글 캘린더에 추가">
+                                <i class="fab fa-google"></i>
+                            </button>
+                            <button class="sync-btn apple" onclick="addToCalendar('apple', '${e.title}', '${e.startDate}')" title="애플/파일로 저장">
+                                <i class="fab fa-apple"></i>
+                            </button>
                         </div>
                     </div>
                 `;
