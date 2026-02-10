@@ -56,6 +56,34 @@
         .action-btn.copy { color: var(--primary); }
         .action-btn.remove { color: var(--copied); }
 
+        /* 캘린더 연동 버튼 컨테이너 */
+        .calendar-sync-group {
+            display: flex;
+            gap: 4px;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        /* 각 버튼 스타일 */
+        .sync-btn {
+            flex: 1; /* 3개 버튼이 동일한 너비를 가짐 */
+            font-size: 11px;
+            padding: 5px 0;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .sync-btn:hover { background: #f8f9fa; }
+        .sync-btn.google { color: #4285F4; }
+        .sync-btn.naver { color: #03C75A; }
+        .sync-btn.apple { color: #000000; }
+
         /* 달력 헤더 */
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .nav-btn {
@@ -567,6 +595,33 @@
             init(false);
         }
 
+        function addToCalendar(type, title, dateStr) {
+            const date = new Date(dateStr);
+            const fmtDate = date.toISOString().replace(/-|:|\.\d+/g, "").split("T")[0]; // YYYYMMDD
+            
+            // 종료일은 시작일 + 1일 (종일 일정 기준)
+            const nextDay = new Date(date);
+            nextDay.setDate(date.getDate() + 1);
+            const fmtNextDate = nextDay.toISOString().replace(/-|:|\.\d+/g, "").split("T")[0];
+
+            let url = "";
+            if (type === 'google') {
+                url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmtDate}/${fmtNextDate}`;
+            } else if (type === 'naver') {
+                url = `https://calendar.naver.com/record/standardForm.nhn?title=${encodeURIComponent(title)}&startDate=${dateStr}&endDate=${dateStr}&isAllDay=true`;
+            } else if (type === 'apple') {
+                // .ics 파일 생성 및 다운로드 로직 (가장 확실한 방법)
+                const icsMsg = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:${fmtDate}\nDTEND;VALUE=DATE:${fmtNextDate}\nSUMMARY:${title}\nEND:VEVENT\nEND:VCALENDAR`;
+                const blob = new Blob([icsMsg], { type: 'text/calendar;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `${title}.ics`;
+                link.click();
+                return;
+            }
+            if (url) window.open(url, '_blank');
+        }
+
         // 3. 통합 로드 및 초기화
         async function init(fetchData = false) {
             currentLocationFilter = document.getElementById('locationFilter').value;
@@ -776,6 +831,17 @@
                             <div class="date" style="font-size: 11px; font-weight: bold; color: ${dateColor};">${dateString}</div>
                         </div>
                         ${actionBtnHtml}
+                        <div class="calendar-sync-group">
+                            <button class="sync-btn google" onclick="addToCalendar('google', '${e.title}', '${e.startDate}')" title="구글 캘린더">
+                                <i class="fab fa-google"></i>
+                            </button>
+                            <button class="sync-btn naver" onclick="addToCalendar('naver', '${e.title}', '${e.startDate}')" title="네이버 캘린더">
+                                <b>N</b>
+                            </button>
+                            <button class="sync-btn apple" onclick="addToCalendar('apple', '${e.title}', '${e.startDate}')" title="애플 캘린더">
+                                <i class="fab fa-apple"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
             });
