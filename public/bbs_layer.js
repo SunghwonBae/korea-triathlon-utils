@@ -396,7 +396,7 @@ async function bbsLoadDetail(id) {
     const currentUser = getUserInfo();
     let btnHtml = '';
     
-    if (currentUser && currentUser.id === post.authorId) {
+    if (currentUser && (currentUser.id === post.authorId || currentUser.isAdmin)) {
         btnHtml = `
             <span style="margin-left:auto;">
                 <button onclick='bbsEditPost(${JSON.stringify(post).replace(/'/g, "&#39;")})' class="bbs-btn-basic">수정</button>
@@ -464,7 +464,7 @@ async function bbsLoadComments() {
             : `<span style="display:inline-block; width:28px; text-align:center;">👤</span>`;
         
         let actionBtns = '';
-        if (currentUser && currentUser.id === c.authorId) {
+        if (currentUser && (currentUser.id === c.authorId || currentUser.isAdmin)) {
             actionBtns = `
                 <span id="bbs-cmt-actions-${c.id}" style="font-size:0.8rem; margin-left:10px;">
                     <a onclick="bbsEditComment(${c.id})" style="color:#888; cursor:pointer;">수정</a> | 

@@ -26,8 +26,10 @@ export default async function handler(req, res) {
     const userGender = naverUser.gender || '';
     const userMobile = naverUser.mobile || ''; // [추가] 010-0000-0000 형태
 
-    // ★ 관리자 체크 로직 (이메일 아이디가 fool93 인지 확인)
-    const isAdmin = userEmail.startsWith('fool93');
+    // ★ [수정됨] 환경변수에서 관리자 ID 목록 가져오기
+    // 예: "ID1,ID2,ID3" -> ["ID1", "ID2", "ID3"] 로 변환 후 포함 여부 확인
+    const adminList = (process.env.ADMIN_NAVER_ID || '').split(',');
+    const isAdmin = adminList.includes(uniqueId);
 
     // 3. DB 저장 (Upsert)
     // naverId가 있으면 업데이트, 없으면 새로 생성
