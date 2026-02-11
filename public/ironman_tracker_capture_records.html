@@ -283,20 +283,9 @@
         </div>
     </div>
 </div>
-<!-- 확인 모달 -->
-<div id="confirmModal" class="modal-overlay" style="z-index: 200;">
-    <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
-        <div style="margin-bottom: 20px;">
-            <i class="fas fa-exclamation-circle" style="font-size: 40px; color: #ff4d4f;"></i>
-        </div>
-        <h4 style="margin:0 0 25px 0; font-size: 16px; color: #333; font-weight: bold;" id="confirmMessage">정말 삭제하시겠습니까?</h4>
-        <div style="display: flex; justify-content: center; gap: 10px;">
-            <button onclick="closeConfirm()" style="flex: 1; padding: 12px 0; background: #f1f1f1; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; color: #555; font-weight: bold;">취소</button>
-            <button id="confirmOkBtn" style="flex: 1; padding: 12px 0; background: #ff4d4f; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">삭제</button>
-        </div>
-    </div>
-</div>
+
 <script src="menu_full_handler.js" defer></script>
+<script src="ui_utils.js"></script>
 <script>
     let cropper, crawledData = [], extractedItems = [], currentRaceType = 'ironman';
     let selectedRace = null, selectedYearData = null, lastResults = [];
@@ -628,38 +617,6 @@
         document.body.removeChild(a);
     }
 
-    function showToast(msg) {
-        const el = document.createElement('div');
-        el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
-        el.innerText = msg;
-        document.body.appendChild(el);
-        requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
-        setTimeout(() => {
-            el.classList.add('opacity-0', 'translate-y-4');
-            setTimeout(() => el.remove(), 300);
-        }, 3000);
-    }
-
-    const confirmModal = document.getElementById('confirmModal');
-    const confirmMessage = document.getElementById('confirmMessage');
-    const confirmOkBtn = document.getElementById('confirmOkBtn');
-    let confirmCallback = null;
-     
-    function showConfirm(msg, callback) {
-        confirmMessage.innerText = msg;
-        confirmCallback = callback;
-        confirmModal.style.display = 'flex';
-    }
-
-    function closeConfirm() {
-        confirmModal.style.display = 'none';
-        confirmCallback = null;
-    }
-    
-    confirmOkBtn.onclick = function() {
-        if (confirmCallback) confirmCallback();
-        closeConfirm();
-    };
 
     function downloadCsv() {
         if (!lastResults || lastResults.length === 0) return showToast("다운로드할 데이터가 없습니다.");

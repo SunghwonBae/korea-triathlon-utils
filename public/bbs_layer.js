@@ -1,10 +1,24 @@
 // bbs_layer.js
 
+// 0. SunEditor 리소스 동적 로드
+(function loadSunEditor() {
+    if (document.getElementById('suneditor-css')) return;
+    const link = document.createElement('link');
+    link.id = 'suneditor-css';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css';
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js';
+    document.body.appendChild(script);
+})();
+
 // 1. 설정
 let bbsTargetPage = window.location.pathname.split('/').pop().replace('.html', '');
 if (!bbsTargetPage || bbsTargetPage === '') bbsTargetPage = 'index';
 
 const pageTitle = document.title || '메인';
+let editorInstance = null;
 
 // 2. 유틸리티
 function getUserInfo() {
@@ -89,37 +103,9 @@ const bbsHTML = `
     .bbs-table th, .bbs-table td { padding: 6px 4px; border-bottom: 1px solid #f1f1f1; text-align: left; }
     .bbs-table th { color: #888; font-weight: normal; font-size: 0.8rem; border-bottom: 1px solid #ddd; padding: 8px 4px; }
     
-    /* [수정] 제목 영역 Flexbox 적용 (말줄임 + 댓글수 고정) */
-    .bbs-list-title { 
-        display: flex; 
-        align-items: center; 
-        width: 100%; 
-        cursor: pointer; 
-        text-decoration: none; 
-        color: #333; 
-    }
-
-    /* 제목 텍스트 (줄어드는 영역) */
-    .bbs-list-title-text { 
-        display: block; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        white-space: nowrap; 
-        flex: 1; /* 남은 공간 차지 */
-        min-width: 0; /* 내용이 길어도 줄어들 수 있게 함 */
-        font-weight: 500; 
-        margin-bottom: 1px; 
-        line-height: 1.2;
-    }
-
-    /* 댓글 수 (고정 영역) */
-    .bbs-comment-count { 
-        color: #03C75A; 
-        font-weight: bold; 
-        font-size: 0.75rem; 
-        margin-left: 5px; 
-        flex-shrink: 0; /* 절대 줄어들지 않음 */
-    }
+    .bbs-list-title { display: flex; align-items: center; width: 100%; cursor: pointer; text-decoration: none; color: #333; }
+    .bbs-list-title-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; font-weight: 500; margin-bottom: 1px; line-height: 1.2; }
+    .bbs-comment-count { color: #03C75A; font-weight: bold; font-size: 0.75rem; margin-left: 5px; flex-shrink: 0; }
     
     .notice-badge-global { color: #d9534f; font-weight: bold; margin-right: 4px; font-size: 0.85rem; }
     .notice-badge-local { color: #03C75A; font-weight: bold; margin-right: 4px; font-size: 0.85rem; }
@@ -130,8 +116,8 @@ const bbsHTML = `
     .bbs-btn-primary { width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
     .bbs-btn-basic { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; color: #555; font-size: 0.75rem; }
     .bbs-btn-del { color: #d9534f; border-color: #f5c6cb; }
-    .bbs-input, .bbs-textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
-    .bbs-textarea { height: 180px; resize: none; line-height: 1.5; }
+    .bbs-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+    .bbs-textarea { width: 100%; height: 300px; display:none; }
     .bbs-comment-item { border-bottom: 1px solid #f5f5f5; padding: 10px 0; font-size: 0.9rem; word-break: break-all; }
     
     .bbs-pagination { display: flex; justify-content: center; gap: 4px; margin-top: 15px; }
@@ -139,6 +125,9 @@ const bbsHTML = `
     .bbs-page-btn.active { background: #333; color: white; border-color: #333; font-weight: bold; }
     .bbs-page-btn:hover:not(.active) { background: #f1f1f1; }
 
+    .sun-editor { z-index: 10002 !important; border: 1px solid #ddd !important; border-radius: 6px; overflow: hidden;}
+    .sun-editor .se-toolbar { outline: none; }
+    #bbs-detail-content img { max-width: 100%; height: auto; }
 </style>
 
 <button id="bbs-btn" onclick="bbsToggleLayer()">💬</button>
@@ -165,10 +154,10 @@ const bbsHTML = `
         <button class="bbs-btn-primary" onclick="bbsChangeView('write')">🖊️ 새 글 쓰기</button>
     </div>
 
-    <div class="bbs-content-wrap" id="bbs-view-write" style="display:none;">
+    <div class="bbs-content-wrap" id="bbs-view-write" style="display:none; padding:10px 15px;">
         ${noticeOptionsHtml}
         <input type="text" id="bbs-write-title" class="bbs-input" placeholder="제목">
-        <textarea id="bbs-write-content" class="bbs-textarea" placeholder="건전한 커뮤니티를 위해 매너를 지켜주세요."></textarea>
+        <textarea id="bbs-write-content" class="bbs-textarea"></textarea>
     </div>
     <div class="bbs-footer-action" id="bbs-footer-write" style="display:none;">
         <div style="display:flex; gap: 10px;">
@@ -182,7 +171,7 @@ const bbsHTML = `
         <div class="bbs-meta" id="bbs-detail-author-wrap" style="display:flex; align-items:center; min-height:36px; margin-bottom: 15px; padding-bottom:10px; border-bottom:1px solid #eee;">
             <span id="bbs-detail-author" style="width:100%;"></span>
         </div>
-        <div id="bbs-detail-content" style="white-space: pre-wrap; font-size:0.95rem; line-height:1.6; min-height:100px; word-break: break-word; color:#333;"></div>
+        <div id="bbs-detail-content" style="white-space: normal; font-size:0.95rem; line-height:1.6; min-height:100px; word-break: break-word; color:#333;"></div>
         <h4 style="margin-top:30px; border-top:1px solid #eee; padding-top:15px; font-size:0.9rem;">댓글</h4>
         <div id="bbs-comment-list" style="margin-bottom: 20px;"></div>
     </div>
@@ -198,13 +187,11 @@ const bbsHTML = `
 `;
 document.body.insertAdjacentHTML('beforeend', bbsHTML);
 
-// 상태 변수
 let bbsCurrentPostId = null;
 let isEditMode = false;
 let editPostId = null;
 let currentPage = 1;
 
-// 메뉴 겹침 방지
 const checkMenuOverlay = document.getElementById('menuOverlay');
 if (checkMenuOverlay) {
     const observer = new MutationObserver(() => {
@@ -216,13 +203,19 @@ if (checkMenuOverlay) {
     observer.observe(checkMenuOverlay, { attributes: true, attributeFilter: ['style', 'class'] });
 }
 
-// 함수 정의
 function bbsSaveReturnUrl() {
     document.cookie = `login_return_url=${window.location.pathname}; path=/; max-age=3600`;
 }
 
 function bbsLogout() {
-    if(confirm('로그아웃 하시겠습니까?')) {
+    // [변경] confirm -> showConfirm
+    if (typeof showConfirm === 'function') {
+        showConfirm('로그아웃 하시겠습니까?', () => {
+            document.cookie = 'auth_token=; path=/; max-age=0';
+            document.cookie = 'user_info=; path=/; max-age=0';
+            window.location.reload();
+        });
+    } else if(confirm('로그아웃 하시겠습니까?')) {
         document.cookie = 'auth_token=; path=/; max-age=0';
         document.cookie = 'user_info=; path=/; max-age=0';
         window.location.reload();
@@ -256,6 +249,30 @@ function bbsChangeView(viewName, postData = null) {
         isEditMode = false;
         editPostId = null;
     } else if (viewName === 'write') {
+        if (!editorInstance && window.SUNEDITOR) {
+            editorInstance = SUNEDITOR.create('bbs-write-content', {
+                width: '100%',
+                height: '350px',
+                imageUploadSizeLimit: 1024 * 150, 
+                imageResizing: true,        
+                imageWidth: '400',
+                defaultStyle: "font-family: -apple-system; font-size: 16px;",
+                buttonList: [
+                    ['undo', 'redo'],
+                    ['font', 'fontSize', 'formatBlock'],
+                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'],
+                    ['fontColor', 'hiliteColor'],
+                    ['outdent', 'indent', 'align', 'horizontalRule', 'list', 'table'],
+                    ['link', 'image', 'video', 'fullScreen', 'showBlocks', 'codeView']
+                ],
+                onImageUploadError: function (errorMessage, result) {
+                    if(typeof showToast === 'function') showToast('이미지는 150KB 이하만 가능합니다. (자동 400px 축소)');
+                    else alert('이미지는 150KB 이하만 가능합니다.');
+                    return false;
+                }
+            });
+        }
+
         const radios = document.getElementsByName('noticeType');
         if(radios.length > 0) {
             for(let r of radios) if(r.value === "2") r.checked = true;
@@ -265,7 +282,9 @@ function bbsChangeView(viewName, postData = null) {
             isEditMode = true;
             editPostId = postData.id;
             document.getElementById('bbs-write-title').value = postData.title;
-            document.getElementById('bbs-write-content').value = postData.content;
+            if(editorInstance) editorInstance.setContents(postData.content);
+            else document.getElementById('bbs-write-content').value = postData.content;
+
             document.getElementById('bbs-btn-save').innerText = "수정 완료";
             
             if(radios.length > 0 && postData.noticeType !== undefined) {
@@ -276,7 +295,9 @@ function bbsChangeView(viewName, postData = null) {
             isEditMode = false;
             editPostId = null;
             document.getElementById('bbs-write-title').value = '';
-            document.getElementById('bbs-write-content').value = '';
+            if(editorInstance) editorInstance.setContents('');
+            else document.getElementById('bbs-write-content').value = '';
+
             document.getElementById('bbs-btn-save').innerText = "등록하기";
         }
     }
@@ -329,7 +350,6 @@ function renderPostRow(p, isNotice) {
             ? `<img src="${p.authorImage}" class="bbs-list-img-small">` 
             : `<span class="bbs-list-img-small" style="display:inline-flex; align-items:center; justify-content:center; background:#eee;">👤</span>`;
 
-    // [수정] HTML 구조 변경 (제목 텍스트와 댓글 수를 span으로 분리)
     return `
     <tr style="${rowStyle}">
         <td>
@@ -375,8 +395,17 @@ function renderPagination(total, current) {
 
 async function bbsSavePost() {
     const title = document.getElementById('bbs-write-title').value;
-    const content = document.getElementById('bbs-write-content').value;
-    if(!title || !content) return alert('내용을 입력하세요.');
+    
+    let content = '';
+    if(editorInstance) content = editorInstance.getContents();
+    else content = document.getElementById('bbs-write-content').value;
+
+    // [변경] alert -> showToast
+    if(!title || !content || content === '<p><br></p>') {
+        if(typeof showToast === 'function') showToast('내용을 입력하세요.');
+        else alert('내용을 입력하세요.');
+        return;
+    }
 
     let noticeType = 2;
     const radios = document.getElementsByName('noticeType');
@@ -395,13 +424,15 @@ async function bbsSavePost() {
     });
 
     if (res.ok) {
-        // [수정] 새 글(POST)인 경우 1페이지로 강제 이동
         if (!isEditMode) {
             currentPage = 1;
         }
         bbsChangeView('list');
+        // [추가] 성공 메시지
+        if(typeof showToast === 'function') showToast(isEditMode ? '수정되었습니다.' : '등록되었습니다.');
     } else {
-        alert('오류가 발생했습니다.');
+        if(typeof showToast === 'function') showToast('오류가 발생했습니다.');
+        else alert('오류가 발생했습니다.');
     }
 }
 
@@ -442,18 +473,33 @@ async function bbsLoadDetail(id) {
             ${btnHtml}
         </div>
     `;
-    document.getElementById('bbs-detail-content').innerText = post.content;
+    
+    document.getElementById('bbs-detail-content').innerHTML = post.content;
     
     bbsLoadComments();
     bbsChangeView('detail');
 }
 
 function bbsEditPost(post) { bbsChangeView('write', post); }
+
 async function bbsDeletePost(id) {
-    if(!confirm('삭제하시겠습니까?')) return;
-    const res = await fetch(`/api/bbs/posts?id=${id}`, { method: 'DELETE' });
-    if(res.ok) { alert('삭제되었습니다.'); bbsChangeView('list'); }
+    // [변경] confirm -> showConfirm
+    const doDelete = async () => {
+        const res = await fetch(`/api/bbs/posts?id=${id}`, { method: 'DELETE' });
+        if(res.ok) { 
+            if(typeof showToast === 'function') showToast('삭제되었습니다.');
+            else alert('삭제되었습니다.');
+            bbsChangeView('list'); 
+        }
+    };
+
+    if (typeof showConfirm === 'function') {
+        showConfirm('정말 삭제하시겠습니까?', doDelete);
+    } else if(confirm('정말 삭제하시겠습니까?')) {
+        doDelete();
+    }
 }
+
 async function bbsLoadComments() {
     if (!bbsCurrentPostId) return;
     const res = await fetch(`/api/bbs/comments?postId=${bbsCurrentPostId}`);
@@ -469,6 +515,7 @@ async function bbsLoadComments() {
         return `<div class="bbs-comment-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div style="display:flex; align-items:center;">${profileImg}<strong style="font-size:0.9rem;">${c.author}</strong></div>${actionBtns}</div><div id="bbs-cmt-text-${c.id}" style="padding-left:38px; margin-top:2px; color:#555; white-space: pre-wrap; font-size:0.9rem;">${c.content}</div></div>`;
     }).join('');
 }
+
 function bbsEditComment(id) {
     const contentEl = document.getElementById(`bbs-cmt-text-${id}`);
     const actionsEl = document.getElementById(`bbs-cmt-actions-${id}`);
@@ -478,17 +525,50 @@ function bbsEditComment(id) {
     actionsEl.innerHTML = `<a onclick="bbsSaveEditedComment(${id})" style="color:#03C75A; cursor:pointer; font-weight:bold; margin-right:5px; font-size:0.8rem;">저장</a> <a onclick="bbsLoadComments()" style="color:#888; cursor:pointer; font-size:0.8rem;">취소</a>`;
     document.getElementById(`bbs-cmt-input-${id}`).focus();
 }
+
 async function bbsSaveEditedComment(id) {
     const inputEl = document.getElementById(`bbs-cmt-input-${id}`);
     const newContent = inputEl.value;
-    if (!newContent.trim()) return alert('내용을 입력하세요.');
+    // [변경] alert -> showToast
+    if (!newContent.trim()) {
+        if(typeof showToast === 'function') showToast('내용을 입력하세요.');
+        else alert('내용을 입력하세요.');
+        return;
+    }
     await fetch('/api/bbs/comments', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, content: newContent }) });
     bbsLoadComments();
+    if(typeof showToast === 'function') showToast('수정되었습니다.');
 }
-async function bbsDeleteComment(id) { if(!confirm('삭제할까요?')) return; await fetch(`/api/bbs/comments?id=${id}`, { method: 'DELETE' }); bbsLoadComments(); }
+
+async function bbsDeleteComment(id) { 
+    // [변경] confirm -> showConfirm
+    const doDelete = async () => {
+        await fetch(`/api/bbs/comments?id=${id}`, { method: 'DELETE' }); 
+        bbsLoadComments(); 
+        if(typeof showToast === 'function') showToast('삭제되었습니다.');
+    };
+
+    if (typeof showConfirm === 'function') {
+        showConfirm('댓글을 삭제할까요?', doDelete);
+    } else if(confirm('댓글을 삭제할까요?')) {
+        doDelete();
+    }
+}
+
 async function bbsSaveComment() {
     const content = document.getElementById('bbs-cmt-input').value;
-    if(!content) return;
+    if(!content) {
+        if(typeof showToast === 'function') showToast('댓글 내용을 입력하세요.');
+        return;
+    }
     const res = await fetch(`/api/bbs/comments?postId=${bbsCurrentPostId}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content }) });
-    if (res.ok) { document.getElementById('bbs-cmt-input').value = ''; bbsLoadComments(); } else { alert('로그인이 필요합니다.'); bbsSaveReturnUrl(); location.href = '/api/auth/login'; }
+    if (res.ok) { 
+        document.getElementById('bbs-cmt-input').value = ''; 
+        bbsLoadComments(); 
+    } else { 
+        if(typeof showToast === 'function') showToast('로그인이 필요합니다.');
+        else alert('로그인이 필요합니다.');
+        bbsSaveReturnUrl(); 
+        location.href = '/api/auth/login'; 
+    }
 }
