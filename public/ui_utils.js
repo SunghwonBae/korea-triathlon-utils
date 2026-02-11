@@ -107,7 +107,6 @@
         <div id="global-toast-container"></div>
         <div id="global-confirm-overlay">
             <div id="global-confirm-box">
-                <span class="confirm-icon">!</span>
                 <h4 class="confirm-msg" id="global-confirm-msg">메시지</h4>
                 <div class="confirm-actions">
                     <button class="confirm-btn confirm-cancel" id="global-confirm-cancel">취소</button>
