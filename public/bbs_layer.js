@@ -126,10 +126,9 @@ const bbsHTML = `
     .bbs-list-meta { display: flex; align-items: center; font-size: 0.75rem; color: #999; }
     .bbs-list-img-small { width: 16px; height: 16px; border-radius: 50%; margin-right: 4px; vertical-align: middle; border: 1px solid #eee; object-fit: cover; }
 
-    /* [수정] 높이 40px 통일, 중앙 정렬 */
     .bbs-btn-primary { 
         width: 100%; 
-        height: 40px; /* 여기서 높이 고정! */
+        height: 40px;
         padding: 0 10px;
         background: #333; 
         color: white; 
@@ -272,11 +271,23 @@ function bbsChangeView(viewName, postData = null) {
     document.getElementById('bbs-footer-write').style.display = viewName === 'write' ? 'block' : 'none';
     document.getElementById('bbs-footer-detail').style.display = viewName === 'detail' ? 'block' : 'none';
 
-    if (viewName === 'list') {
-        bbsLoadPosts(currentPage);
-        isEditMode = false;
-        editPostId = null;
-    } else if (viewName === 'write') {
+    // [변경됨] 글쓰기 화면으로 이동 전, 로그인 체크
+    if (viewName === 'write') {
+        // 실시간 로그인 상태 확인
+        const user = getUserInfo();
+        if (!user) {
+            if (typeof showConfirm === 'function') {
+                showConfirm('네이버 아이디로 로그인이 필요합니다.', () => {
+                    bbsOpenLoginPopup();
+                });
+            } else {
+                alert('로그인이 필요합니다.');
+                bbsOpenLoginPopup();
+            }
+            // 뷰 변경을 막고 함수 종료
+            return;
+        }
+
         if (!editorInstance && window.SUNEDITOR) {
             editorInstance = SUNEDITOR.create('bbs-write-content', {
                 width: '100%',
@@ -328,6 +339,10 @@ function bbsChangeView(viewName, postData = null) {
 
             document.getElementById('bbs-btn-save').innerText = "등록하기";
         }
+    } else if (viewName === 'list') {
+        bbsLoadPosts(currentPage);
+        isEditMode = false;
+        editPostId = null;
     }
 }
 
@@ -579,6 +594,20 @@ async function bbsDeleteComment(id) {
 }
 
 async function bbsSaveComment() {
+    // [변경됨] 댓글 저장 전 로그인 체크
+    const user = getUserInfo();
+    if (!user) {
+        if (typeof showConfirm === 'function') {
+            showConfirm('네이버 아이디로 로그인이 필요합니다.', () => {
+                bbsOpenLoginPopup();
+            });
+        } else {
+            alert('로그인이 필요합니다.');
+            bbsOpenLoginPopup();
+        }
+        return;
+    }
+
     const content = document.getElementById('bbs-cmt-input').value;
     if(!content) {
         if(typeof showToast === 'function') showToast('댓글 내용을 입력하세요.');
@@ -589,10 +618,8 @@ async function bbsSaveComment() {
         document.getElementById('bbs-cmt-input').value = ''; 
         bbsLoadComments(); 
     } else { 
-        if(typeof showToast === 'function') showToast('로그인이 필요합니다.');
-        else alert('로그인이 필요합니다.');
-        bbsSaveReturnUrl(); 
-        location.href = '/api/auth/login'; 
+        if(typeof showToast === 'function') showToast('오류가 발생했습니다.');
+        else alert('오류가 발생했습니다.');
     }
 }
 
