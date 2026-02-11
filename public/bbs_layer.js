@@ -263,17 +263,8 @@ function bbsToggleLayer() {
 }
 
 function bbsChangeView(viewName, postData = null) {
-    document.getElementById('bbs-view-list').style.display = viewName === 'list' ? 'flex' : 'none';
-    document.getElementById('bbs-view-write').style.display = viewName === 'write' ? 'block' : 'none';
-    document.getElementById('bbs-view-detail').style.display = viewName === 'detail' ? 'block' : 'none';
-
-    document.getElementById('bbs-footer-list').style.display = viewName === 'list' ? 'block' : 'none';
-    document.getElementById('bbs-footer-write').style.display = viewName === 'write' ? 'block' : 'none';
-    document.getElementById('bbs-footer-detail').style.display = viewName === 'detail' ? 'block' : 'none';
-
-    // [변경됨] 글쓰기 화면으로 이동 전, 로그인 체크
+    // [변경됨] 핵심 수정: 화면을 바꾸기 전에 로그인 체크 먼저!
     if (viewName === 'write') {
-        // 실시간 로그인 상태 확인
         const user = getUserInfo();
         if (!user) {
             if (typeof showConfirm === 'function') {
@@ -284,10 +275,21 @@ function bbsChangeView(viewName, postData = null) {
                 alert('로그인이 필요합니다.');
                 bbsOpenLoginPopup();
             }
-            // 뷰 변경을 막고 함수 종료
+            // 여기서 return하면 화면이 전환되지 않고 기존 화면(목록)에 남습니다.
             return;
         }
+    }
 
+    // 로그인 체크 통과 후 화면 전환 실행
+    document.getElementById('bbs-view-list').style.display = viewName === 'list' ? 'flex' : 'none';
+    document.getElementById('bbs-view-write').style.display = viewName === 'write' ? 'block' : 'none';
+    document.getElementById('bbs-view-detail').style.display = viewName === 'detail' ? 'block' : 'none';
+
+    document.getElementById('bbs-footer-list').style.display = viewName === 'list' ? 'block' : 'none';
+    document.getElementById('bbs-footer-write').style.display = viewName === 'write' ? 'block' : 'none';
+    document.getElementById('bbs-footer-detail').style.display = viewName === 'detail' ? 'block' : 'none';
+
+    if (viewName === 'write') {
         if (!editorInstance && window.SUNEDITOR) {
             editorInstance = SUNEDITOR.create('bbs-write-content', {
                 width: '100%',
@@ -594,7 +596,6 @@ async function bbsDeleteComment(id) {
 }
 
 async function bbsSaveComment() {
-    // [변경됨] 댓글 저장 전 로그인 체크
     const user = getUserInfo();
     if (!user) {
         if (typeof showConfirm === 'function') {
@@ -618,8 +619,10 @@ async function bbsSaveComment() {
         document.getElementById('bbs-cmt-input').value = ''; 
         bbsLoadComments(); 
     } else { 
-        if(typeof showToast === 'function') showToast('오류가 발생했습니다.');
-        else alert('오류가 발생했습니다.');
+        if(typeof showToast === 'function') showToast('로그인이 필요합니다.');
+        else alert('로그인이 필요합니다.');
+        bbsSaveReturnUrl(); 
+        location.href = '/api/auth/login'; 
     }
 }
 
