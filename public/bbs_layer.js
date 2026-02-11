@@ -1,4 +1,4 @@
-// bbs_layer.js
+// public/bbs_layer.js
 
 // 0. SunEditor 리소스 동적 로드
 (function loadSunEditor() {
@@ -19,6 +19,19 @@ if (!bbsTargetPage || bbsTargetPage === '') bbsTargetPage = 'index';
 
 const pageTitle = document.title || '메인';
 let editorInstance = null;
+
+// ★ [신규] 팝업에서 보내는 로그인 성공 신호 감지 리스너
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'NAVER_LOGIN_SUCCESS') {
+        // 로그인이 성공하면 현재 페이지를 리로드하되, 
+        // 게시판이 바로 열리도록 파라미터를 붙입니다.
+        const separator = window.location.search ? '&' : '?';
+        const newUrl = window.location.pathname + window.location.search + separator + "bbs_open=true";
+        
+        // 페이지 리로드 (쿠키 적용 및 세션 갱신)
+        window.location.href = newUrl;
+    }
+});
 
 // 2. 유틸리티
 function getUserInfo() {
@@ -52,14 +65,26 @@ if (currentUser && currentUser.name) {
         </div>
     `;
 } else {
+    // [변경] href 이동 대신 onclick으로 팝업 오픈
     authHtml = `
-        <a href="/api/auth/login" onclick="bbsSaveReturnUrl()" class="naver-login-btn">
+        <a href="#" onclick="bbsOpenLoginPopup(); return false;" class="naver-login-btn">
             <span class="n-icon">
                 <svg width="14" height="14" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.5 10.2V18H18V0H11.5V7.8L6.5 0H0V18H6.5V10.2L11.5 18V10.2Z" fill="white"/></svg>
             </span>
             <span>네이버 아이디로 로그인</span>
         </a>
     `;
+}
+
+// ★ [신규] 로그인 팝업 열기 함수
+function bbsOpenLoginPopup() {
+    const width = 500;
+    const height = 650;
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+    
+    // API 라우트로 이동 (백엔드에서 네이버 인증 페이지로 리다이렉트)
+    window.open('/api/auth/login', 'naver_login_popup', `width=${width},height=${height},top=${top},left=${left}`);
 }
 
 // 관리자용 공지 옵션
@@ -113,7 +138,22 @@ const bbsHTML = `
     .bbs-list-meta { display: flex; align-items: center; font-size: 0.75rem; color: #999; }
     .bbs-list-img-small { width: 16px; height: 16px; border-radius: 50%; margin-right: 4px; vertical-align: middle; border: 1px solid #eee; object-fit: cover; }
 
-    .bbs-btn-primary { width: 100%; padding: 12px; background: #333; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
+    /* [수정] 중앙 정렬을 위한 Flexbox 추가 및 패딩 조정 */
+    .bbs-btn-primary { 
+        width: 100%; 
+        padding: 0 10px; /* 세로 패딩 0, 가로 10px */
+        background: #333; 
+        color: white; 
+        border: none; 
+        border-radius: 6px; 
+        font-weight: bold; 
+        font-size: 0.95rem; 
+        cursor: pointer;
+        display: flex; /* Flexbox 사용 */
+        align-items: center; /* 세로 중앙 */
+        justify-content: center; /* 가로 중앙 */
+    }
+
     .bbs-btn-basic { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; color: #555; font-size: 0.75rem; }
     .bbs-btn-del { color: #d9534f; border-color: #f5c6cb; }
     .bbs-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
@@ -135,7 +175,7 @@ const bbsHTML = `
 
 <div id="bbs-layer">
     <div class="bbs-header">
-        <h3 id="bbs-top-title">자유게시판 - (${pageTitle})</h3>
+        <h3 id="bbs-top-title">게시판 - (${pageTitle})</h3>
         <button class="bbs-close-btn" onclick="bbsToggleLayer()">✕</button>
     </div>
     
@@ -204,11 +244,11 @@ if (checkMenuOverlay) {
 }
 
 function bbsSaveReturnUrl() {
+    // 팝업 방식에서는 이 함수가 필수적이지 않으나, 혹시 모를 상황 대비 유지
     document.cookie = `login_return_url=${window.location.pathname}; path=/; max-age=3600`;
 }
 
 function bbsLogout() {
-    // [변경] confirm -> showConfirm
     if (typeof showConfirm === 'function') {
         showConfirm('로그아웃 하시겠습니까?', () => {
             document.cookie = 'auth_token=; path=/; max-age=0';
@@ -257,13 +297,14 @@ function bbsChangeView(viewName, postData = null) {
                 imageResizing: true,        
                 imageWidth: '400',
                 defaultStyle: "font-family: -apple-system; font-size: 16px;",
+                // [수정] video, fullScreen, codeView 삭제됨
                 buttonList: [
                     ['undo', 'redo'],
                     ['font', 'fontSize', 'formatBlock'],
                     ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'],
                     ['fontColor', 'hiliteColor'],
                     ['outdent', 'indent', 'align', 'horizontalRule', 'list', 'table'],
-                    ['link', 'image', 'video', 'fullScreen', 'showBlocks', 'codeView']
+                    ['link', 'image', 'showBlocks'] 
                 ],
                 onImageUploadError: function (errorMessage, result) {
                     if(typeof showToast === 'function') showToast('이미지는 150KB 이하만 가능합니다. (자동 400px 축소)');
@@ -400,7 +441,6 @@ async function bbsSavePost() {
     if(editorInstance) content = editorInstance.getContents();
     else content = document.getElementById('bbs-write-content').value;
 
-    // [변경] alert -> showToast
     if(!title || !content || content === '<p><br></p>') {
         if(typeof showToast === 'function') showToast('내용을 입력하세요.');
         else alert('내용을 입력하세요.');
@@ -428,7 +468,6 @@ async function bbsSavePost() {
             currentPage = 1;
         }
         bbsChangeView('list');
-        // [추가] 성공 메시지
         if(typeof showToast === 'function') showToast(isEditMode ? '수정되었습니다.' : '등록되었습니다.');
     } else {
         if(typeof showToast === 'function') showToast('오류가 발생했습니다.');
@@ -483,7 +522,6 @@ async function bbsLoadDetail(id) {
 function bbsEditPost(post) { bbsChangeView('write', post); }
 
 async function bbsDeletePost(id) {
-    // [변경] confirm -> showConfirm
     const doDelete = async () => {
         const res = await fetch(`/api/bbs/posts?id=${id}`, { method: 'DELETE' });
         if(res.ok) { 
@@ -529,7 +567,6 @@ function bbsEditComment(id) {
 async function bbsSaveEditedComment(id) {
     const inputEl = document.getElementById(`bbs-cmt-input-${id}`);
     const newContent = inputEl.value;
-    // [변경] alert -> showToast
     if (!newContent.trim()) {
         if(typeof showToast === 'function') showToast('내용을 입력하세요.');
         else alert('내용을 입력하세요.');
@@ -541,7 +578,6 @@ async function bbsSaveEditedComment(id) {
 }
 
 async function bbsDeleteComment(id) { 
-    // [변경] confirm -> showConfirm
     const doDelete = async () => {
         await fetch(`/api/bbs/comments?id=${id}`, { method: 'DELETE' }); 
         bbsLoadComments(); 
@@ -571,4 +607,13 @@ async function bbsSaveComment() {
         bbsSaveReturnUrl(); 
         location.href = '/api/auth/login'; 
     }
+}
+
+// [신규] 리다이렉트되어 돌아왔을 때 게시판 자동 열기 (팝업 방식 적용 후에도 유지)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('bbs_open') === 'true') {
+    bbsToggleLayer();
+    // 주소창 청소
+    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search.replace(/[\?&]bbs_open=true/, '');
+    history.replaceState({}, document.title, newUrl);
 }
