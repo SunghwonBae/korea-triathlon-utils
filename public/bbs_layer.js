@@ -263,7 +263,6 @@ function bbsToggleLayer() {
 }
 
 function bbsChangeView(viewName, postData = null) {
-    // [확인] 로그인 체크를 화면 전환보다 먼저 수행
     if (viewName === 'write') {
         const user = getUserInfo();
         if (!user) {
@@ -389,7 +388,6 @@ function renderPostRow(p, isNotice) {
 
     const cmtCount = p.commentCount > 0 ? `<span class="bbs-comment-count">[${p.commentCount}]</span>` : '';
     
-    // [확인] 게시글 목록 이미지 처리
     const imgSrc = p.authorImage || p.profileImage || p.image;
     const profileImg = imgSrc
             ? `<img src="${imgSrc}" class="bbs-list-img-small">` 
@@ -496,7 +494,6 @@ async function bbsLoadDetail(id) {
         `;
     }
 
-    // [확인] 상세화면 작성자 이미지
     const imgSrc = post.authorImage || post.profileImage || post.image;
     const profileImg = imgSrc
         ? `<img src="${imgSrc}" style="width:36px; height:36px; border-radius:50%; margin-right:10px; border:1px solid #ddd; object-fit:cover;">` 
@@ -544,7 +541,6 @@ async function bbsDeletePost(id) {
     }
 }
 
-// [수정] 댓글 목록 로딩 - 이미지 프로퍼티 확인 강화
 async function bbsLoadComments() {
     if (!bbsCurrentPostId) return;
     const res = await fetch(`/api/bbs/comments?postId=${bbsCurrentPostId}`);
@@ -552,7 +548,6 @@ async function bbsLoadComments() {
     const currentUser = getUserInfo();
     
     document.getElementById('bbs-comment-list').innerHTML = cmts.map(c => {
-        // [수정] 이미지 변수명을 확실하게 찾아서 매핑 (authorImage가 최우선)
         const imgSrc = c.authorImage || c.profileImage || c.image;
         
         const profileImg = imgSrc 
@@ -639,3 +634,6 @@ if (urlParams.get('bbs_open') === 'true') {
     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search.replace(/[\?&]bbs_open=true/, '');
     history.replaceState({}, document.title, newUrl);
 }
+
+// ★ [신규 추가] 페이지 로드 시 백그라운드에서 게시글 목록 미리 가져오기
+bbsLoadPosts(1);
