@@ -20,15 +20,11 @@ if (!bbsTargetPage || bbsTargetPage === '') bbsTargetPage = 'index';
 const pageTitle = document.title || '메인';
 let editorInstance = null;
 
-// ★ [신규] 팝업에서 보내는 로그인 성공 신호 감지 리스너
+// 팝업에서 보내는 로그인 성공 신호 감지 리스너
 window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'NAVER_LOGIN_SUCCESS') {
-        // 로그인이 성공하면 현재 페이지를 리로드하되, 
-        // 게시판이 바로 열리도록 파라미터를 붙입니다.
         const separator = window.location.search ? '&' : '?';
         const newUrl = window.location.pathname + window.location.search + separator + "bbs_open=true";
-        
-        // 페이지 리로드 (쿠키 적용 및 세션 갱신)
         window.location.href = newUrl;
     }
 });
@@ -65,7 +61,6 @@ if (currentUser && currentUser.name) {
         </div>
     `;
 } else {
-    // [변경] href 이동 대신 onclick으로 팝업 오픈
     authHtml = `
         <a href="#" onclick="bbsOpenLoginPopup(); return false;" class="naver-login-btn">
             <span class="n-icon">
@@ -76,18 +71,14 @@ if (currentUser && currentUser.name) {
     `;
 }
 
-// ★ [신규] 로그인 팝업 열기 함수
 function bbsOpenLoginPopup() {
     const width = 500;
     const height = 650;
     const left = (window.screen.width / 2) - (width / 2);
     const top = (window.screen.height / 2) - (height / 2);
-    
-    // API 라우트로 이동 (백엔드에서 네이버 인증 페이지로 리다이렉트)
     window.open('/api/auth/login', 'naver_login_popup', `width=${width},height=${height},top=${top},left=${left}`);
 }
 
-// 관리자용 공지 옵션
 let noticeOptionsHtml = '';
 if (currentUser && currentUser.isAdmin) {
     noticeOptionsHtml = `
@@ -132,16 +123,14 @@ const bbsHTML = `
     .bbs-list-title-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; font-weight: 500; margin-bottom: 1px; line-height: 1.2; }
     .bbs-comment-count { color: #03C75A; font-weight: bold; font-size: 0.75rem; margin-left: 5px; flex-shrink: 0; }
     
-    .notice-badge-global { color: #d9534f; font-weight: bold; margin-right: 4px; font-size: 0.85rem; }
-    .notice-badge-local { color: #03C75A; font-weight: bold; margin-right: 4px; font-size: 0.85rem; }
-    
     .bbs-list-meta { display: flex; align-items: center; font-size: 0.75rem; color: #999; }
     .bbs-list-img-small { width: 16px; height: 16px; border-radius: 50%; margin-right: 4px; vertical-align: middle; border: 1px solid #eee; object-fit: cover; }
 
-    /* [수정] 중앙 정렬을 위한 Flexbox 추가 및 패딩 조정 */
+    /* [수정] 높이 40px 통일, 중앙 정렬 */
     .bbs-btn-primary { 
         width: 100%; 
-        padding: 0 10px; /* 세로 패딩 0, 가로 10px */
+        height: 40px; /* 여기서 높이 고정! */
+        padding: 0 10px;
         background: #333; 
         color: white; 
         border: none; 
@@ -149,9 +138,9 @@ const bbsHTML = `
         font-weight: bold; 
         font-size: 0.95rem; 
         cursor: pointer;
-        display: flex; /* Flexbox 사용 */
-        align-items: center; /* 세로 중앙 */
-        justify-content: center; /* 가로 중앙 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .bbs-btn-basic { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; color: #555; font-size: 0.75rem; }
@@ -202,7 +191,7 @@ const bbsHTML = `
     <div class="bbs-footer-action" id="bbs-footer-write" style="display:none;">
         <div style="display:flex; gap: 10px;">
             <button class="bbs-btn-basic" style="flex:1; height:40px;" onclick="bbsChangeView('list')">취소</button>
-            <button class="bbs-btn-primary" id="bbs-btn-save" style="flex:2; height:40px;" onclick="bbsSavePost()">등록</button>
+            <button class="bbs-btn-primary" id="bbs-btn-save" style="flex:2;" onclick="bbsSavePost()">등록</button>
         </div>
     </div>
 
@@ -220,7 +209,7 @@ const bbsHTML = `
         <div style="display:flex; gap:8px;">
             <button class="bbs-btn-basic" onclick="bbsChangeView('list')" style="min-width: 60px;">글목록</button>
             <input type="text" id="bbs-cmt-input" class="bbs-input" style="margin:0; flex:1; height:40px;" placeholder="댓글 입력">
-            <button class="bbs-btn-primary" style="width: 50px; padding:0; height:40px;" onclick="bbsSaveComment()">등록</button>
+            <button class="bbs-btn-primary" style="width: 50px; padding:0;" onclick="bbsSaveComment()">등록</button>
         </div>
     </div>
 </div>
@@ -244,7 +233,6 @@ if (checkMenuOverlay) {
 }
 
 function bbsSaveReturnUrl() {
-    // 팝업 방식에서는 이 함수가 필수적이지 않으나, 혹시 모를 상황 대비 유지
     document.cookie = `login_return_url=${window.location.pathname}; path=/; max-age=3600`;
 }
 
@@ -297,7 +285,6 @@ function bbsChangeView(viewName, postData = null) {
                 imageResizing: true,        
                 imageWidth: '400',
                 defaultStyle: "font-family: -apple-system; font-size: 16px;",
-                // [수정] video, fullScreen, codeView 삭제됨
                 buttonList: [
                     ['undo', 'redo'],
                     ['font', 'fontSize', 'formatBlock'],
@@ -609,11 +596,9 @@ async function bbsSaveComment() {
     }
 }
 
-// [신규] 리다이렉트되어 돌아왔을 때 게시판 자동 열기 (팝업 방식 적용 후에도 유지)
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('bbs_open') === 'true') {
     bbsToggleLayer();
-    // 주소창 청소
     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search.replace(/[\?&]bbs_open=true/, '');
     history.replaceState({}, document.title, newUrl);
 }
