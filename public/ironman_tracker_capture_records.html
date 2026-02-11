@@ -608,6 +608,7 @@
 
     function closeModal() { document.getElementById('resultModal').classList.add('hidden'); }
     function downloadJson() {
+        if (!lastResults || lastResults.length === 0) return showToast("다운로드할 데이터가 없습니다.");
         const blob = new Blob([JSON.stringify(lastResults, null, 2)], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
