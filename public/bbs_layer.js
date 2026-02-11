@@ -220,12 +220,14 @@ let isEditMode = false;
 let editPostId = null;
 let currentPage = 1;
 
+// [수정] 메뉴 오버레이 등 외부 요인으로 닫힐 때도 스크롤 잠금 해제
 const checkMenuOverlay = document.getElementById('menuOverlay');
 if (checkMenuOverlay) {
     const observer = new MutationObserver(() => {
         if (window.getComputedStyle(checkMenuOverlay).display === 'block') {
             document.getElementById('bbs-layer').classList.remove('open');
             document.getElementById('bbs-overlay-bg').style.display = 'none';
+            document.body.style.overflow = ''; // 스크롤 잠금 해제
         }
     });
     observer.observe(checkMenuOverlay, { attributes: true, attributeFilter: ['style', 'class'] });
@@ -252,13 +254,18 @@ function bbsLogout() {
 function bbsToggleLayer() {
     const layer = document.getElementById('bbs-layer');
     const overlay = document.getElementById('bbs-overlay-bg');
+    
     if (layer.classList.contains('open')) {
+        // [닫기]
         layer.classList.remove('open');
         setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        document.body.style.overflow = ''; // ★ 스크롤 잠금 해제 (원상복구)
     } else {
+        // [열기]
         overlay.style.display = 'block';
         setTimeout(() => layer.classList.add('open'), 10);
         bbsChangeView('list');
+        document.body.style.overflow = 'hidden'; // ★ 스크롤 잠금 (메인 페이지 스크롤 방지)
     }
 }
 
@@ -635,5 +642,5 @@ if (urlParams.get('bbs_open') === 'true') {
     history.replaceState({}, document.title, newUrl);
 }
 
-// ★ [신규 추가] 페이지 로드 시 백그라운드에서 게시글 목록 미리 가져오기
+// 백그라운드 프리패칭
 bbsLoadPosts(1);
