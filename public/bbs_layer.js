@@ -263,7 +263,7 @@ function bbsToggleLayer() {
 }
 
 function bbsChangeView(viewName, postData = null) {
-    // [변경됨] 핵심 수정: 화면을 바꾸기 전에 로그인 체크 먼저!
+    // [확인] 로그인 체크를 화면 전환보다 먼저 수행
     if (viewName === 'write') {
         const user = getUserInfo();
         if (!user) {
@@ -275,12 +275,10 @@ function bbsChangeView(viewName, postData = null) {
                 alert('로그인이 필요합니다.');
                 bbsOpenLoginPopup();
             }
-            // 여기서 return하면 화면이 전환되지 않고 기존 화면(목록)에 남습니다.
             return;
         }
     }
 
-    // 로그인 체크 통과 후 화면 전환 실행
     document.getElementById('bbs-view-list').style.display = viewName === 'list' ? 'flex' : 'none';
     document.getElementById('bbs-view-write').style.display = viewName === 'write' ? 'block' : 'none';
     document.getElementById('bbs-view-detail').style.display = viewName === 'detail' ? 'block' : 'none';
@@ -391,8 +389,10 @@ function renderPostRow(p, isNotice) {
 
     const cmtCount = p.commentCount > 0 ? `<span class="bbs-comment-count">[${p.commentCount}]</span>` : '';
     
-    const profileImg = p.authorImage 
-            ? `<img src="${p.authorImage}" class="bbs-list-img-small">` 
+    // [확인] 게시글 목록 이미지 처리
+    const imgSrc = p.authorImage || p.profileImage || p.image;
+    const profileImg = imgSrc
+            ? `<img src="${imgSrc}" class="bbs-list-img-small">` 
             : `<span class="bbs-list-img-small" style="display:inline-flex; align-items:center; justify-content:center; background:#eee;">👤</span>`;
 
     return `
@@ -496,8 +496,10 @@ async function bbsLoadDetail(id) {
         `;
     }
 
-    const profileImg = post.authorImage 
-        ? `<img src="${post.authorImage}" style="width:36px; height:36px; border-radius:50%; margin-right:10px; border:1px solid #ddd; object-fit:cover;">` 
+    // [확인] 상세화면 작성자 이미지
+    const imgSrc = post.authorImage || post.profileImage || post.image;
+    const profileImg = imgSrc
+        ? `<img src="${imgSrc}" style="width:36px; height:36px; border-radius:50%; margin-right:10px; border:1px solid #ddd; object-fit:cover;">` 
         : `<span style="font-size:2rem; margin-right:10px;">👤</span>`;
     
     document.getElementById('bbs-detail-title').innerText = post.title;
@@ -542,14 +544,21 @@ async function bbsDeletePost(id) {
     }
 }
 
+// [수정] 댓글 목록 로딩 - 이미지 프로퍼티 확인 강화
 async function bbsLoadComments() {
     if (!bbsCurrentPostId) return;
     const res = await fetch(`/api/bbs/comments?postId=${bbsCurrentPostId}`);
     const cmts = await res.json();
     const currentUser = getUserInfo();
+    
     document.getElementById('bbs-comment-list').innerHTML = cmts.map(c => {
-        const profileImg = c.authorImage 
-            ? `<img src="${c.authorImage}" style="width:28px; height:28px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #eee;">` : `<span style="display:inline-block; width:28px; text-align:center;">👤</span>`;
+        // [수정] 이미지 변수명을 확실하게 찾아서 매핑 (authorImage가 최우선)
+        const imgSrc = c.authorImage || c.profileImage || c.image;
+        
+        const profileImg = imgSrc 
+            ? `<img src="${imgSrc}" style="width:28px; height:28px; border-radius:50%; margin-right:8px; vertical-align:middle; border:1px solid #eee; object-fit:cover;">` 
+            : `<span style="display:inline-block; width:28px; height:28px; line-height:28px; text-align:center; border-radius:50%; background:#eee; margin-right:8px; vertical-align:middle; font-size:16px;">👤</span>`;
+            
         let actionBtns = '';
         if (currentUser && (currentUser.id === c.authorId || currentUser.isAdmin)) {
             actionBtns = `<span id="bbs-cmt-actions-${c.id}" style="font-size:0.75rem; margin-left:10px;"><a onclick="bbsEditComment(${c.id})" style="color:#888; cursor:pointer;">수정</a> | <a onclick="bbsDeleteComment(${c.id})" style="color:#d9534f; cursor:pointer;">삭제</a></span>`;
@@ -619,10 +628,8 @@ async function bbsSaveComment() {
         document.getElementById('bbs-cmt-input').value = ''; 
         bbsLoadComments(); 
     } else { 
-        if(typeof showToast === 'function') showToast('로그인이 필요합니다.');
-        else alert('로그인이 필요합니다.');
-        bbsSaveReturnUrl(); 
-        location.href = '/api/auth/login'; 
+        if(typeof showToast === 'function') showToast('오류가 발생했습니다.');
+        else alert('오류가 발생했습니다.');
     }
 }
 

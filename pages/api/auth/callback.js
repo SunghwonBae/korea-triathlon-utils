@@ -59,7 +59,8 @@ export default async function handler(req, res) {
     const tokenPayload = { 
         name: userName, 
         naverId: uniqueId, 
-        isAdmin: isAdmin 
+        isAdmin: isAdmin ,
+        profileImage: userImage 
     };
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
