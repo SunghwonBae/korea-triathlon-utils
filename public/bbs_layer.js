@@ -14,19 +14,15 @@
 })();
 
 // 1. 설정 및 모드 감지
-// ★ [수정됨] URL에 'admin'이 포함되어 있으면 관리자 모드로 인식
 const isManagerMode = window.location.pathname.includes('admin');
 
 let bbsTargetPage = window.location.pathname.split('/').pop().replace('.html', '');
 if (!bbsTargetPage || bbsTargetPage === '') bbsTargetPage = 'index';
-
-// 관리자 모드면 초기값은 'ALL'로 설정하여 모든 글을 불러옴
 if (isManagerMode) bbsTargetPage = 'ALL';
 
 const pageTitle = document.title || '메인';
 let editorInstance = null;
 
-// 팝업에서 보내는 로그인 성공 신호 감지 리스너
 window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'NAVER_LOGIN_SUCCESS') {
         const separator = window.location.search ? '&' : '?';
@@ -35,7 +31,6 @@ window.addEventListener('message', function(e) {
     }
 });
 
-// 2. 유틸리티
 function getUserInfo() {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; user_info=`);
@@ -44,6 +39,17 @@ function getUserInfo() {
         try { return JSON.parse(decoded); } catch(e) { return null; }
     }
     return null;
+}
+
+function formatCommentDate(dateString) {
+    if(!dateString) return '';
+    const date = new Date(dateString);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${d} ${h}:${min}`;
 }
 
 // 3. UI 생성
@@ -96,7 +102,6 @@ if (currentUser && currentUser.isAdmin) {
     `;
 }
 
-// ★ 관리자 모드일 때만 셀렉트 박스 표시
 let managerSelectHtml = '';
 if (isManagerMode) {
     managerSelectHtml = `
@@ -122,7 +127,6 @@ const bbsHTML = `
     .bbs-close-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #333; padding: 5px; }
     .bbs-content-wrap { flex: 1; overflow-y: auto; padding: 10px 20px; width: 100%; display: flex; flex-direction: column; }
     .bbs-footer-action { padding: 10px 20px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
-
     .naver-login-btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 40px; background-color: #03C75A; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .n-icon { margin-right: 8px; display: flex; align-items: center; }
     .bbs-profile-card { display: flex; align-items: center; padding: 10px; background: #f9fafb; border-radius: 6px; border: 1px solid #eee; margin-bottom: 10px; }
@@ -131,45 +135,25 @@ const bbsHTML = `
     .bbs-profile-info { display: flex; flex-direction: column; flex: 1; }
     .bbs-user-name { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 2px; }
     .bbs-btn-logout { background: #fff; border: 1px solid #ccc; padding: 2px 8px; font-size: 11px; color: #666; border-radius: 3px; cursor: pointer; align-self: flex-start; }
-
     .bbs-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed; }
     .bbs-table th, .bbs-table td { padding: 6px 4px; border-bottom: 1px solid #f1f1f1; text-align: left; }
     .bbs-table th { color: #888; font-weight: normal; font-size: 0.8rem; border-bottom: 1px solid #ddd; padding: 8px 4px; }
-    
     .bbs-list-title { display: flex; align-items: center; width: 100%; cursor: pointer; text-decoration: none; color: #333; }
     .bbs-list-title-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; font-weight: 500; margin-bottom: 1px; line-height: 1.2; }
     .bbs-comment-count { color: #03C75A; font-weight: bold; font-size: 0.75rem; margin-left: 5px; flex-shrink: 0; }
-    
     .bbs-list-meta { display: flex; align-items: center; font-size: 0.75rem; color: #999; }
     .bbs-list-img-small { width: 16px; height: 16px; border-radius: 50%; margin-right: 4px; vertical-align: middle; border: 1px solid #eee; object-fit: cover; }
-
-    .bbs-btn-primary { 
-        width: 100%; 
-        height: 40px;
-        padding: 0 10px;
-        background: #333; 
-        color: white; 
-        border: none; 
-        border-radius: 6px; 
-        font-weight: bold; 
-        font-size: 0.95rem; 
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
+    .bbs-date { font-size: 0.75rem; color: #bbb; }
+    .bbs-btn-primary { width: 100%; height: 40px; padding: 0 10px; background: #333; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .bbs-btn-basic { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; background: #fff; color: #555; font-size: 0.75rem; }
     .bbs-btn-del { color: #d9534f; border-color: #f5c6cb; }
     .bbs-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
     .bbs-textarea { width: 100%; height: 300px; display:none; }
     .bbs-comment-item { border-bottom: 1px solid #f5f5f5; padding: 10px 0; font-size: 0.9rem; word-break: break-all; }
-    
     .bbs-pagination { display: flex; justify-content: center; gap: 4px; margin-top: 15px; }
     .bbs-page-btn { padding: 4px 8px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 3px; font-size: 0.8rem; color: #555; }
     .bbs-page-btn.active { background: #333; color: white; border-color: #333; font-weight: bold; }
     .bbs-page-btn:hover:not(.active) { background: #f1f1f1; }
-
     .sun-editor { z-index: 10002 !important; border: 1px solid #ddd !important; border-radius: 6px; overflow: hidden;}
     .sun-editor .se-toolbar { outline: none; }
     #bbs-detail-content img { max-width: 100%; height: auto; }
@@ -191,8 +175,8 @@ const bbsHTML = `
         ${authHtml}
         
         <table class="bbs-table">
-            <colgroup><col width="*"/><col width="80"/></colgroup>
-            <thead><tr><th>글제목</th><th>작성자</th></tr></thead>
+            <colgroup><col width="*"/><col width="75"/><col width="110"/></colgroup>
+            <thead><tr><th>글제목</th><th>작성자</th><th>등록일</th></tr></thead>
             <tbody id="bbs-list-tbody"></tbody>
         </table>
         <div id="bbs-pagination" class="bbs-pagination"></div>
@@ -240,7 +224,6 @@ let isEditMode = false;
 let editPostId = null;
 let currentPage = 1;
 
-// 메뉴 오버레이 등 외부 요인으로 닫힐 때도 스크롤 잠금 해제
 const checkMenuOverlay = document.getElementById('menuOverlay');
 if (checkMenuOverlay) {
     const observer = new MutationObserver(() => {
@@ -287,13 +270,11 @@ function bbsToggleLayer() {
     }
 }
 
-// [신규] 카테고리 변경 시
 function bbsChangeCategory(val) {
     bbsTargetPage = val;
     bbsLoadPosts(1);
 }
 
-// [신규] 관리자 모드면 카테고리 목록 Fetch
 async function bbsLoadCategories() {
     if (!isManagerMode) return;
     try {
@@ -412,7 +393,7 @@ async function bbsLoadPosts(page = 1) {
     }
 
     if (data.posts.length === 0 && (!data.notices || data.notices.length === 0)) {
-        html = '<tr><td colspan="2" style="text-align:center; color:#888; padding:30px 0;">첫 글의 주인공이 되어보세요!</td></tr>';
+        html = '<tr><td colspan="3" style="text-align:center; color:#888; padding:30px 0;">첫 글의 주인공이 되어보세요!</td></tr>';
     } else {
         html += data.posts.map(p => renderPostRow(p, false)).join('');
     }
@@ -435,7 +416,6 @@ function renderPostRow(p, isNotice) {
         }
     }
 
-    // ★ [신규] 관리자 모드 + 전체 보기 + 일반글/페이지공지인 경우 -> [페이지명] 뱃지 표시
     if (isManagerMode && bbsTargetPage === 'ALL' && !isNotice) {
         titlePrefix += `<span style="font-size:0.75rem; color:#888; border:1px solid #ddd; border-radius:3px; padding:0 4px; margin-right:4px;">${p.targetPage}</span>`;
     }
@@ -458,8 +438,11 @@ function renderPostRow(p, isNotice) {
         <td>
             <div class="bbs-list-meta">
                 ${profileImg}
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60px;">${p.author}</span>
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:50px;">${p.author}</span>
             </div>
+        </td>
+        <td>
+            <div class="bbs-date">${p.date}</div>
         </td>
     </tr>
     `;
@@ -520,9 +503,7 @@ async function bbsSavePost() {
     });
 
     if (res.ok) {
-        if (!isEditMode) {
-            currentPage = 1;
-        }
+        if (!isEditMode) currentPage = 1;
         bbsChangeView('list');
         if(typeof showToast === 'function') showToast(isEditMode ? '수정되었습니다.' : '등록되었습니다.');
     } else {
@@ -559,12 +540,13 @@ async function bbsLoadDetail(id) {
     if(post.noticeType === 0) badge = '<span class="notice-badge-global">[전체]</span>';
     else if(post.noticeType === 1) badge = '<span class="notice-badge-local">[공지]</span>';
 
+    // ★ [수정] 작성자 이름 아래에 날짜 표시
     document.getElementById('bbs-detail-author').innerHTML = `
         <div style="display:flex; align-items:center; width:100%;">
             ${profileImg}
             <div style="display:flex; flex-direction:column;">
                 <span style="font-weight:bold; color:#333; font-size:0.95rem;">${post.author}</span>
-                <span style="font-size:0.75rem; color:#999;">${post.date || ''} ${badge}</span>
+                <span style="font-size:0.8rem; color:#888; margin-top:2px;">${post.date || ''} ${badge}</span>
             </div>
             ${btnHtml}
         </div>
@@ -612,7 +594,21 @@ async function bbsLoadComments() {
         if (currentUser && (currentUser.id === c.authorId || currentUser.isAdmin)) {
             actionBtns = `<span id="bbs-cmt-actions-${c.id}" style="font-size:0.75rem; margin-left:10px;"><a onclick="bbsEditComment(${c.id})" style="color:#888; cursor:pointer;">수정</a> | <a onclick="bbsDeleteComment(${c.id})" style="color:#d9534f; cursor:pointer;">삭제</a></span>`;
         }
-        return `<div class="bbs-comment-item"><div style="display:flex; justify-content:space-between; align-items:flex-start;"><div style="display:flex; align-items:center;">${profileImg}<strong style="font-size:0.9rem;">${c.author}</strong></div>${actionBtns}</div><div id="bbs-cmt-text-${c.id}" style="padding-left:38px; margin-top:2px; color:#555; white-space: pre-wrap; font-size:0.9rem;">${c.content}</div></div>`;
+
+        const dateStr = formatCommentDate(c.createdAt);
+
+        return `
+        <div class="bbs-comment-item">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="display:flex; align-items:center;">
+                    ${profileImg}
+                    <strong style="font-size:0.9rem; margin-right:6px;">${c.author}</strong>
+                    <span style="font-size:0.7rem; color:#aaa;">${dateStr}</span>
+                </div>
+                ${actionBtns}
+            </div>
+            <div id="bbs-cmt-text-${c.id}" style="padding-left:38px; margin-top:2px; color:#555; white-space: pre-wrap; font-size:0.9rem;">${c.content}</div>
+        </div>`;
     }).join('');
 }
 
@@ -689,6 +685,5 @@ if (urlParams.get('bbs_open') === 'true') {
     history.replaceState({}, document.title, newUrl);
 }
 
-// 초기화
 bbsLoadCategories();
 bbsLoadPosts(1);

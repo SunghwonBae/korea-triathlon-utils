@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     // 1. GET 요청
     if (req.method === 'GET') {
       
-      // [카테고리 목록 조회] 관리자 페이지용
+      // [카테고리 목록 조회]
       if (req.query.type === 'categories') {
         const categories = await prisma.post.findMany({
           distinct: ['targetPage'],
@@ -18,12 +18,29 @@ export default async function handler(req, res) {
         return res.json(categories.map(c => c.targetPage));
       }
 
-      // [상세 조회]
+      // ★ [수정됨] 상세 조회 (날짜 포맷팅 추가)
       if (req.query.id) {
         const post = await prisma.post.findUnique({
           where: { id: Number(req.query.id) },
         });
-        return res.json(post);
+
+        if (!post) return res.status(404).json({ error: '글 없음' });
+
+        // 상세 조회 시에도 날짜 포맷을 만들어서 보내줍니다.
+        const dateObj = new Date(post.createdAt);
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const hour = String(dateObj.getHours()).padStart(2, '0');
+        const min = String(dateObj.getMinutes()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd} ${hour}:${min}`;
+
+        // DB 객체에 date, author 필드를 명시적으로 합쳐서 리턴
+        return res.json({ 
+            ...post, 
+            author: post.authorName || '익명', // 이름 마스킹 없음
+            date: dateStr 
+        });
       }
 
       // [목록 조회]
@@ -36,24 +53,12 @@ export default async function handler(req, res) {
       let noticeWhere = {};
       
       if (targetPage === 'ALL') {
-          // ★ [수정됨] 전체 모드 (관리자용)
-          // 리스트: '페이지 공지(1)'와 '일반글(2)'을 모두 포함하여 조회
-          whereClause = { 
-              noticeType: { in: [1, 2] } 
-          }; 
-          
-          // 상단 고정: '전체 공지(0)'만 고정 (너무 많이 고정되는 것 방지)
+          // 관리자(전체) 모드
+          whereClause = { noticeType: { in: [1, 2] } }; 
           noticeWhere = { noticeType: 0 }; 
-
       } else {
-          // ★ 일반 모드 (특정 페이지)
-          // 리스트: 해당 페이지의 '일반글(2)'만 조회
-          whereClause = { 
-              targetPage: targetPage,
-              noticeType: 2 
-          };
-
-          // 상단 고정: '전체 공지(0)' + '이 페이지 공지(1)'
+          // 일반 모드
+          whereClause = { targetPage: targetPage, noticeType: 2 };
           noticeWhere = {
             OR: [
               { noticeType: 0 },
@@ -62,14 +67,14 @@ export default async function handler(req, res) {
           };
       }
 
-      // 1. 공지사항 조회 (Pinned)
+      // 1. 공지사항 조회
       const notices = await prisma.post.findMany({
         where: noticeWhere,
-        orderBy: { id: 'desc' }, // 공지 내에서도 최신순
+        orderBy: { id: 'desc' },
         include: { _count: { select: { comments: true } } }
       });
       
-      // 2. 일반 게시글 조회 (List)
+      // 2. 일반 게시글 조회
       const totalPosts = await prisma.post.count({ where: whereClause });
       const posts = await prisma.post.findMany({
         where: whereClause,
@@ -83,15 +88,15 @@ export default async function handler(req, res) {
 
       // 데이터 가공 함수
       const processPosts = (list) => list.map(post => {
-        let displayName = post.authorName || '익명';
-        if (displayName.length > 2) {
-            displayName = displayName[0] + '*'.repeat(displayName.length - 2) + displayName[displayName.length - 1];
-        } else if (displayName.length === 2) {
-            displayName = displayName[0] + '*';
-        }
+        const displayName = post.authorName || '익명'; // 마스킹 없음
         
         const dateObj = new Date(post.createdAt);
-        const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const hour = String(dateObj.getHours()).padStart(2, '0');
+        const min = String(dateObj.getMinutes()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd} ${hour}:${min}`;
 
         return {
             id: post.id,
@@ -114,7 +119,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- (이하 POST, PUT, DELETE는 기존 로직 유지) ---
+    // --- (POST, PUT, DELETE 기존 유지) ---
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ error: '로그인 필요' });
     
