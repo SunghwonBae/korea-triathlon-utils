@@ -283,6 +283,7 @@ async function bbsLoadCategories() {
         const select = document.getElementById('bbs-manager-select');
         if (select) {
             categories.forEach(cat => {
+                if (cat === 'ALL') return; // 'ALL' 중복 방지
                 const opt = document.createElement('option');
                 opt.value = cat;
                 opt.innerText = cat;
@@ -473,9 +474,9 @@ function renderPagination(total, current) {
     container.innerHTML = html;
 }
 
+// ★ [수정됨] 글 저장 함수 (유효성 검사 추가)
 async function bbsSavePost() {
     const title = document.getElementById('bbs-write-title').value;
-    
     let content = '';
     if(editorInstance) content = editorInstance.getContents();
     else content = document.getElementById('bbs-write-content').value;
@@ -486,14 +487,36 @@ async function bbsSavePost() {
         return;
     }
 
+    // Notice Type 가져오기 (0: 전체공지, 1: 페이지공지, 2: 일반)
     let noticeType = 2;
     const radios = document.getElementsByName('noticeType');
     if (radios.length > 0) {
-        for(let r of radios) { if(r.checked) noticeType = r.value; }
+        for(let r of radios) { if(r.checked) noticeType = parseInt(r.value); }
+    }
+
+    // ★ [관리자 모드 로직 추가]
+    let finalTargetPage = bbsTargetPage;
+
+    if (isManagerMode) {
+        // 관리자 모드면 셀렉트 박스 값을 우선 확인
+        const selectEl = document.getElementById('bbs-manager-select');
+        if (selectEl) finalTargetPage = selectEl.value;
+
+        // 1. 전체공지(0)면 무조건 'ALL'로 강제
+        if (noticeType === 0) {
+            finalTargetPage = 'ALL';
+        } 
+        // 2. 일반(2)이나 공지(1)인데 'ALL'이 선택되어 있으면 저장 막음
+        else {
+            if (finalTargetPage === 'ALL') {
+                alert("일반글이나 페이지 공지는 '전체 게시글(ALL)' 카테고리에 작성할 수 없습니다.\n우측 상단에서 구체적인 페이지를 선택해주세요.");
+                return; // 저장 중단
+            }
+        }
     }
 
     const method = isEditMode ? 'PUT' : 'POST';
-    const body = { title, content, targetPage: bbsTargetPage, noticeType: noticeType };
+    const body = { title, content, targetPage: finalTargetPage, noticeType: noticeType };
     if (isEditMode) body.id = editPostId;
 
     const res = await fetch('/api/bbs/posts', {
@@ -540,7 +563,6 @@ async function bbsLoadDetail(id) {
     if(post.noticeType === 0) badge = '<span class="notice-badge-global">[전체]</span>';
     else if(post.noticeType === 1) badge = '<span class="notice-badge-local">[공지]</span>';
 
-    // ★ [수정] 작성자 이름 아래에 날짜 표시
     document.getElementById('bbs-detail-author').innerHTML = `
         <div style="display:flex; align-items:center; width:100%;">
             ${profileImg}
