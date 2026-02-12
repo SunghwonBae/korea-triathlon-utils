@@ -1,0 +1,221 @@
+<!-- c:\korea-triathlon-utils\public\admin_manager.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 매니저</title>
+    <link rel="stylesheet" href="/bucheonTriStyle.css">
+    <style>
+        body {
+            background-color: #f4f4f9;
+            padding-top: 80px; /* 헤더 공간 확보 */
+        }
+        .admin-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .login-section { display: none; }
+        .menu-section { display: none; }
+        
+        .admin-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .admin-list li {
+            margin-bottom: 10px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .admin-list li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-color: var(--primary-blue);
+        }
+        .admin-link {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-link:hover {
+            color: var(--primary-blue);
+        }
+        .file-icon { margin-right: 10px; }
+        
+        .profile-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .profile-img {
+            width: 50px; height: 50px; border-radius: 50%; border: 1px solid #ddd;
+        }
+        .logout-btn {
+            background: #666; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+        }
+        .naver-login-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            background-color: #03C75A; color: white; text-decoration: none;
+            padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px;
+            border: none; cursor: pointer;
+        }
+    </style>
+    <script src="/ui_utils.js"></script>
+    <script src="/bbs_layer.js" defer></script>
+</head>
+<body>
+    <!-- 헤더 섹션 (기존 스타일 재사용) -->
+    <div class="header-section">
+        <h1>Admin Manager</h1>
+    </div>
+
+    <div class="admin-container">
+        <!-- 1. 로그인 전 화면 -->
+        <div id="login-view" class="card login-section">
+            <h2 style="margin-bottom: 20px; color: #333;">관리자 로그인</h2>
+            <p style="margin-bottom: 30px; color: #666;">관리자 기능을 사용하려면 네이버 아이디로 로그인하세요.</p>
+            <button onclick="openLoginPopup()" class="naver-login-btn">
+                <span style="margin-right: 8px;">N</span> 네이버 아이디로 로그인
+            </button>
+        </div>
+
+        <!-- 2. 로그인 후 (관리자 아님) -->
+        <div id="unauth-view" class="card login-section">
+            <h2 style="color: #d9534f;">접근 권한 없음</h2>
+            <p style="margin: 20px 0;">귀하의 계정은 관리자 권한이 없습니다.</p>
+            <button onclick="logout()" class="logout-btn">로그아웃</button>
+        </div>
+
+        <!-- 3. 로그인 후 (관리자) -->
+        <div id="admin-view" class="menu-section">
+            <div class="card">
+                <div class="profile-area" id="profile-info"></div>
+                <h3 style="margin-bottom: 10px;">관리자 도구 목록</h3>
+                <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">public 폴더 내의 admin 관련 파일들입니다.</p>
+                
+                <ul id="file-list" class="admin-list">
+                    <!-- API로 불러온 리스트가 여기에 들어갑니다 -->
+                    <li style="text-align:center; padding:20px;">목록을 불러오는 중...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 유틸리티: 쿠키에서 사용자 정보 파싱
+        function getUserInfo() {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; user_info=`);
+            if (parts.length === 2) {
+                const decoded = decodeURIComponent(parts.pop().split(';').shift());
+                try { return JSON.parse(decoded); } catch(e) { return null; }
+            }
+            return null;
+        }
+
+        // 2. 초기화 및 상태 체크
+        async function init() {
+            const user = getUserInfo();
+            
+            if (!user) {
+                document.getElementById('login-view').style.display = 'block';
+            } else if (!user.isAdmin) {
+                document.getElementById('unauth-view').style.display = 'block';
+            } else {
+                // 관리자 인증 성공
+                document.getElementById('admin-view').style.display = 'block';
+                renderProfile(user);
+                loadAdminFiles();
+            }
+        }
+
+        function renderProfile(user) {
+            const container = document.getElementById('profile-info');
+            const img = user.image ? `<img src="${user.image}" class="profile-img">` : '';
+            container.innerHTML = `
+                ${img}
+                <div>
+                    <div style="font-weight:bold; font-size:1.1rem;">${user.name}님</div>
+                    <button onclick="logout()" class="logout-btn" style="margin-top:4px;">로그아웃</button>
+                </div>
+            `;
+        }
+
+        // 3. 파일 목록 불러오기 (API 호출)
+        async function loadAdminFiles() {
+            try {
+                const res = await fetch('/api/admin/menu');
+                if (!res.ok) throw new Error('권한이 없거나 오류가 발생했습니다.');
+                
+                const data = await res.json();
+                const listEl = document.getElementById('file-list');
+                
+                if (data.files && data.files.length > 0) {
+                    listEl.innerHTML = data.files.map(file => `
+                        <li>
+                            <a href="/${file}" class="admin-link">
+                                <span>📄 ${file}</span>
+                                <span style="font-size:0.8rem; color:#999;">이동 &rarr;</span>
+                            </a>
+                        </li>
+                    `).join('');
+                } else {
+                    listEl.innerHTML = '<li style="padding:20px; text-align:center;">표시할 파일이 없습니다.</li>';
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('file-list').innerHTML = `<li style="padding:20px; color:red;">오류: ${e.message}</li>`;
+            }
+        }
+
+        // 4. 로그인 팝업 열기 (기존 API 재사용)
+        function openLoginPopup() {
+            const width = 500;
+            const height = 650;
+            const left = (window.screen.width / 2) - (width / 2);
+            const top = (window.screen.height / 2) - (height / 2);
+            // 기존 로그인 API 호출 (callback에서 postMessage를 보내줌)
+            window.open('/api/auth/login', 'naver_login_popup', `width=${width},height=${height},top=${top},left=${left}`);
+        }
+
+        // 5. 로그인 성공 메시지 수신
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'NAVER_LOGIN_SUCCESS') {
+                window.location.reload();
+            }
+        });
+
+        // 6. 로그아웃
+        function logout() {
+            if(confirm('로그아웃 하시겠습니까?')) {
+                document.cookie = 'auth_token=; path=/; max-age=0';
+                document.cookie = 'user_info=; path=/; max-age=0';
+                window.location.reload();
+            }
+        }
+
+        // 실행
+        init();
+    </script>
+</body>
+</html>

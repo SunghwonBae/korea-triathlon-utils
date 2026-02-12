@@ -13,9 +13,15 @@
     document.body.appendChild(script);
 })();
 
-// 1. 설정
+// 1. 설정 및 모드 감지
+// ★ [수정됨] URL에 'admin'이 포함되어 있으면 관리자 모드로 인식
+const isManagerMode = window.location.pathname.includes('admin');
+
 let bbsTargetPage = window.location.pathname.split('/').pop().replace('.html', '');
 if (!bbsTargetPage || bbsTargetPage === '') bbsTargetPage = 'index';
+
+// 관리자 모드면 초기값은 'ALL'로 설정하여 모든 글을 불러옴
+if (isManagerMode) bbsTargetPage = 'ALL';
 
 const pageTitle = document.title || '메인';
 let editorInstance = null;
@@ -87,6 +93,17 @@ if (currentUser && currentUser.isAdmin) {
             <label style="color:#03C75A;"><input type="radio" name="noticeType" value="1"> [공지]</label>
             <label style="color:#d9534f;"><input type="radio" name="noticeType" value="0"> [전체공지]</label>
         </div>
+    `;
+}
+
+// ★ 관리자 모드일 때만 셀렉트 박스 표시
+let managerSelectHtml = '';
+if (isManagerMode) {
+    managerSelectHtml = `
+        <select id="bbs-manager-select" onchange="bbsChangeCategory(this.value)" 
+            style="padding:5px; border-radius:4px; border:1px solid #ddd; font-size:0.9rem; margin-right:10px;">
+            <option value="ALL">전체 게시글</option>
+        </select>
     `;
 }
 
@@ -163,7 +180,10 @@ const bbsHTML = `
 
 <div id="bbs-layer">
     <div class="bbs-header">
-        <h3 id="bbs-top-title">게시판 - (${pageTitle})</h3>
+        <div style="display:flex; align-items:center;">
+            ${managerSelectHtml}
+            <h3 id="bbs-top-title">게시판 - (${pageTitle})</h3>
+        </div>
         <button class="bbs-close-btn" onclick="bbsToggleLayer()">✕</button>
     </div>
     
@@ -220,14 +240,14 @@ let isEditMode = false;
 let editPostId = null;
 let currentPage = 1;
 
-// [수정] 메뉴 오버레이 등 외부 요인으로 닫힐 때도 스크롤 잠금 해제
+// 메뉴 오버레이 등 외부 요인으로 닫힐 때도 스크롤 잠금 해제
 const checkMenuOverlay = document.getElementById('menuOverlay');
 if (checkMenuOverlay) {
     const observer = new MutationObserver(() => {
         if (window.getComputedStyle(checkMenuOverlay).display === 'block') {
             document.getElementById('bbs-layer').classList.remove('open');
             document.getElementById('bbs-overlay-bg').style.display = 'none';
-            document.body.style.overflow = ''; // 스크롤 잠금 해제
+            document.body.style.overflow = '';
         }
     });
     observer.observe(checkMenuOverlay, { attributes: true, attributeFilter: ['style', 'class'] });
@@ -256,17 +276,39 @@ function bbsToggleLayer() {
     const overlay = document.getElementById('bbs-overlay-bg');
     
     if (layer.classList.contains('open')) {
-        // [닫기]
         layer.classList.remove('open');
         setTimeout(() => { overlay.style.display = 'none'; }, 300);
-        document.body.style.overflow = ''; // ★ 스크롤 잠금 해제 (원상복구)
+        document.body.style.overflow = '';
     } else {
-        // [열기]
         overlay.style.display = 'block';
         setTimeout(() => layer.classList.add('open'), 10);
         bbsChangeView('list');
-        document.body.style.overflow = 'hidden'; // ★ 스크롤 잠금 (메인 페이지 스크롤 방지)
+        document.body.style.overflow = 'hidden';
     }
+}
+
+// [신규] 카테고리 변경 시
+function bbsChangeCategory(val) {
+    bbsTargetPage = val;
+    bbsLoadPosts(1);
+}
+
+// [신규] 관리자 모드면 카테고리 목록 Fetch
+async function bbsLoadCategories() {
+    if (!isManagerMode) return;
+    try {
+        const res = await fetch('/api/bbs/posts?type=categories');
+        const categories = await res.json();
+        const select = document.getElementById('bbs-manager-select');
+        if (select) {
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                select.appendChild(opt);
+            });
+        }
+    } catch(e) { console.error(e); }
 }
 
 function bbsChangeView(viewName, postData = null) {
@@ -391,6 +433,11 @@ function renderPostRow(p, isNotice) {
             titlePrefix = `<span class="notice-badge-local">[공지]</span>`;
             rowStyle = 'background-color:#f9fff9;';
         }
+    }
+
+    // ★ [신규] 관리자 모드 + 전체 보기 + 일반글/페이지공지인 경우 -> [페이지명] 뱃지 표시
+    if (isManagerMode && bbsTargetPage === 'ALL' && !isNotice) {
+        titlePrefix += `<span style="font-size:0.75rem; color:#888; border:1px solid #ddd; border-radius:3px; padding:0 4px; margin-right:4px;">${p.targetPage}</span>`;
     }
 
     const cmtCount = p.commentCount > 0 ? `<span class="bbs-comment-count">[${p.commentCount}]</span>` : '';
@@ -642,5 +689,6 @@ if (urlParams.get('bbs_open') === 'true') {
     history.replaceState({}, document.title, newUrl);
 }
 
-// 백그라운드 프리패칭
+// 초기화
+bbsLoadCategories();
 bbsLoadPosts(1);

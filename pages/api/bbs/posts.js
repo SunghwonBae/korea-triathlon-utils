@@ -1,11 +1,24 @@
+// pages/api/bbs/posts.js
+
 import prisma from '../../../lib/prisma';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
   try {
-    // 1. GET 요청: 목록 및 상세 조회
+    // 1. GET 요청
     if (req.method === 'GET') {
-      // (1) 상세 조회 (기존 동일)
+      
+      // [카테고리 목록 조회] 관리자 페이지용
+      if (req.query.type === 'categories') {
+        const categories = await prisma.post.findMany({
+          distinct: ['targetPage'],
+          select: { targetPage: true },
+          where: { targetPage: { not: 'common' } }
+        });
+        return res.json(categories.map(c => c.targetPage));
+      }
+
+      // [상세 조회]
       if (req.query.id) {
         const post = await prisma.post.findUnique({
           where: { id: Number(req.query.id) },
@@ -13,164 +26,152 @@ export default async function handler(req, res) {
         return res.json(post);
       }
 
-      // (2) 목록 조회 (★ 로직 수정됨)
-      const targetPage = req.query.targetPage || 'common';
+      // [목록 조회]
+      let targetPage = req.query.targetPage || 'common';
       const page = Number(req.query.page) || 1;
-      const limit = 10; // 페이지당 표시할 총 게시물 수
+      const limit = 10;
+      const skip = (page - 1) * limit;
 
-      // [단계 1] 공지사항 먼저 조회 (개수 파악을 위해 항상 필요)
-      const notices = await prisma.post.findMany({
-        where: {
-          OR: [
-            { noticeType: 0 }, // 전체 공지
-            { noticeType: 1, targetPage: targetPage } // 페이지 공지
-          ]
-        },
-        orderBy: { noticeType: 'asc' }, // 전체공지(0) -> 페이지공지(1)
-        include: { _count: { select: { comments: true } } }
-      });
+      let whereClause = {};
+      let noticeWhere = {};
       
-      const noticeCount = notices.length;
+      if (targetPage === 'ALL') {
+          // ★ [수정됨] 전체 모드 (관리자용)
+          // 리스트: '페이지 공지(1)'와 '일반글(2)'을 모두 포함하여 조회
+          whereClause = { 
+              noticeType: { in: [1, 2] } 
+          }; 
+          
+          // 상단 고정: '전체 공지(0)'만 고정 (너무 많이 고정되는 것 방지)
+          noticeWhere = { noticeType: 0 }; 
 
-      // [단계 2] 일반 게시글 가져올 개수(take)와 건너뛸 개수(skip) 계산
-      let skip = 0;
-      let take = limit;
-
-      if (page === 1) {
-        // 1페이지: 공지사항 개수만큼 빼고 조회 (최소 0개)
-        // 예: 공지 3개 -> 일반글 7개 (총 10개)
-        // 예: 공지 12개 -> 일반글 0개 (총 12개 - 공지는 잘리지 않고 다 보여줌)
-        take = Math.max(0, limit - noticeCount);
-        skip = 0;
       } else {
-        // 2페이지 이상: 
-        // 1페이지에서 보여줬어야 할 일반글 개수 (limit - noticeCount) 만큼 건너뜀
-        const normalPostsOnPage1 = Math.max(0, limit - noticeCount);
-        
-        // 수식: (1페이지에서 보여준 일반글) + (이전 페이지들 * limit)
-        skip = normalPostsOnPage1 + (page - 2) * limit;
-        take = limit;
+          // ★ 일반 모드 (특정 페이지)
+          // 리스트: 해당 페이지의 '일반글(2)'만 조회
+          whereClause = { 
+              targetPage: targetPage,
+              noticeType: 2 
+          };
+
+          // 상단 고정: '전체 공지(0)' + '이 페이지 공지(1)'
+          noticeWhere = {
+            OR: [
+              { noticeType: 0 },
+              { noticeType: 1, targetPage: targetPage }
+            ]
+          };
       }
 
-      // [단계 3] 일반 게시글 조회
+      // 1. 공지사항 조회 (Pinned)
+      const notices = await prisma.post.findMany({
+        where: noticeWhere,
+        orderBy: { id: 'desc' }, // 공지 내에서도 최신순
+        include: { _count: { select: { comments: true } } }
+      });
+      
+      // 2. 일반 게시글 조회 (List)
+      const totalPosts = await prisma.post.count({ where: whereClause });
       const posts = await prisma.post.findMany({
-        where: {
-          targetPage: targetPage,
-          noticeType: 2 // 일반 글만
-        },
-        take: take,
-        skip: skip,
+        where: whereClause,
         orderBy: { id: 'desc' },
+        skip: skip,
+        take: limit,
         include: { _count: { select: { comments: true } } }
       });
 
-      // [단계 4] 총 페이지 수 계산 (공지사항 영향 반영)
-      const totalNormalPosts = await prisma.post.count({
-        where: { targetPage: targetPage, noticeType: 2 }
-      });
+      const totalPages = Math.ceil(totalPosts / limit);
 
-      // 1페이지에 들어갈 수 있는 일반글 수
-      const firstPageCapacity = Math.max(0, limit - noticeCount);
-      
-      // 1페이지를 제외한 나머지 일반글 수
-      const remainingPosts = Math.max(0, totalNormalPosts - firstPageCapacity);
-      
-      // 총 페이지 = 1페이지 + 나머지 글을 limit로 나눈 페이지 수
-      // (글이 하나도 없으면 0페이지가 아니라 1페이지가 되어야 하므로 로직 보정)
-      let totalPages = 1;
-      if (remainingPosts > 0) {
-        totalPages = 1 + Math.ceil(remainingPosts / limit);
-      }
-      if (noticeCount === 0 && totalNormalPosts === 0) totalPages = 0; // 글이 아예 없으면 0
+      // 데이터 가공 함수
+      const processPosts = (list) => list.map(post => {
+        let displayName = post.authorName || '익명';
+        if (displayName.length > 2) {
+            displayName = displayName[0] + '*'.repeat(displayName.length - 2) + displayName[displayName.length - 1];
+        } else if (displayName.length === 2) {
+            displayName = displayName[0] + '*';
+        }
+        
+        const dateObj = new Date(post.createdAt);
+        const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
 
-
-      // [단계 5] 데이터 포맷팅
-      const formatPost = (p) => ({
-        ...p,
-        date: p.createdAt.toISOString().split('T')[0],
-        commentCount: p._count.comments
+        return {
+            id: post.id,
+            title: post.title,
+            author: displayName,
+            authorId: post.authorId,
+            authorImage: post.authorImage,
+            date: dateStr,
+            commentCount: post._count.comments,
+            noticeType: post.noticeType,
+            targetPage: post.targetPage
+        };
       });
 
       return res.json({
-        // 1페이지일 때만 공지사항을 배열에 담아서 보냄
-        notices: (page === 1 ? notices.map(formatPost) : []),
-        posts: posts.map(formatPost),
-        totalPosts: totalNormalPosts + noticeCount,
-        currentPage: page,
-        totalPages: totalPages
+        posts: processPosts(posts),
+        notices: processPosts(notices),
+        totalPages: totalPages,
+        currentPage: page
       });
     }
 
-    // --- 로그인 필요 (POST, PUT, DELETE) - 기존과 동일 ---
+    // --- (이하 POST, PUT, DELETE는 기존 로직 유지) ---
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ error: '로그인 필요' });
     
     let user;
     try {
-      user = jwt.verify(token, process.env.JWT_SECRET);
+        user = jwt.verify(token, process.env.JWT_SECRET);
     } catch(e) {
-      return res.status(401).json({ error: '유효하지 않은 토큰' });
+        return res.status(401).json({ error: '토큰 만료' });
     }
 
-    // POST: 글쓰기
     if (req.method === 'POST') {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      let noticeType = 2;
-      if (user.isAdmin) {
-        noticeType = body.noticeType !== undefined ? parseInt(body.noticeType) : 2;
-      }
-      await prisma.post.create({
-        data: {
-          targetPage: body.targetPage || 'common',
-          title: body.title,
-          content: body.content,
-          author: user.name,
-          authorId: user.naverId,
-          authorImage: user.profileImage,
-          noticeType: noticeType,
-        },
-      });
-      return res.status(200).json({ success: true });
+        const body = req.body;
+        let nType = 2;
+        if (user.isAdmin && body.noticeType !== undefined) nType = parseInt(body.noticeType);
+
+        await prisma.post.create({
+            data: {
+                title: body.title,
+                content: body.content,
+                targetPage: body.targetPage,
+                authorId: user.naverId,
+                authorName: user.name,
+                authorImage: user.profileImage,
+                noticeType: nType
+            }
+        });
+        return res.status(200).json({ success: true });
     }
 
-    // PUT: 글 수정
     if (req.method === 'PUT') {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      const post = await prisma.post.findUnique({ where: { id: body.id } });
-      if (!post) return res.status(404).json({ error: '글 없음' });
+        const body = req.body;
+        const post = await prisma.post.findUnique({ where: { id: body.id } });
+        if (!post) return res.status(404).json({ error: '글 없음' });
+        if (post.authorId !== user.naverId && !user.isAdmin) return res.status(403).json({ error: '권한 없음' });
 
-      if (post.authorId !== user.naverId && !user.isAdmin) {
-          return res.status(403).json({ error: '권한 없음' });
-      }
+        let nType = post.noticeType;
+        if (user.isAdmin && body.noticeType !== undefined) nType = parseInt(body.noticeType);
 
-      let noticeType = post.noticeType;
-      if (user.isAdmin && body.noticeType !== undefined) {
-        noticeType = parseInt(body.noticeType);
-      }
-
-      await prisma.post.update({
-        where: { id: body.id },
-        data: { title: body.title, content: body.content, noticeType: noticeType }
-      });
-      return res.status(200).json({ success: true });
+        await prisma.post.update({
+            where: { id: body.id },
+            data: { title: body.title, content: body.content, noticeType: nType }
+        });
+        return res.status(200).json({ success: true });
     }
 
-    // DELETE: 글 삭제
     if (req.method === 'DELETE') {
         const postId = Number(req.query.id);
         const post = await prisma.post.findUnique({ where: { id: postId } });
         if (!post) return res.status(404).json({ error: '글 없음' });
-        
-        if (post.authorId !== user.naverId && !user.isAdmin) {
-            return res.status(403).json({ error: '권한 없음' });
-        }
+        if (post.authorId !== user.naverId && !user.isAdmin) return res.status(403).json({ error: '권한 없음' });
 
         await prisma.post.delete({ where: { id: postId } });
         return res.status(200).json({ success: true });
     }
 
-  } catch (e) {
-    console.error("API Error:", e);
-    return res.status(500).json({ error: e.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: '서버 오류' });
   }
 }
