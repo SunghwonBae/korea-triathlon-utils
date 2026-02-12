@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         return res.json(categories.map(c => c.targetPage));
       }
 
-      // ★ [수정됨] 상세 조회 (날짜 포맷팅 추가)
+      // [상세 조회]
       if (req.query.id) {
         const post = await prisma.post.findUnique({
           where: { id: Number(req.query.id) },
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
         if (!post) return res.status(404).json({ error: '글 없음' });
 
-        // 상세 조회 시에도 날짜 포맷을 만들어서 보내줍니다.
+        // 날짜 포맷팅
         const dateObj = new Date(post.createdAt);
         const yyyy = dateObj.getFullYear();
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -35,10 +35,11 @@ export default async function handler(req, res) {
         const min = String(dateObj.getMinutes()).padStart(2, '0');
         const dateStr = `${yyyy}-${mm}-${dd} ${hour}:${min}`;
 
-        // DB 객체에 date, author 필드를 명시적으로 합쳐서 리턴
         return res.json({ 
             ...post, 
-            author: post.authorName || '익명', // 이름 마스킹 없음
+            // ★ [수정됨] author 컬럼을 그대로 사용합니다.
+            author: post.author || '익명', 
+            authorImage: post.authorImage,     
             date: dateStr 
         });
       }
@@ -71,7 +72,7 @@ export default async function handler(req, res) {
       const notices = await prisma.post.findMany({
         where: noticeWhere,
         orderBy: { id: 'desc' },
-        include: { _count: { select: { comments: true } } }
+        include: { _count: { select: { comments: true } } } 
       });
       
       // 2. 일반 게시글 조회
@@ -88,7 +89,9 @@ export default async function handler(req, res) {
 
       // 데이터 가공 함수
       const processPosts = (list) => list.map(post => {
-        const displayName = post.authorName || '익명'; // 마스킹 없음
+        // ★ [수정됨] post.authorName이 아니라 post.author 입니다!
+        const displayName = post.author || '익명';
+        const displayImage = post.authorImage || '';
         
         const dateObj = new Date(post.createdAt);
         const yyyy = dateObj.getFullYear();
@@ -101,9 +104,9 @@ export default async function handler(req, res) {
         return {
             id: post.id,
             title: post.title,
-            author: displayName,
+            author: displayName,  // 여기도 author
             authorId: post.authorId,
-            authorImage: post.authorImage,
+            authorImage: displayImage,
             date: dateStr,
             commentCount: post._count.comments,
             noticeType: post.noticeType,
@@ -119,7 +122,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- (POST, PUT, DELETE 기존 유지) ---
+    // --- POST, PUT, DELETE ---
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ error: '로그인 필요' });
     
@@ -130,6 +133,7 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: '토큰 만료' });
     }
 
+    // 2. POST (글쓰기)
     if (req.method === 'POST') {
         const body = req.body;
         let nType = 2;
@@ -139,16 +143,18 @@ export default async function handler(req, res) {
             data: {
                 title: body.title,
                 content: body.content,
-                targetPage: body.targetPage,
+                targetPage: body.targetPage || 'common',
                 authorId: user.naverId,
-                authorName: user.name,
-                authorImage: user.profileImage,
+                // ★ [수정됨] authorName이 아니라 author 입니다! (어제 소스 복구)
+                author: user.name, 
+                authorImage: user.profileImage, 
                 noticeType: nType
             }
         });
         return res.status(200).json({ success: true });
     }
 
+    // 3. PUT (수정)
     if (req.method === 'PUT') {
         const body = req.body;
         const post = await prisma.post.findUnique({ where: { id: body.id } });
@@ -165,6 +171,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
     }
 
+    // 4. DELETE (삭제)
     if (req.method === 'DELETE') {
         const postId = Number(req.query.id);
         const post = await prisma.post.findUnique({ where: { id: postId } });
