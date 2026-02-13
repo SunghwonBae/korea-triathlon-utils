@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  // 1. 네이버 로그인 검증 (쿠키의 auth_token 확인)
   const token = req.cookies.auth_token;
   if (!token) return res.status(401).json({ message: '로그인이 필요합니다.' });
 
@@ -14,15 +13,19 @@ export default async function handler(req, res) {
 
     const { original, modified } = req.body;
 
-    // 2. 수정 요청 데이터 DB 저장
-    // original: 식별용, modified: 수정된 필드만 추출
+    // [수정] original이 비어있으면 신규 등록으로 간주
+    const isNew = !original || Object.keys(original).length === 0;
+
     await prisma.recordRequest.create({
       data: {
-        raceName: original.rn,
-        year: original.rd || original.y || original.year,
-        bib: original.b,
-        name: original.n,
-        updatedFields: JSON.stringify(modified), // 수정된 내용만 JSON 문자열로 저장
+        // 신규이면 modified(입력값)을 사용, 수정이면 original(기존값)을 사용해 식별
+        raceName: isNew ? modified.rn : original.rn,
+        year: isNew ? (modified.rd || modified.y || modified.year) : (original.rd || original.y || original.year),
+        bib: isNew ? modified.b : original.b,
+        name: isNew ? modified.n : original.n,
+        
+        // modified 객체 자체를 저장 (신규 플래그 _isNew 포함됨)
+        updatedFields: JSON.stringify(modified),
         requester: requester,
         status: 'PENDING'
       }

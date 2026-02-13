@@ -649,11 +649,11 @@
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
         },
-        { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true, editable: false },
+        { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true, editable: (params) => params.data._editing || params.data._isNew },
         { headerName: "국가/클럽", field: "c", width: 130, sortable: true,                 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '', filter: 'agTextColumnFilter' },
-        { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter', editable: false },
+        { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter', editable: (params) => params.data._editing || params.data._isNew, },
         { headerName: "Total", field: "to", width: 110, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
@@ -703,7 +703,7 @@
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
                 filter: 'agTextColumnFilter' },
-        { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' ,editable: false},
+        { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' ,editable: (params) => params.data._editing || params.data._isNew,},
         // [추가] 맨 끝에 수정/확인 버튼 컬럼
             {
                 headerName: "관리",
@@ -711,6 +711,7 @@
                 width: 110,
                 pinned: 'right', // 오른쪽에 고정
                 editable: false,
+                headerComponent: CustomHeader,
                 cellRenderer: addEditButton // 아래에서 정의할 함수
             },
     ];
@@ -793,18 +794,8 @@
             editBtn.onclick = (e) => {
                 e.stopPropagation();
 
-                // 로그인 체크 (필요시)
-                // if (!checkLogin()) return; 
-
-                // 1. 현재 데이터 백업 (취소 시 복구용)
-                params.data._original = { ...params.data };
-
-                // 2. 수정 모드 활성화 플래그 설정
-                params.data._editing = true;
-
-                // 3. 그리드 갱신 (CSS 스타일 적용을 위해 필수)
-                // force: true를 해야 cellClass 규칙이 다시 적용됨
-                params.api.refreshCells({ rowNodes: [params.node], force: true });
+                // 로그인 체크 및 편집모드전환
+                startEdit(params);
 
                 // 4. (선택사항) '이름' 컬럼부터 바로 커서 깜빡이게 하기
                 setTimeout(() => {
@@ -818,6 +809,41 @@
         }
 
         return container;
+    }
+
+
+    // [추가] 헤더에 [신규] 버튼을 렌더링할 클래스
+    class CustomHeader {
+        init(params) {
+            this.eGui = document.createElement('div');
+            this.eGui.style.display = "flex";
+            this.eGui.style.alignItems = "center";
+            this.eGui.style.justifyContent = "center";
+            
+            this.eGui.innerHTML = `
+                <span>관리</span>
+                <button onclick="onAddRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 ml-2 rounded text-xs shadow-sm transition-colors">
+                    <i class="fas fa-plus mr-1"></i>신규
+                </button>
+            `;
+        }
+        getGui() {
+            return this.eGui;
+        }
+    }
+
+    // [추가] 신규 행 추가 함수
+    function onAddRow() {
+        const newRow = {
+            n: '', t: 0, s: 0, bk: 0, r: 0, t1: 0, t2: 0,
+            rn: '', y: new Date().getFullYear().toString(), // 기본값
+            rt: 'Ironman', b: '', d: '', c: '', q: '',
+            _editing: true, // 바로 수정 모드
+            _isNew: true    // 신규 행 플래그
+        };
+        
+        // 그리드 최상단에 추가
+        gridOptions.api.applyTransaction({ add: [newRow], addIndex: 0 });
     }
 
     async function initGrid(rowData) {
@@ -982,56 +1008,72 @@
         Object.assign(params.data, original);
         params.data._editing = false;
         delete params.data._original;
-        params.api.refreshCells({ rowNodes: [params.node], force: true });
+        if(params.data._isNew){
+            const transaction = { remove: [params.data] };
+            params.api.applyTransaction(transaction);
+            params.data._isNew = false;
+        }else{
+            params.api.refreshCells({ rowNodes: [params.node], force: true });
+        }
     }
 
-    // [로직] 수정 확인 (DB 저장 요청)
+
     async function saveRow(params) {
-        params.api.stopEditing(); // 편집 종료 트리거
-
-        const modifiedData = params.data;
-        const originalData = modifiedData._original;
+        const rowData = params.data;
         
-        // 변경된 필드만 추출
-        const changes = {};
-        Object.keys(modifiedData).forEach(key => {
-            if (key !== '_editing' && key !== '_original' && modifiedData[key] !== originalData[key]) {
-                changes[key] = modifiedData[key];
+        // [유효성 검사] 신규 등록 시 필수 키값 확인
+        if (rowData._isNew) {
+            if (!rowData.rn || !rowData.y || !rowData.b || !rowData.n) {
+                alert("신규 등록 시 [대회명, 연도, 배번호, 이름]은 필수 입력 사항입니다.");
+                return;
             }
-        });
-
-        if (Object.keys(changes).length === 0) {
-            alert('변경된 내용이 없습니다.');
-            cancelRow(params);
-            return;
         }
 
-        // API 호출
+        // 변경된 데이터 수집 (기존 로직 활용)
+        const changes = { ...rowData };
+        // 불필요한 UI 플래그 제거
+        delete changes._editing;
+        delete changes._isPending;
+        
+        // [중요] 신규 데이터임을 백엔드에 알리기 위한 플래그 추가
+        if (rowData._isNew) {
+            changes._isNew = true;
+        }
+
+        // 원본 데이터(식별용): 신규일 경우 null 또는 빈 객체
+        const originalData = rowData._isNew ? {} : {
+            rn: rowData.rn,
+            y: rowData.y,
+            b: rowData.b,
+            n: rowData.n
+            // 필요한 경우 기존 식별자 추가
+        };
+
         try {
             const res = await fetch('/api/record/request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    original: originalData, // 식별용 원본
-                    modified: changes       // 변경된 데이터
+                    original: originalData,
+                    modified: changes
                 })
             });
 
             if (res.ok) {
-                alert('수정 요청이 접수되었습니다. (새벽 3시 반영)');
+                alert(rowData._isNew ? '신규 등록 요청이 접수되었습니다.' : '수정 요청이 접수되었습니다.');
                 params.data._editing = false;
-                params.data._isPending = true; // 즉시 반영된 것처럼 표시
-                delete params.data._original;
+                params.data._isPending = true;
+                params.data._isNew = false; // 저장 후엔 더 이상 신규가 아님
                 params.api.refreshCells({ rowNodes: [params.node], force: true });
-                params.api.redrawRows({ rowNodes: [params.node] }); // 스타일 적용
             } else {
-                const err = await res.json();
-                alert('오류: ' + err.message);
+                alert('요청 실패: ' + res.statusText);
             }
-        } catch (e) {
+        } catch (err) {
+            console.error(err);
             alert('서버 통신 오류');
         }
     }
+    
 
     const checkChartsReady = setInterval(() => {
         if (window.AgChart || (window.agCharts && window.agCharts.AgChart)) {

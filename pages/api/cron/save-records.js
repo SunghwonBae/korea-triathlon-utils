@@ -45,16 +45,24 @@ export default async function handler(req, res) {
     pendingRequests.forEach(req => {
       const changes = JSON.parse(req.updatedFields);
       
-      const targetIndex = records.findIndex(r => 
-        r.rn === req.raceName && 
-        r.y === req.year && 
-        r.b === req.bib && 
-        r.n === req.name
-      );
-
-      if (targetIndex !== -1) {
-        records[targetIndex] = { ...records[targetIndex], ...changes };
+      // [수정] 신규 등록 처리
+      if (changes._isNew) {
+        delete changes._isNew; // 플래그 제거
+        records.push(changes); // 배열에 추가
         processedIds.push(req.id);
+      } else {
+        // [기존] 수정 처리
+        const targetIndex = records.findIndex(r => 
+          r.rn === req.raceName && 
+          r.y === req.year && 
+          r.b === req.bib && 
+          r.n === req.name
+        );
+
+        if (targetIndex !== -1) {
+          records[targetIndex] = { ...records[targetIndex], ...changes };
+          processedIds.push(req.id);
+        }
       }
     });
 
