@@ -788,9 +788,11 @@
         // 3. [질문하신 부분] 그리드 생성 및 API 할당
         const gridDiv = document.querySelector('#myGrid');
         gridApi = agGrid.createGrid(gridDiv, gridOptions);
+
+        gridOptions.isExternalFilterPresent = () => searchFilters.length > 0 || (sliders.to && isSliderActive());
     }
 
-    gridOptions.isExternalFilterPresent = () => searchFilters.length > 0 || (sliders.to && isSliderActive());
+
     function isSliderActive() { return true; }
 
     function updateRowCount(total, filtered) {
@@ -941,7 +943,7 @@
             alert('서버 통신 오류');
         }
     }
-    
+
     const checkChartsReady = setInterval(() => {
         if (window.AgChart || (window.agCharts && window.agCharts.AgChart)) {
             clearInterval(checkChartsReady);
