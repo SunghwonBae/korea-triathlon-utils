@@ -658,7 +658,7 @@
                 width: 130,
                 pinned: 'right', // 오른쪽에 고정
                 editable: false,
-                cellRenderer: ActionButtonRenderer // 아래에서 정의할 함수
+                cellRenderer: addEditButton // 아래에서 정의할 함수
             },
     ];
 
@@ -724,6 +724,101 @@
                     rowIndex: params.node.rowIndex,
                     colKey: 'n' // 처음 편집을 시작할 컬럼 ID
                 });
+            };
+            container.appendChild(editBtn);
+        }
+
+        return container;
+    }
+
+    function addEditButton(params) {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.gap = '5px'; // 버튼 사이 간격
+        container.style.justifyContent = 'center';
+        container.style.alignItems = 'center';
+        container.style.height = '100%';
+
+        // 현재 이 행이 수정 모드인지 확인
+        const isEditing = params.data._editing === true;
+
+        if (isEditing) {
+            // [상태 1: 수정 중] -> '저장' 버튼과 '취소' 버튼 표시
+            
+            // 1. 저장 버튼
+            const saveBtn = document.createElement('button');
+            saveBtn.innerText = '저장';
+            saveBtn.className = 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs';
+            saveBtn.onclick = (e) => {
+                e.stopPropagation(); // 로우 선택 방지
+                
+                // 편집 종료 (현재 열려있는 입력창 닫기)
+                params.api.stopEditing();
+
+                // 1. 수정 모드 해제
+                params.data._editing = false;
+                
+                // 2. 서버 저장 로직 호출
+                if (typeof saveRow === 'function') {
+                    saveRow(params); // DB 업데이트 요청
+                } else {
+                    alert("저장 함수가 없습니다.");
+                }
+
+                // 3. 그리드 화면 갱신 (스타일 원상복구)
+                params.api.refreshCells({ rowNodes: [params.node], force: true });
+            };
+            container.appendChild(saveBtn);
+
+            // 2. 취소 버튼
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerText = '취소';
+            cancelBtn.className = 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded text-xs';
+            cancelBtn.onclick = (e) => {
+                e.stopPropagation();
+                
+                // 편집 종료
+                params.api.stopEditing(true); // true = 변경사항 취소
+
+                // 원본 데이터로 복구 (백업해둔 데이터가 있다면)
+                if (params.data._originalData) {
+                    Object.assign(params.data, params.data._originalData);
+                }
+
+                // 수정 모드 해제 및 갱신
+                params.data._editing = false;
+                params.api.refreshCells({ rowNodes: [params.node], force: true });
+            };
+            container.appendChild(cancelBtn);
+
+        } else {
+            // [상태 2: 일반 보기] -> '수정' 버튼 표시
+            const editBtn = document.createElement('button');
+            editBtn.innerText = '수정';
+            editBtn.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+
+                // 로그인 체크 (필요시)
+                // if (!checkLogin()) return; 
+
+                // 1. 현재 데이터 백업 (취소 시 복구용)
+                params.data._originalData = { ...params.data };
+
+                // 2. 수정 모드 활성화 플래그 설정
+                params.data._editing = true;
+
+                // 3. 그리드 갱신 (CSS 스타일 적용을 위해 필수)
+                // force: true를 해야 cellClass 규칙이 다시 적용됨
+                params.api.refreshCells({ rowNodes: [params.node], force: true });
+
+                // 4. (선택사항) '이름' 컬럼부터 바로 커서 깜빡이게 하기
+                setTimeout(() => {
+                    params.api.startEditingCell({
+                        rowIndex: params.node.rowIndex,
+                        colKey: 'n' // 이름 컬럼 필드명
+                    });
+                }, 100);
             };
             container.appendChild(editBtn);
         }
