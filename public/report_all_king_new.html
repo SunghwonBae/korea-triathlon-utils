@@ -1584,7 +1584,8 @@
         const newData = processTransitionData(data, limit);
         adjustChartHeight('transitionRankChart', newData.length, 20);
         transitionRankOptions.data = newData;
-        window.AgChart.update(transitionRankChart, transitionRankOptions);
+        const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+        if (AgChart) AgChart.update(transitionRankChart, transitionRankOptions);
     }
 
     function processRaceDifficultyData(data) {
@@ -1641,7 +1642,8 @@
         
         adjustChartHeight('raceDifficultyChart', pData.length, 20);
         raceDifficultyOptions.data = pData;
-        window.AgChart.update(raceDifficultyChart, raceDifficultyOptions);
+        const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+        if (AgChart) AgChart.update(raceDifficultyChart, raceDifficultyOptions);
     }
     function updateprocessSub10ListData(data) {
         if (!sub10ListChart) return;
@@ -1683,7 +1685,8 @@
         adjustChartHeight('sub10ListChart', pData.length);
         sub10ListOptions.data = pData;
         sub10ListOptions.title.text = `총 ${pData.length}건`;
-        window.AgChart.update(sub10ListChart, sub10ListOptions);
+        const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+        if (AgChart) AgChart.update(sub10ListChart, sub10ListOptions);
     }
 
     function processSub10ListData(data) {
