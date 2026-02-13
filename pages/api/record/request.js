@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     await prisma.recordRequest.create({
       data: {
         raceName: original.rn,
-        year: original.y,
+        year: original.rd || original.y || original.year,
         bib: original.b,
         name: original.n,
         updatedFields: JSON.stringify(modified), // 수정된 내용만 JSON 문자열로 저장
