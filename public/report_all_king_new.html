@@ -650,7 +650,25 @@
             return [];
         }
     }
-
+    // [추가] 헤더에 [신규] 버튼을 렌더링할 클래스
+    class CustomHeader {
+        init(params) {
+            this.eGui = document.createElement('div');
+            this.eGui.style.display = "flex";
+            this.eGui.style.alignItems = "center";
+            this.eGui.style.justifyContent = "center";
+            
+            this.eGui.innerHTML = `
+                <span>관리</span>
+                <button onclick="onAddRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 ml-2 rounded text-xs shadow-sm transition-colors">
+                    <i class="fas fa-plus mr-1"></i>신규
+                </button>
+            `;
+        }
+        getGui() {
+            return this.eGui;
+        }
+    }
     // Grid Column Definitions
     const columnDefs = [
         {
@@ -866,25 +884,7 @@
     }
 
 
-    // [추가] 헤더에 [신규] 버튼을 렌더링할 클래스
-    class CustomHeader {
-        init(params) {
-            this.eGui = document.createElement('div');
-            this.eGui.style.display = "flex";
-            this.eGui.style.alignItems = "center";
-            this.eGui.style.justifyContent = "center";
-            
-            this.eGui.innerHTML = `
-                <span>관리</span>
-                <button onclick="onAddRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 ml-2 rounded text-xs shadow-sm transition-colors">
-                    <i class="fas fa-plus mr-1"></i>신규
-                </button>
-            `;
-        }
-        getGui() {
-            return this.eGui;
-        }
-    }
+
 
     // [추가] 신규 행 추가 함수
     function onAddRow() {
