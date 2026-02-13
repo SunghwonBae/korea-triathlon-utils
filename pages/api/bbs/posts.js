@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         return res.json(categories.map(c => c.targetPage));
       }
 
-      // [상세 조회]
+      // [상세 조회] - 상세 화면은 정보가 구체적인 게 좋으므로 'YYYY-MM-DD HH:MM' 유지
       if (req.query.id) {
         const post = await prisma.post.findUnique({
           where: { id: Number(req.query.id) },
@@ -26,7 +26,6 @@ export default async function handler(req, res) {
 
         if (!post) return res.status(404).json({ error: '글 없음' });
 
-        // 날짜 포맷팅
         const dateObj = new Date(post.createdAt);
         const yyyy = dateObj.getFullYear();
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -37,7 +36,6 @@ export default async function handler(req, res) {
 
         return res.json({ 
             ...post, 
-            // ★ [수정됨] author 컬럼을 그대로 사용합니다.
             author: post.author || '익명', 
             authorImage: post.authorImage,     
             date: dateStr 
@@ -54,11 +52,9 @@ export default async function handler(req, res) {
       let noticeWhere = {};
       
       if (targetPage === 'ALL') {
-          // 관리자(전체) 모드
           whereClause = { noticeType: { in: [1, 2] } }; 
           noticeWhere = { noticeType: 0 }; 
       } else {
-          // 일반 모드
           whereClause = { targetPage: targetPage, noticeType: 2 };
           noticeWhere = {
             OR: [
@@ -89,22 +85,20 @@ export default async function handler(req, res) {
 
       // 데이터 가공 함수
       const processPosts = (list) => list.map(post => {
-        // ★ [수정됨] post.authorName이 아니라 post.author 입니다!
         const displayName = post.author || '익명';
         const displayImage = post.authorImage || '';
         
+        // ★ [수정됨] 목록용 짧은 날짜 포맷 (YY-MM-DD)
         const dateObj = new Date(post.createdAt);
-        const yyyy = dateObj.getFullYear();
+        const yy = String(dateObj.getFullYear()).slice(2); // 2026 -> 26
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const dd = String(dateObj.getDate()).padStart(2, '0');
-        const hour = String(dateObj.getHours()).padStart(2, '0');
-        const min = String(dateObj.getMinutes()).padStart(2, '0');
-        const dateStr = `${yyyy}-${mm}-${dd} ${hour}:${min}`;
+        const dateStr = `${yy}-${mm}-${dd}`; // 예: 26-02-13
 
         return {
             id: post.id,
             title: post.title,
-            author: displayName,  // 여기도 author
+            author: displayName, 
             authorId: post.authorId,
             authorImage: displayImage,
             date: dateStr,
@@ -122,7 +116,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // --- POST, PUT, DELETE ---
+    // --- (POST, PUT, DELETE 기존 로직 유지) ---
     const token = req.cookies.auth_token;
     if (!token) return res.status(401).json({ error: '로그인 필요' });
     
@@ -133,7 +127,6 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: '토큰 만료' });
     }
 
-    // 2. POST (글쓰기)
     if (req.method === 'POST') {
         const body = req.body;
         let nType = 2;
@@ -145,7 +138,6 @@ export default async function handler(req, res) {
                 content: body.content,
                 targetPage: body.targetPage || 'common',
                 authorId: user.naverId,
-                // ★ [수정됨] authorName이 아니라 author 입니다! (어제 소스 복구)
                 author: user.name, 
                 authorImage: user.profileImage, 
                 noticeType: nType
@@ -154,7 +146,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
     }
 
-    // 3. PUT (수정)
     if (req.method === 'PUT') {
         const body = req.body;
         const post = await prisma.post.findUnique({ where: { id: body.id } });
@@ -171,7 +162,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
     }
 
-    // 4. DELETE (삭제)
     if (req.method === 'DELETE') {
         const postId = Number(req.query.id);
         const post = await prisma.post.findUnique({ where: { id: postId } });

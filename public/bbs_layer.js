@@ -91,13 +91,22 @@ function bbsOpenLoginPopup() {
     window.open('/api/auth/login', 'naver_login_popup', `width=${width},height=${height},top=${top},left=${left}`);
 }
 
+// ★ [수정됨] 공지 옵션 생성 로직
 let noticeOptionsHtml = '';
 if (currentUser && currentUser.isAdmin) {
+    let options = `
+        <label><input type="radio" name="noticeType" value="2" checked> 일반글</label>
+        <label style="color:#03C75A;"><input type="radio" name="noticeType" value="1"> [공지]</label>
+    `;
+
+    // ★ 관리자 모드일 때만 '전체공지' 옵션을 보여줌
+    if (isManagerMode) {
+        options += `<label style="color:#d9534f;"><input type="radio" name="noticeType" value="0"> [전체공지]</label>`;
+    }
+
     noticeOptionsHtml = `
         <div style="margin-bottom:10px; display:flex; gap:15px; font-size:0.9rem; font-weight:bold;">
-            <label><input type="radio" name="noticeType" value="2" checked> 일반글</label>
-            <label style="color:#03C75A;"><input type="radio" name="noticeType" value="1"> [공지]</label>
-            <label style="color:#d9534f;"><input type="radio" name="noticeType" value="0"> [전체공지]</label>
+            ${options}
         </div>
     `;
 }
@@ -417,8 +426,15 @@ function renderPostRow(p, isNotice) {
         }
     }
 
+    // ★ [수정됨] 관리자 모드 + 전체 보기일 때 로직
     if (isManagerMode && bbsTargetPage === 'ALL' && !isNotice) {
+        // 1. 페이지 뱃지
         titlePrefix += `<span style="font-size:0.75rem; color:#888; border:1px solid #ddd; border-radius:3px; padding:0 4px; margin-right:4px;">${p.targetPage}</span>`;
+        
+        // 2. ★ [공지] 뱃지 추가 (noticeType이 1이면)
+        if (p.noticeType === 1) {
+            titlePrefix += `<span style="color:#03C75A; font-weight:bold; margin-right:4px; font-size:0.85rem;">[공지]</span>`;
+        }
     }
 
     const cmtCount = p.commentCount > 0 ? `<span class="bbs-comment-count">[${p.commentCount}]</span>` : '';
@@ -474,7 +490,6 @@ function renderPagination(total, current) {
     container.innerHTML = html;
 }
 
-// ★ [수정됨] 글 저장 함수 (유효성 검사 추가)
 async function bbsSavePost() {
     const title = document.getElementById('bbs-write-title').value;
     let content = '';
@@ -487,30 +502,25 @@ async function bbsSavePost() {
         return;
     }
 
-    // Notice Type 가져오기 (0: 전체공지, 1: 페이지공지, 2: 일반)
     let noticeType = 2;
     const radios = document.getElementsByName('noticeType');
     if (radios.length > 0) {
         for(let r of radios) { if(r.checked) noticeType = parseInt(r.value); }
     }
 
-    // ★ [관리자 모드 로직 추가]
     let finalTargetPage = bbsTargetPage;
 
     if (isManagerMode) {
-        // 관리자 모드면 셀렉트 박스 값을 우선 확인
         const selectEl = document.getElementById('bbs-manager-select');
         if (selectEl) finalTargetPage = selectEl.value;
 
-        // 1. 전체공지(0)면 무조건 'ALL'로 강제
         if (noticeType === 0) {
             finalTargetPage = 'ALL';
-        } 
-        // 2. 일반(2)이나 공지(1)인데 'ALL'이 선택되어 있으면 저장 막음
-        else {
+        } else {
             if (finalTargetPage === 'ALL') {
-                showToast("일반글이나 페이지 공지는 '전체 게시글(ALL)' 카테고리에 작성할 수 없습니다.\n우측 상단에서 구체적인 페이지를 선택해주세요.");
-                return; // 저장 중단
+                if(typeof showToast === 'function') showToast("일반글이나 페이지 공지는 '전체 게시글(ALL)' 카테고리에 작성할 수 없습니다. 우측 상단에서 구체적인 페이지를 선택해주세요.");
+                else alert("일반글이나 페이지 공지는 '전체 게시글(ALL)' 카테고리에 작성할 수 없습니다.\n우측 상단에서 구체적인 페이지를 선택해주세요.");
+                return;
             }
         }
     }
