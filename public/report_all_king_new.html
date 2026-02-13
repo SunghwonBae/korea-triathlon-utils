@@ -636,26 +636,79 @@
                 btn.onclick = (e) => { e.stopPropagation(); saveRowToMemory(params); };
                 return btn;
             },
+            editable: false,
             cellStyle: { 'text-align': 'center' }
         },
-        { headerName: "이름", field: "n", width: 110, sortable: true, filter: 'agTextColumnFilter', cellClass: 'bold-cell', pinned: 'left' },
-        { headerName: "성별", field: "g", width: 80, filter: true },
-        { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true },
-        { headerName: "국가/클럽", field: "c", width: 130, sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: "Total", field: "to", width: 110, sortable: true,  valueFormatter: timeFormatter, cellStyle: { 'font-weight': 'bold' } },
-        { headerName: "Swim", field: "sw", width: 100, sortable: true,  valueFormatter: timeFormatter, cellClass: 'swim-cell' },
-        { headerName: "T1", field: "t1", width: 80, sortable: true, valueFormatter: params => sToMs(params.value) },
-        { headerName: "Bike", field: "bi", width: 100, sortable: true, valueFormatter: timeFormatter, cellClass: 'bike-cell' },
-        { headerName: "T2", field: "t2", width: 80, sortable: true, valueFormatter: params => sToMs(params.value) },
-        { headerName: "Run", field: "ru", width: 100, sortable: true,  valueFormatter: timeFormatter, cellClass: 'run-cell' },
-        { headerName: "배번", field: "b", width: 90, sortable: true, filter: 'agTextColumnFilter' },
-        { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' },
+        { headerName: "이름", field: "n", width: 110, sortable: true, 
+                // [중요] _editing 값이 true일 때만 수정 가능하게 설정
+                editable: (params) => params.data._editing, 
+                // [중요] 수정 모드일 때 입력창 스타일(테두리) 적용
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+                filter: 'agTextColumnFilter', cellClass: 'bold-cell', pinned: 'left' },
+        { headerName: "성별", field: "g", width: 80, filter: true, 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+        },
+        { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true, editable: false },
+        { headerName: "국가/클럽", field: "c", width: 130, sortable: true,                 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '', filter: 'agTextColumnFilter' },
+        { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter', editable: false },
+        { headerName: "Total", field: "to", width: 110, sortable: true, 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+                valueFormatter: timeFormatter, cellStyle: { 'font-weight': 'bold' } },
+        { headerName: "Swim", field: "sw", width: 100, sortable: true,  
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => {
+                    const classes = []; 
+                        classes.push('swim-cell');
+                    if (params.data._editing) {
+                        classes.push('cell-editable-look');
+                    }
+                    return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
+                },
+                valueFormatter: timeFormatter  },
+        { headerName: "T1", field: "t1", width: 80, sortable: true, 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+                valueFormatter: params => sToMs(params.value) },
+        { headerName: "Bike", field: "bi", width: 100, sortable: true, 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => {
+                    const classes = []; 
+                        classes.push('bike-cell');
+                    if (params.data._editing) {
+                        classes.push('cell-editable-look');
+                    }
+                    return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
+                },
+                valueFormatter: timeFormatter  },
+        { headerName: "T2", field: "t2", width: 80, sortable: true, 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+                valueFormatter: params => sToMs(params.value) },
+        { headerName: "Run", field: "ru", width: 100, sortable: true,                  
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => {
+                    const classes = []; 
+                        classes.push('run-cell');
+                    if (params.data._editing) {
+                        classes.push('cell-editable-look');
+                    }
+                    return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
+                },
+                valueFormatter: timeFormatter  },
+        { headerName: "배번", field: "b", width: 90, sortable: true, 
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+                filter: 'agTextColumnFilter' },
+        { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' ,editable: false},
         // [추가] 맨 끝에 수정/확인 버튼 컬럼
             {
                 headerName: "관리",
                 field: "action",
-                width: 130,
+                width: 110,
                 pinned: 'right', // 오른쪽에 고정
                 editable: false,
                 cellRenderer: addEditButton // 아래에서 정의할 함수
@@ -836,12 +889,6 @@
             defaultColDef: {
                 resizable: true, sortable: true,
                 filterParams: { buttons: ['reset', 'apply'], closeOnApply: true },
-
-                // [중요] _editing 값이 true일 때만 수정 가능하게 설정
-                editable: (params) => params.data._editing, 
-                
-                // [중요] 수정 모드일 때 입력창 스타일(테두리) 적용
-                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
             },
             // 행 스타일: 수정 대기 상태인 경우 배경색 변경
             getRowStyle: params => {
