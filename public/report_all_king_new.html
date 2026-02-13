@@ -582,7 +582,36 @@
         }).join(' ').toLowerCase();
     }
 
+    // [입력값(문자열) -> 초(정수)] 사용자가 입력한 값을 데이터로 저장할 때 사용
+    function parseTime(params) {
+        const val = params.newValue;
+        
+        // 값이 없거나 숫자면 그대로 리턴
+        if (!val && val !== 0) return 0;
+        if (typeof val === 'number') return val;
 
+        // "시:분:초" 또는 "분:초"를 구분자로 분리
+        // 콜론(:), 점(.), 혹은 띄어쓰기 등으로 구분 가능하게 처리
+        const parts = val.toString().split(/[:.\s]+/).map(Number);
+        
+        // 숫자가 아닌 값이 포함되어 있으면 원래 값 유지(입력 취소 효과)
+        if (parts.some(isNaN)) return params.oldValue;
+
+        let seconds = 0;
+        
+        if (parts.length === 3) { 
+            // 시:분:초 (예: 10:30:00)
+            seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+        } else if (parts.length === 2) { 
+            // 분:초 (예: 30:00 -> 30분 0초)
+            seconds = (parts[0] * 60) + parts[1];
+        } else if (parts.length === 1) { 
+            // 숫자만 입력하면 그냥 초 단위로 인식 (필요에 따라 정책 결정)
+            seconds = parts[0];
+        }
+
+        return seconds;
+    }
     // [추가] 데이터 로드 및 병합 함수
     async function loadMergedData() {
         try {
@@ -657,7 +686,12 @@
         { headerName: "Total", field: "to", width: 110, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
-                valueFormatter: timeFormatter, cellStyle: { 'font-weight': 'bold' } },
+                valueFormatter: timeFormatter, 
+                valueParser: parseTime,
+                cellEditorParams: {
+                    useFormatter: true
+                },
+                cellStyle: { 'font-weight': 'bold' } },
         { headerName: "Swim", field: "sw", width: 100, sortable: true,  
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => {
@@ -668,11 +702,19 @@
                     }
                     return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
                 },
-                valueFormatter: timeFormatter  },
+                valueFormatter: timeFormatter, 
+                valueParser: parseTime,
+                cellEditorParams: {
+                    useFormatter: true
+                }},
         { headerName: "T1", field: "t1", width: 80, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
-                valueFormatter: params => sToMs(params.value) },
+                valueFormatter: params => sToMs(params.value),
+                valueParser: parseTime,
+                cellEditorParams: {
+                    useFormatter: true
+                } },
         { headerName: "Bike", field: "bi", width: 100, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => {
@@ -683,11 +725,19 @@
                     }
                     return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
                 },
-                valueFormatter: timeFormatter  },
+                valueFormatter: timeFormatter ,
+                valueParser: parseTime,
+                cellEditorParams: {
+                    useFormatter: true
+                } },
         { headerName: "T2", field: "t2", width: 80, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
-                valueFormatter: params => sToMs(params.value) },
+                valueFormatter: params => sToMs(params.value),
+                valueParser: parseTime,
+                cellEditorParams: {
+                    useFormatter: true
+                } },
         { headerName: "Run", field: "ru", width: 100, sortable: true,                  
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => {
@@ -698,7 +748,11 @@
                     }
                     return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
                 },
-                valueFormatter: timeFormatter  },
+                valueFormatter: timeFormatter,
+                valueParser: parseTime,
+                cellEditorParams: {
+                    useFormatter: true
+                } },
         { headerName: "배번", field: "b", width: 90, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
