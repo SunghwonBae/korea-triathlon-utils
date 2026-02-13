@@ -1082,11 +1082,10 @@
         }
     }
 
-
     async function saveRow(params) {
         const rowData = params.data;
         
-        // [유효성 검사] 신규 등록 시 필수 키값 확인
+        // 1. 유효성 검사 (신규일 때 필수값 체크)
         if (rowData._isNew) {
             if (!rowData.rn || !rowData.y || !rowData.b || !rowData.n) {
                 alert("신규 등록 시 [대회명, 연도, 배번호, 이름]은 필수 입력 사항입니다.");
@@ -1094,24 +1093,38 @@
             }
         }
 
-        // 변경된 데이터 수집 (기존 로직 활용)
-        const changes = { ...rowData };
-        // 불필요한 UI 플래그 제거
-        delete changes._editing;
-        delete changes._isPending;
-        
-        // [중요] 신규 데이터임을 백엔드에 알리기 위한 플래그 추가
-        if (rowData._isNew) {
-            changes._isNew = true;
-        }
+        // 2. [핵심] 서버(DB/JSON)에 저장할 포맷으로 데이터 정제
+        // 내부적으로 사용하는 변수(to, sw, bi 등)를 JSON 표준 키(t, s, bk 등)로 변환
+        const cleanData = {
+            // 식별자 및 기본 정보
+            n: rowData.n,
+            y: String(rowData.y), // 연도는 문자열로
+            rn: rowData.rn,
+            b: String(rowData.b),
+            rt: rowData.rt || 'Ironman',
+            d: rowData.d || '',
+            c: rowData.c || '',
+            q: rowData.q || '',
+            
+            // 기록 데이터 (입력된 값이 있으면 우선 사용, 없으면 내부 변수 사용)
+            // 화면에서 수정하면 t, s 등에 값이 들어가고, 초기 로딩값은 to, sw 등에 있을 수 있음
+            t:  Number(rowData.t  || rowData.to || 0),
+            s:  Number(rowData.s  || rowData.sw || 0),
+            bk: Number(rowData.bk || rowData.bi || 0), // bike는 bk
+            r:  Number(rowData.r  || rowData.ru || 0), // run은 r
+            t1: Number(rowData.t1 || 0),
+            t2: Number(rowData.t2 || 0),
+            
+            // 메타 데이터 (필요한 경우만)
+            _isNew: rowData._isNew ? true : undefined
+        };
 
-        // 원본 데이터(식별용): 신규일 경우 null 또는 빈 객체
+        // 3. 원본 데이터 식별자 (수정 시 사용)
         const originalData = rowData._isNew ? {} : {
             rn: rowData.rn,
             y: rowData.y,
             b: rowData.b,
             n: rowData.n
-            // 필요한 경우 기존 식별자 추가
         };
 
         try {
@@ -1120,22 +1133,29 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     original: originalData,
-                    modified: changes
+                    modified: cleanData // 정제된 깔끔한 데이터 전송
                 })
             });
 
             if (res.ok) {
                 alert(rowData._isNew ? '신규 등록 요청이 접수되었습니다.' : '수정 요청이 접수되었습니다.');
+                
+                // 화면 갱신 (저장 성공 표시)
                 params.data._editing = false;
                 params.data._isPending = true;
-                params.data._isNew = false; // 저장 후엔 더 이상 신규가 아님
+                params.data._isNew = false;
+                
+                // [중요] 화면 데이터도 정제된 값으로 동기화 (그래야 즉시 올바르게 보임)
+                Object.assign(params.data, cleanData); 
+                
                 params.api.refreshCells({ rowNodes: [params.node], force: true });
             } else {
-                alert('요청 실패: ' + res.statusText);
+                const errData = await res.json();
+                alert('요청 실패: ' + (errData.message || res.statusText));
             }
         } catch (err) {
             console.error(err);
-            alert('서버 통신 오류');
+            alert('서버 통신 오류가 발생했습니다.');
         }
     }
     
