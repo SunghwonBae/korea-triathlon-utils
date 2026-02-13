@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       // [수정] 신규 등록 처리
       if (changes._isNew) {
         delete changes._isNew; // 플래그 제거
-        records.push(changes); // 배열에 추가
+        records.unshift(changes); // 배열 맨 앞에 추가 (신규 등록은 최신 순으로 정렬)
         processedIds.push(req.id);
       } else {
         // [기존] 수정 처리
