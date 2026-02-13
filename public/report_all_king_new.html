@@ -899,10 +899,12 @@
         // 그리드 최상단에 추가
         gridOptions.api.applyTransaction({ add: [newRow], addIndex: 0 });
     }
-
+    
+    let gridOptions = null;
+    
     async function initGrid(rowData) {
 
-        const gridOptions = {
+        gridOptions = {
             rowData: rowData,
             columnDefs: columnDefs,
             localeText: KR_LOCALE,
