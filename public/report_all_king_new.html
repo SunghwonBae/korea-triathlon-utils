@@ -1660,6 +1660,7 @@
         ];
 
         if (toggle.checked) {
+            console.log('Excluding foreign countries from Sub-10 list');
             pData = pData.filter( d => {
                     // processSub10ListData에서 이미 파싱된 year 사용 (문자열일 수 있으므로 변환)
                     let year = parseInt(d.year || "0");
@@ -1668,8 +1669,10 @@
                        if (!d.c) return true; // 값이 없으면 한국으로 간주
 
                         const clubOrCountry = String(d.c).trim().toUpperCase();
+                        console.log(`Checking entry: ${d.label}, Club/Country: ${clubOrCountry}`);
                         // 외국 국가 리스트에 있으면 제외
                         if (FOREIGN_CODES.includes(clubOrCountry)) {
+                            console.log(`Excluding foreign entry: ${d.label} (${clubOrCountry})`);
                             return false;
                         }
                     }
