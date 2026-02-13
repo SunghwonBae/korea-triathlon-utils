@@ -5,10 +5,15 @@ import { Octokit } from "@octokit/rest"; // npm install @octokit/rest 필요
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-  // Cron 보안 체크 (Vercel Cron 헤더 확인)
-  const authHeader = req.headers.get('authorization');
-  if (req.query.key !== process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    // return res.status(401).end('Unauthorized'); // 테스트를 위해 주석 처리 가능
+// 1. Vercel Cron 자동 실행 (CRON_SECRET)
+  const isVercelCron = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+  
+  // 2. 관리자 수동 실행 (MANUAL_CRON_KEY) -> 님이 정한 비번
+  const isManualRun = req.query.key === process.env.MANUAL_CRON_KEY;
+
+  // 둘 다 아니면 차단
+  if (!isVercelCron && !isManualRun) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
