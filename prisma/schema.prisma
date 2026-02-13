@@ -43,3 +43,31 @@ model User {
   lastLogin    DateTime @default(now())
   createdAt    DateTime @default(now())
 }
+
+// 기존 모델들 아래에 추가
+
+model RecordRequest {
+  id        Int      @id @default(autoincrement())
+  
+  // 원본 레코드 식별 키 (Composite Key 역할)
+  raceName  String   // rn: 대회명
+  year      String   // y: 연도
+  bib       String   // b: 배번
+  name      String   // n: 이름
+  
+  // 수정할 데이터 (JSON 형태로 저장하여 유연성 확보)
+  // 예: { "t": 36000, "r": 12000 }
+  updatedFields String 
+
+  // 상태 관리
+  status    String   @default("PENDING") // PENDING(대기), COMPLETED(반영완료)
+  
+  // 요청자 정보
+  requester String   // 네이버 아이디 또는 이름
+  
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+  
+  // 식별 키에 인덱스 걸기 (검색 속도 향상)
+  @@index([raceName, year, bib, name])
+}

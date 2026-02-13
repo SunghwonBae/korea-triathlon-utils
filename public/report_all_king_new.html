@@ -570,6 +570,45 @@
     }
 
 
+    // [추가] 데이터 로드 및 병합 함수
+    async function loadMergedData() {
+        try {
+            // 1. 원본 JSON 로드
+            const jsonRes = await fetch('all_records_v2.json');
+            let records = await jsonRes.json();
+
+            // 2. DB의 수정 대기(PENDING) 데이터 로드
+            const pendingRes = await fetch('/api/record/pending');
+            const pendingList = await pendingRes.json();
+
+            // 3. 데이터 병합 (JSON + DB)
+            pendingList.forEach(req => {
+                const changes = JSON.parse(req.updatedFields);
+                // 식별자로 원본 데이터 찾기
+                const targetIndex = records.findIndex(r => 
+                    r.rn === req.raceName && 
+                    r.y === req.year && 
+                    r.b === req.bib && 
+                    r.n === req.name
+                );
+
+                if (targetIndex !== -1) {
+                    // 원본 데이터에 수정 사항 덮어쓰기 & 상태 표시 추가
+                    records[targetIndex] = { 
+                        ...records[targetIndex], 
+                        ...changes, 
+                        _isPending: true // UI 표시용 플래그
+                    };
+                }
+            });
+
+            return records;
+        } catch (e) {
+            console.error("데이터 로드 실패", e);
+            return [];
+        }
+    }
+
     // Grid Column Definitions
     const columnDefs = [
         {
@@ -599,6 +638,15 @@
         { headerName: "Run", field: "ru", width: 100, sortable: true,  valueFormatter: timeFormatter, cellClass: 'run-cell' },
         { headerName: "배번", field: "b", width: 90, sortable: true, filter: 'agTextColumnFilter' },
         { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' },
+        // [추가] 맨 끝에 수정/확인 버튼 컬럼
+            {
+                headerName: "관리",
+                field: "action",
+                width: 130,
+                pinned: 'right', // 오른쪽에 고정
+                editable: false,
+                cellRenderer: ActionButtonRenderer // 아래에서 정의할 함수
+            },
     ];
 
     let sliders = {};
@@ -610,60 +658,137 @@
         filterOoo: '검색...', applyFilter: '확인', resetFilter: '초기화', blank: '공백', notBlank: '공백 아님'
     };
 
-    const gridOptions = {
-        columnDefs: columnDefs,
-        localeText: KR_LOCALE,
-        enableCellTextSelection: true,
-        defaultColDef: {
-            resizable: true, sortable: true,
-            filterParams: { buttons: ['reset', 'apply'], closeOnApply: true }
-        },
-        rowBuffer: 10,
-        animateRows: true,
-        pagination: true,
-        paginationPageSize: 100,
-        isExternalFilterPresent: () => searchFilters.length > 0,
-        doesExternalFilterPass: (node) => {
-            const data = node.data;
+    function ActionButtonRenderer(params) {
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.gap = '5px';
+        container.style.alignItems = 'center';
+        container.style.height = '100%';
 
-            // 헬퍼 함수: 슬라이더가 전체 범위인지 확인
-            const isFullRange = (slider) => {
-                const [currentMin, currentMax] = slider.get().map(Number);
-                const { min, max } = slider.options.range;
-                return (Math.abs(currentMin - min) < 0.1 && Math.abs(currentMax - max) < 0.1);
+        // 1. 수정 대기 상태일 때
+        if (params.data._isPending) {
+            container.innerHTML = `<span style="color: #ed8936; font-size: 12px; font-weight: bold;">[수정대기]</span>`;
+            return container;
+        }
+
+        // 2. 수정 모드일 때 (확인/취소 버튼)
+        if (params.data._editing) {
+            const saveBtn = document.createElement('button');
+            saveBtn.innerText = '확인';
+            saveBtn.className = 'bg-blue-500 text-white px-2 py-1 rounded text-xs';
+            saveBtn.onclick = () => saveRecordChange(params);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerText = '취소';
+            cancelBtn.className = 'bg-gray-500 text-white px-2 py-1 rounded text-xs';
+            cancelBtn.onclick = () => {
+                params.data._editing = false;
+                gridApi.applyTransaction({ update: [params.data] });
+                gridApi.stopEditing(true); // 취소
             };
 
-            // 1. 슬라이더 필터 체크
-            if (sliders.to && !isFullRange(sliders.to)) {
-                const [min, max] = sliders.to.get().map(Number);
-                if (data.to < min || data.to > max) return false;
-            }
-            if (sliders.sw && !isFullRange(sliders.sw)) {
-                const [min, max] = sliders.sw.get().map(Number);
-                if (data.sw < min || data.sw > max) return false;
-            }
-            if (sliders.bi && !isFullRange(sliders.bi)) {
-                const [min, max] = sliders.bi.get().map(Number);
-                if (data.bi < min || data.bi > max) return false;
-            }
-            if (sliders.ru && !isFullRange(sliders.ru)) {
-                const [min, max] = sliders.ru.get().map(Number);
-                if (data.ru < min || data.ru > max) return false;
-            }
+            container.appendChild(saveBtn);
+            container.appendChild(cancelBtn);
+        } 
+        // 3. 일반 모드일 때 (수정 버튼)
+        else {
+            const editBtn = document.createElement('button');
+            editBtn.innerText = '수정';
+            editBtn.className = 'bg-green-600 text-white px-2 py-1 rounded text-xs';
+            editBtn.onclick = () => {
+                // 네이버 로그인 체크 (bbs_layer.js 내 함수 활용)
+                const user = getUserInfo(); 
+                if (!user) {
+                    alert('로그인이 필요한 기능입니다.');
+                    if (typeof bbsOpenLoginPopup === 'function') bbsOpenLoginPopup();
+                    return;
+                }
+                
+                params.data._editing = true;
+                params.data._original = { ...params.data }; // 백업
+                gridApi.applyTransaction({ update: [params.data] });
+                gridApi.startEditingCell({
+                    rowIndex: params.node.rowIndex,
+                    colKey: 't' // 처음 편집을 시작할 컬럼 ID
+                });
+            };
+            container.appendChild(editBtn);
+        }
 
-            // 2. 검색어 필터 체크
-            if (searchFilters.length === 0) return true;
-            const rowString = getRowSearchString(node.data);
-            let result = rowString.includes(searchFilters[0].term);
-            for (let i = 1; i < searchFilters.length; i++) {
-                const filter = searchFilters[i];
-                const match = rowString.includes(filter.term);
-                if (filter.logic === 'AND') result = result && match;
-                else result = result || match;
-            }
-            return result;
-        },
-    };
+        return container;
+    }
+
+    async function initGrid() {
+        // 1. 데이터 가져오기 (JSON + DB 병합)
+        const rowData = await loadMergedData();
+
+        const gridOptions = {
+            rowData: rowData,
+            columnDefs: columnDefs,
+            localeText: KR_LOCALE,
+            enableCellTextSelection: true,
+            defaultColDef: {
+                resizable: true, sortable: true,
+                filterParams: { buttons: ['reset', 'apply'], closeOnApply: true },
+                // 수정 모드일 때만 편집 가능하도록 설정
+                editable: (params) => params.data._editing === true
+            },
+            // 행 스타일: 수정 대기 상태인 경우 배경색 변경
+            getRowStyle: params => {
+                if (params.data && params.data._isPending) {
+                    return { background: '#fffbe6' }; // 연한 노란색
+                }
+            },
+            rowBuffer: 10,
+            animateRows: true,
+            pagination: true,
+            paginationPageSize: 100,
+            isExternalFilterPresent: () => searchFilters.length > 0,
+            doesExternalFilterPass: (node) => {
+                const data = node.data;
+
+                // 헬퍼 함수: 슬라이더가 전체 범위인지 확인
+                const isFullRange = (slider) => {
+                    const [currentMin, currentMax] = slider.get().map(Number);
+                    const { min, max } = slider.options.range;
+                    return (Math.abs(currentMin - min) < 0.1 && Math.abs(currentMax - max) < 0.1);
+                };
+
+                // 1. 슬라이더 필터 체크
+                if (sliders.to && !isFullRange(sliders.to)) {
+                    const [min, max] = sliders.to.get().map(Number);
+                    if (data.to < min || data.to > max) return false;
+                }
+                if (sliders.sw && !isFullRange(sliders.sw)) {
+                    const [min, max] = sliders.sw.get().map(Number);
+                    if (data.sw < min || data.sw > max) return false;
+                }
+                if (sliders.bi && !isFullRange(sliders.bi)) {
+                    const [min, max] = sliders.bi.get().map(Number);
+                    if (data.bi < min || data.bi > max) return false;
+                }
+                if (sliders.ru && !isFullRange(sliders.ru)) {
+                    const [min, max] = sliders.ru.get().map(Number);
+                    if (data.ru < min || data.ru > max) return false;
+                }
+
+                // 2. 검색어 필터 체크
+                if (searchFilters.length === 0) return true;
+                const rowString = getRowSearchString(node.data);
+                let result = rowString.includes(searchFilters[0].term);
+                for (let i = 1; i < searchFilters.length; i++) {
+                    const filter = searchFilters[i];
+                    const match = rowString.includes(filter.term);
+                    if (filter.logic === 'AND') result = result && match;
+                    else result = result || match;
+                }
+                return result;
+            },
+        };
+        // 3. [질문하신 부분] 그리드 생성 및 API 할당
+        const gridDiv = document.querySelector('#myGrid');
+        gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    }
 
     gridOptions.isExternalFilterPresent = () => searchFilters.length > 0 || (sliders.to && isSliderActive());
     function isSliderActive() { return true; }
@@ -675,9 +800,9 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const gridDiv = document.querySelector('#myGrid');
-        gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    document.addEventListener('DOMContentLoaded', async () => {
+
+        initGrid();
 
         gridApi.addEventListener('filterChanged', () => {
             const filteredData = [];
@@ -740,8 +865,83 @@
                  updateLegendaryFinishersChart(filteredData);
             }
         });
+
     });
 
+    // [로직] 수정 시작
+    function startEdit(params) {
+        // 1. 로그인 체크 (bbs_layer.js의 함수 활용)
+        const user = getUserInfo(); 
+        if (!user) {
+            alert('로그인이 필요한 기능입니다.');
+            // bbs_layer.js의 로그인 팝업 호출
+            if(typeof bbsOpenLoginPopup === 'function') bbsOpenLoginPopup();
+            return;
+        }
+
+        // 2. 해당 행을 수정 모드로 변경
+        params.data._editing = true;
+        params.data._original = { ...params.data }; // 취소 시 복구를 위해 백업
+        params.api.refreshCells({ rowNodes: [params.node], force: true });
+    }
+
+    // [로직] 수정 취소
+    function cancelRow(params) {
+        const original = params.data._original;
+        Object.assign(params.data, original);
+        params.data._editing = false;
+        delete params.data._original;
+        params.api.refreshCells({ rowNodes: [params.node], force: true });
+    }
+
+    // [로직] 수정 확인 (DB 저장 요청)
+    async function saveRow(params) {
+        params.api.stopEditing(); // 편집 종료 트리거
+
+        const modifiedData = params.data;
+        const originalData = modifiedData._original;
+        
+        // 변경된 필드만 추출
+        const changes = {};
+        Object.keys(modifiedData).forEach(key => {
+            if (key !== '_editing' && key !== '_original' && modifiedData[key] !== originalData[key]) {
+                changes[key] = modifiedData[key];
+            }
+        });
+
+        if (Object.keys(changes).length === 0) {
+            alert('변경된 내용이 없습니다.');
+            cancelRow(params);
+            return;
+        }
+
+        // API 호출
+        try {
+            const res = await fetch('/api/record/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    original: originalData, // 식별용 원본
+                    modified: changes       // 변경된 데이터
+                })
+            });
+
+            if (res.ok) {
+                alert('수정 요청이 접수되었습니다. (새벽 3시 반영)');
+                params.data._editing = false;
+                params.data._isPending = true; // 즉시 반영된 것처럼 표시
+                delete params.data._original;
+                params.api.refreshCells({ rowNodes: [params.node], force: true });
+                params.api.redrawRows({ rowNodes: [params.node] }); // 스타일 적용
+            } else {
+                const err = await res.json();
+                alert('오류: ' + err.message);
+            }
+        } catch (e) {
+            alert('서버 통신 오류');
+        }
+    }
+    
     const checkChartsReady = setInterval(() => {
         if (window.AgChart || (window.agCharts && window.agCharts.AgChart)) {
             clearInterval(checkChartsReady);
