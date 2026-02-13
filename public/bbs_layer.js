@@ -184,7 +184,7 @@ const bbsHTML = `
         ${authHtml}
         
         <table class="bbs-table">
-            <colgroup><col width="*"/><col width="75"/><col width="110"/></colgroup>
+            <colgroup><col width="*"/><col width="75"/><col width="70"/></colgroup>
             <thead><tr><th>글제목</th><th>작성자</th><th>등록일</th></tr></thead>
             <tbody id="bbs-list-tbody"></tbody>
         </table>
