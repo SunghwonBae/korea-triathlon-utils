@@ -727,7 +727,8 @@
                 adjustChartHeight('sub10ListChart', s10Data.length);
                 sub10ListOptions.data = s10Data;
                 sub10ListOptions.title.text = `총 ${s10Data.length}건`;
-                AgChart.update(sub10ListChart, sub10ListOptions);
+                window.AgChart.update(sub10ListChart, sub10ListOptions);
+                //updateprocessSub10ListData(filteredData);
             }
             if (sub10RateChart && sub10RateOptions) {
                 const newData = processSub10RateData(filteredData);
@@ -1654,7 +1655,8 @@
         "MACAO", "MALAYSIA", "MEXICO", "MONGOLIA", "NETHERLANDS", "NEW ZEALAND",
         "NORWAY", "PHILIPPINES", "POLAND", "PORTUGAL", "QATAR", "RUSSIAN FEDERATION",
         "SINGAPORE", "SOUTH AFRICA", "SPAIN", "SWEDEN", "SWITZERLAND", "TAIWAN",
-        "THAILAND", "UKRAINE", "UNITED KINGDOM", "UNITED STATES", "VIETNAM", "ZIMBABWE"
+        "THAILAND", "UKRAINE", "UNITED KINGDOM", "UNITED STATES", "VIETNAM", "ZIMBABWE",
+        "USA", "JPN", "CHN", "AUS", "GBR", "HKG", "PHI", "THA", "VNM", "MAS", "IDN", "SGP", "CAN", "FRA", "GER", "ITA", "ESP", "RUS", "TWN", "NZL", "NED", "BEL", "AUT", "SUI", "SWE", "NOR", "DEN", "POL", "HUN", "CZE", "EST", "KAZ", "QAT", "ZIM", "RSA"
         ];
 
         if (toggle.checked) {
