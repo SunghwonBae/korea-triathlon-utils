@@ -828,18 +828,13 @@
                     updateRaceDifficultyChart(filteredData);
                 }
                 if (sub10ListChart && sub10ListOptions) {
-                    // const s10Data = processSub10ListData(filteredData);
-                    // adjustChartHeight('sub10ListChart', s10Data.length);
-                    // sub10ListOptions.data = s10Data;
-                    // sub10ListOptions.title.text = `총 ${s10Data.length}건`;
-                    // window.AgChart.update(sub10ListChart, sub10ListOptions);
                     updateprocessSub10ListData(filteredData);
                 }
                 if (sub10RateChart && sub10RateOptions) {
                     const newData = processSub10RateData(filteredData);
                     adjustChartHeight('sub10RateChart', newData.length);
                     sub10RateOptions.data = newData;
-                    window.AgChart.update(sub10RateChart, sub10RateOptions);
+                    AgChart.update(sub10RateChart, sub10RateOptions);
                 }
                 if (legendaryFinishersChart && legendaryFinishersOptions) {
                     updateLegendaryFinishersChart(filteredData);
