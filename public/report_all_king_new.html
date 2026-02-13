@@ -264,6 +264,19 @@
             font-size: 1rem; transition: background 0.2s;
         }
         .viewer-controls button:hover { background: #2980b9; }
+
+        /* 수정 모드일 때 해당 행의 배경색 변경 (연한 노란색) */
+        .row-editing-mode {
+            background-color: #fff9c4 !important; /* 강조색 */
+        }
+
+        /* 수정 가능한 셀을 입력창처럼 보이게 꾸미기 */
+        .cell-editable-look {
+            border: 1px solid #3b82f6 !important; /* 파란 테두리 */
+            background-color: #ffffff !important; /* 흰색 배경 */
+            border-radius: 4px;
+            margin: 2px;
+        }
     </style>
 </head>
 <body>
@@ -728,8 +741,12 @@
             defaultColDef: {
                 resizable: true, sortable: true,
                 filterParams: { buttons: ['reset', 'apply'], closeOnApply: true },
-                // 수정 모드일 때만 편집 가능하도록 설정
-                editable: (params) => params.data._editing === true
+
+                // [중요] _editing 값이 true일 때만 수정 가능하게 설정
+                editable: (params) => params.data._editing, 
+                
+                // [중요] 수정 모드일 때 입력창 스타일(테두리) 적용
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
             },
             // 행 스타일: 수정 대기 상태인 경우 배경색 변경
             getRowStyle: params => {
