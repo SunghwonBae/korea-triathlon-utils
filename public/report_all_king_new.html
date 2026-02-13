@@ -1659,15 +1659,8 @@
 
         if (toggle.checked) {
             pData = pData.filter( d => {
-                    let year = 0;
-                    if (d.rd) {
-                        const parts = String(d.rd).trim().split(/[^0-9]+/).filter(p => p.length > 0);
-                        if (parts.length > 0) {
-                             const p0 = parts[0];
-                             if (p0.length === 4) year = parseInt(p0);
-                             else if (p0.length === 2) year = parseInt((p0.startsWith('9') ? '19' : '20') + p0);
-                        }
-                    }
+                    // processSub10ListData에서 이미 파싱된 year 사용 (문자열일 수 있으므로 변환)
+                    let year = parseInt(d.year || "0");
 
                     if (year > 2019) {
                        if (!d.c) return true; // 값이 없으면 한국으로 간주
@@ -1677,8 +1670,8 @@
                         if (FOREIGN_CODES.includes(clubOrCountry)) {
                             return false;
                         }
-                        return true;
                     }
+                    return true;
                 }
             );
         }
@@ -1689,7 +1682,6 @@
     }
 
     function processSub10ListData(data) {
-        const toggle = document.getElementById('toggleOtherKor');
 
 
         return data
@@ -1731,7 +1723,9 @@
                     bi: d.bi,
                     t2: t2,
                     ru: d.ru,
-                    unknown_t: unknown_t
+                    unknown_t: unknown_t,
+                    c: d.c,
+                    rd: d.rd
                 };
             });
     }
