@@ -782,6 +782,67 @@
                 }
                 return result;
             },
+            onFilterChanged: () => {
+                 const filteredData = [];
+                gridApi.forEachNodeAfterFilter(node => filteredData.push(node.data));
+                currentFilteredData = filteredData;
+                updateRowCount(fullData.length, filteredData.length);
+                
+                // 차트 업데이트 (라이브러리가 로드된 경우)
+                const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+                if (!AgChart) return;
+
+                if (distChart && distOptions) {
+                    distOptions.data = processDistributionData(filteredData);
+                    AgChart.update(distChart, distOptions);
+                }
+                if (ageChart && ageOptions) {
+                    ageOptions.data = processAgeData(filteredData);
+                    AgChart.update(ageChart, ageOptions);
+                }
+                if (yearStatsChart && yearStatsOptions) {
+                    yearStatsOptions.data = processYearStatsData(filteredData);
+                    AgChart.update(yearStatsChart, yearStatsOptions);
+                }
+                if (clubChart && clubOptions) {
+                    clubOptions.data = processClubData(filteredData);
+                    AgChart.update(clubChart, clubOptions);
+                }
+                if (bikeRunScatterChart && bikeRunScatterOptions) {
+                    const sData = processBikeRunData(filteredData);
+                    const { slope, intercept } = getTrendParams(sData);
+                    const tData = getTrendLineData(sData, slope, intercept);
+                    const fData = sData.filter(d => d.run <= d.bike * slope + intercept);
+                    const slData = sData.filter(d => d.run > d.bike * slope + intercept);
+                    bikeRunScatterOptions.series[0].data = fData;
+                    bikeRunScatterOptions.series[1].data = slData;
+                    bikeRunScatterOptions.series[2].data = tData;
+                    AgChart.update(bikeRunScatterChart, bikeRunScatterOptions);
+                }
+                if (transitionRankChart && transitionRankOptions) {
+                    updateTransitionRankChart(filteredData);
+                }
+                if (raceDifficultyChart && raceDifficultyOptions) {
+                    updateRaceDifficultyChart(filteredData);
+                }
+                if (sub10ListChart && sub10ListOptions) {
+                    // const s10Data = processSub10ListData(filteredData);
+                    // adjustChartHeight('sub10ListChart', s10Data.length);
+                    // sub10ListOptions.data = s10Data;
+                    // sub10ListOptions.title.text = `총 ${s10Data.length}건`;
+                    // window.AgChart.update(sub10ListChart, sub10ListOptions);
+                    updateprocessSub10ListData(filteredData);
+                }
+                if (sub10RateChart && sub10RateOptions) {
+                    const newData = processSub10RateData(filteredData);
+                    adjustChartHeight('sub10RateChart', newData.length);
+                    sub10RateOptions.data = newData;
+                    window.AgChart.update(sub10RateChart, sub10RateOptions);
+                }
+                if (legendaryFinishersChart && legendaryFinishersOptions) {
+                    updateLegendaryFinishersChart(filteredData);
+                }
+            },
         };
         // 3. [질문하신 부분] 그리드 생성 및 API 할당
         const gridDiv = document.querySelector('#myGrid');
@@ -800,71 +861,6 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-
-        gridApi.addEventListener('filterChanged', () => {
-            const filteredData = [];
-            gridApi.forEachNodeAfterFilter(node => filteredData.push(node.data));
-            currentFilteredData = filteredData;
-            updateRowCount(fullData.length, filteredData.length);
-            
-            // 차트 업데이트 (라이브러리가 로드된 경우)
-            const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
-            if (!AgChart) return;
-
-            if (distChart && distOptions) {
-                distOptions.data = processDistributionData(filteredData);
-                AgChart.update(distChart, distOptions);
-            }
-            if (ageChart && ageOptions) {
-                ageOptions.data = processAgeData(filteredData);
-                AgChart.update(ageChart, ageOptions);
-            }
-            if (yearStatsChart && yearStatsOptions) {
-                yearStatsOptions.data = processYearStatsData(filteredData);
-                AgChart.update(yearStatsChart, yearStatsOptions);
-            }
-            if (clubChart && clubOptions) {
-                 clubOptions.data = processClubData(filteredData);
-                 AgChart.update(clubChart, clubOptions);
-            }
-            if (bikeRunScatterChart && bikeRunScatterOptions) {
-                const sData = processBikeRunData(filteredData);
-                const { slope, intercept } = getTrendParams(sData);
-                const tData = getTrendLineData(sData, slope, intercept);
-                const fData = sData.filter(d => d.run <= d.bike * slope + intercept);
-                const slData = sData.filter(d => d.run > d.bike * slope + intercept);
-                bikeRunScatterOptions.series[0].data = fData;
-                bikeRunScatterOptions.series[1].data = slData;
-                bikeRunScatterOptions.series[2].data = tData;
-                AgChart.update(bikeRunScatterChart, bikeRunScatterOptions);
-            }
-            if (transitionRankChart && transitionRankOptions) {
-                 updateTransitionRankChart(filteredData);
-            }
-            if (raceDifficultyChart && raceDifficultyOptions) {
-                 updateRaceDifficultyChart(filteredData);
-            }
-            if (sub10ListChart && sub10ListOptions) {
-                // const s10Data = processSub10ListData(filteredData);
-                // adjustChartHeight('sub10ListChart', s10Data.length);
-                // sub10ListOptions.data = s10Data;
-                // sub10ListOptions.title.text = `총 ${s10Data.length}건`;
-                // window.AgChart.update(sub10ListChart, sub10ListOptions);
-                updateprocessSub10ListData(filteredData);
-            }
-            if (sub10RateChart && sub10RateOptions) {
-                const newData = processSub10RateData(filteredData);
-                adjustChartHeight('sub10RateChart', newData.length);
-                sub10RateOptions.data = newData;
-                window.AgChart.update(sub10RateChart, sub10RateOptions);
-            }
-            if (legendaryFinishersChart && legendaryFinishersOptions) {
-                 updateLegendaryFinishersChart(filteredData);
-            }
-        });
-
-    });
 
     // [로직] 수정 시작
     function startEdit(params) {
