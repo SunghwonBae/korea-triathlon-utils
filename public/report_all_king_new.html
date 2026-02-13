@@ -783,15 +783,17 @@
                 return result;
             },
             onFilterChanged: () => {
-                 const filteredData = [];
+
+                // [수정 1] 함수 시작 부분에 AgChart 정의 추가
+                const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+                if (!AgChart) return; // 안전장치: 라이브러리가 로드되지 않았으면 중단
+
+                const filteredData = [];
                 gridApi.forEachNodeAfterFilter(node => filteredData.push(node.data));
                 currentFilteredData = filteredData;
                 updateRowCount(fullData.length, filteredData.length);
-                
-                // 차트 업데이트 (라이브러리가 로드된 경우)
-                const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
-                if (!AgChart) return;
-
+            
+    
                 if (distChart && distOptions) {
                     distOptions.data = processDistributionData(filteredData);
                     AgChart.update(distChart, distOptions);
@@ -1032,7 +1034,6 @@
         currentLogic = currentLogic === 'AND' ? 'OR' : 'AND';
         logicBtn.innerText = currentLogic;
         logicBtn.className = currentLogic === 'AND' ? 'logic-btn logic-and' : 'logic-btn logic-or';
-        applyQuickFilter();
     });
 
     input.addEventListener('keydown', (e) => {
