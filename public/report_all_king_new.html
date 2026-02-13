@@ -574,7 +574,7 @@
     async function loadMergedData() {
         try {
             // 1. 원본 JSON 로드
-            const jsonRes = await fetch('all_records_v2.json');
+            const jsonRes = await fetch('/data/all_records_v2.json');
             let records = await jsonRes.json();
 
             // 2. DB의 수정 대기(PENDING) 데이터 로드
@@ -718,9 +718,7 @@
         return container;
     }
 
-    async function initGrid() {
-        // 1. 데이터 가져오기 (JSON + DB 병합)
-        const rowData = await loadMergedData();
+    async function initGrid(rowData) {
 
         const gridOptions = {
             rowData: rowData,
@@ -947,68 +945,90 @@
     const checkChartsReady = setInterval(() => {
         if (window.AgChart || (window.agCharts && window.agCharts.AgChart)) {
             clearInterval(checkChartsReady);
-            
-            // ============================================================
-            // [수정됨] 데이터 소스 변경: ironman_data.json -> all_records_v2.json
-            // ============================================================
-            fetch('/data/all_records_v2.json')
-                .then(response => response.json())
-                .then(rawData => {
-                    // 1. King Course (Ironman / Full) 필터링
-                    // rt가 'Ironman' 이거나 'Full'인 경우만 추출
-                    const kingData = rawData.filter(d => d.rt && (d.rt.toLowerCase() === 'ironman' || d.rt.toLowerCase() === 'full'));
-                    
-                    // 2. 완주 횟수(fn) 계산 (이름 기준)
-                    const finishCounts = {};
-                    kingData.forEach(d => {
-                        if(d.n) finishCounts[d.n] = (finishCounts[d.n] || 0) + 1;
-                    });
-
-                    // 3. 기존 데이터 구조로 매핑 (컬럼 맞춤)
-                    const data = kingData.map(d => {
-                        // 성별 매핑 (d 컬럼이 "M55-59" 형식이므로 첫 글자로 판별)
-                        let gender = "";
-                        if(d.d) {
-                            const dStr = String(d.d).toUpperCase();
-                            if(((!dStr.includes("FEMALE")) && dStr.includes("MALE")) || dStr.startsWith("M")|| dStr.includes("FULLM")) gender = "남";
-                            else if(dStr.includes("FEMALE") || dStr.startsWith("W") || dStr.includes("FULLF") || (dStr.startsWith("F")&&(!dStr.includes("FULLM"))) ) gender = "여";
-                        }
-                        
-                        return {
-                            n: d.n || "",
-                            d: d.d || "",
-                            c: d.c || "",
-                            b: d.b || "",
-                            // 기존 rd는 날짜문자열이었으나, 새 데이터는 y(년도)만 있음. 로직상 년도만 있어도 파싱 가능.
-                            rd: d.y ? String(d.y) : "", 
-                            rn: d.rn || "",
-                            to: d.t || 0,
-                            sw: d.s || 0,
-                            bi: d.bk || 0, // bk -> bi
-                            ru: d.r || 0,  // r -> ru
-                            t1: d.t1 || 0,
-                            t2: d.t2 || 0,
-                            g: gender,
-                            fn: finishCounts[d.n] ? finishCounts[d.n] + "회" : "", // "12회" 형식 유지
-                            fi: "", // 새 데이터에 완주순 정보 없음 (빈값 처리)
-                            rt: d.rt // 참조용
-                        };
-                    });
-
-                    fullData = data;
-                    currentFilteredData = data;
-                    
-                    gridApi.setGridOption('rowData', data);
-                    updateRowCount(data.length, data.length);
-                    initAdvancedFilters(data);
-                    initCharts(data);
-                })
-                .catch(err => {
-                    console.error("데이터 로드 실패:", err);
-                    alert("데이터 파일을 불러오는데 실패했습니다. all_records_v2.json 파일이 있는지 확인해주세요.");
-                });
+            initDashboard(); // 통합 초기화 함수 호출
         }
     }, 100);
+
+    async function initDashboard() {
+        try {
+            // (1) 데이터 로드 및 병합 (JSON + DB)
+            const [jsonRes, pendingRes] = await Promise.all([
+                fetch('/data/all_records_v2.json'),
+                fetch('/api/record/pending').catch(() => ({ json: () => [] }))
+            ]);
+            let rawData = await jsonRes.json();
+            let pendingList = [];
+            try { pendingList = await pendingRes.json(); } catch(e) {}
+
+            // (2) DB 수정사항 병합
+            pendingList.forEach(req => {
+                const changes = JSON.parse(req.updatedFields);
+                const target = rawData.find(r => 
+                    r.rn === req.raceName && r.y === req.year && r.b === req.bib && r.n === req.name
+                );
+                if (target) {
+                    Object.assign(target, changes);
+                    target._isPending = true; // 표시용
+                }
+            });
+
+
+            // 1. King Course (Ironman / Full) 필터링
+            // rt가 'Ironman' 이거나 'Full'인 경우만 추출
+            const kingData = rawData.filter(d => d.rt && (d.rt.toLowerCase() === 'ironman' || d.rt.toLowerCase() === 'full'));
+            
+            // 2. 완주 횟수(fn) 계산 (이름 기준)
+            const finishCounts = {};
+            kingData.forEach(d => {
+                if(d.n) finishCounts[d.n] = (finishCounts[d.n] || 0) + 1;
+            });
+
+            // 3. 기존 데이터 구조로 매핑 (컬럼 맞춤)
+            const data = kingData.map(d => {
+                // 성별 매핑 (d 컬럼이 "M55-59" 형식이므로 첫 글자로 판별)
+                let gender = "";
+                if(d.d) {
+                    const dStr = String(d.d).toUpperCase();
+                    if(((!dStr.includes("FEMALE")) && dStr.includes("MALE")) || dStr.startsWith("M")|| dStr.includes("FULLM")) gender = "남";
+                    else if(dStr.includes("FEMALE") || dStr.startsWith("W") || dStr.includes("FULLF") || (dStr.startsWith("F")&&(!dStr.includes("FULLM"))) ) gender = "여";
+                }
+                
+                return {
+                    n: d.n || "",
+                    d: d.d || "",
+                    c: d.c || "",
+                    b: d.b || "",
+                    // 기존 rd는 날짜문자열이었으나, 새 데이터는 y(년도)만 있음. 로직상 년도만 있어도 파싱 가능.
+                    rd: d.y ? String(d.y) : "", 
+                    rn: d.rn || "",
+                    to: d.t || 0,
+                    sw: d.s || 0,
+                    bi: d.bk || 0, // bk -> bi
+                    ru: d.r || 0,  // r -> ru
+                    t1: d.t1 || 0,
+                    t2: d.t2 || 0,
+                    g: gender,
+                    fn: finishCounts[d.n] ? finishCounts[d.n] + "회" : "", // "12회" 형식 유지
+                    fi: "", // 새 데이터에 완주순 정보 없음 (빈값 처리)
+                    rt: d.rt // 참조용
+                };
+            });
+
+            fullData = data;
+            currentFilteredData = data;
+            
+            gridApi.setGridOption('rowData', data);
+            updateRowCount(data.length, data.length);
+            initGrid(data);
+            initAdvancedFilters(data);
+            initCharts(data);
+        
+        } catch(err) {
+            console.error("데이터 로드 실패:", err);
+            alert("데이터 파일을 불러오는데 실패했습니다. all_records_v2.json 파일이 있는지 확인해주세요.");
+        }
+    }
+
 
     // 검색 및 UI 이벤트 핸들러들
     const logicBtn = document.getElementById('logicToggle');
