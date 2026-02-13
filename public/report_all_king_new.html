@@ -724,65 +724,6 @@
         filterOoo: '검색...', applyFilter: '확인', resetFilter: '초기화', blank: '공백', notBlank: '공백 아님'
     };
 
-    function ActionButtonRenderer(params) {
-        const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.gap = '5px';
-        container.style.alignItems = 'center';
-        container.style.height = '100%';
-
-        // 1. 수정 대기 상태일 때
-        if (params.data._isPending) {
-            container.innerHTML = `<span style="color: #ed8936; font-size: 12px; font-weight: bold;">[수정대기]</span>`;
-            return container;
-        }
-
-        // 2. 수정 모드일 때 (확인/취소 버튼)
-        if (params.data._editing) {
-            const saveBtn = document.createElement('button');
-            saveBtn.innerText = '확인';
-            saveBtn.className = 'bg-blue-500 text-white px-2 py-1 rounded text-xs';
-            saveBtn.onclick = () => saveRecordChange(params);
-
-            const cancelBtn = document.createElement('button');
-            cancelBtn.innerText = '취소';
-            cancelBtn.className = 'bg-gray-500 text-white px-2 py-1 rounded text-xs';
-            cancelBtn.onclick = () => {
-                params.data._editing = false;
-                gridApi.applyTransaction({ update: [params.data] });
-                gridApi.stopEditing(true); // 취소
-            };
-
-            container.appendChild(saveBtn);
-            container.appendChild(cancelBtn);
-        } 
-        // 3. 일반 모드일 때 (수정 버튼)
-        else {
-            const editBtn = document.createElement('button');
-            editBtn.innerText = '수정';
-            editBtn.className = 'bg-green-600 text-white px-2 py-1 rounded text-xs';
-            editBtn.onclick = () => {
-                // 네이버 로그인 체크 (bbs_layer.js 내 함수 활용)
-                const user = getUserInfo(); 
-                if (!user) {
-                    alert('로그인이 필요한 기능입니다.');
-                    if (typeof bbsOpenLoginPopup === 'function') bbsOpenLoginPopup();
-                    return;
-                }
-                
-                params.data._editing = true;
-                params.data._original = { ...params.data }; // 백업
-                gridApi.applyTransaction({ update: [params.data] });
-                gridApi.startEditingCell({
-                    rowIndex: params.node.rowIndex,
-                    colKey: 'n' // 처음 편집을 시작할 컬럼 ID
-                });
-            };
-            container.appendChild(editBtn);
-        }
-
-        return container;
-    }
 
     function addEditButton(params) {
         const container = document.createElement('div');
@@ -834,8 +775,8 @@
                 params.api.stopEditing(true); // true = 변경사항 취소
 
                 // 원본 데이터로 복구 (백업해둔 데이터가 있다면)
-                if (params.data._originalData) {
-                    Object.assign(params.data, params.data._originalData);
+                if (params.data._original) {
+                    Object.assign(params.data, params.data._original);
                 }
 
                 // 수정 모드 해제 및 갱신
@@ -856,7 +797,7 @@
                 // if (!checkLogin()) return; 
 
                 // 1. 현재 데이터 백업 (취소 시 복구용)
-                params.data._originalData = { ...params.data };
+                params.data._original = { ...params.data };
 
                 // 2. 수정 모드 활성화 플래그 설정
                 params.data._editing = true;
