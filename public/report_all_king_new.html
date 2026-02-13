@@ -802,8 +802,6 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
 
-        initGrid();
-
         gridApi.addEventListener('filterChanged', () => {
             const filteredData = [];
             gridApi.forEachNodeAfterFilter(node => filteredData.push(node.data));
