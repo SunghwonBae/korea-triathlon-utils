@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
 // 1. Vercel Cron 자동 실행 (CRON_SECRET)
-  const isVercelCron = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+  //const isVercelCron = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`; // Next.js 13 이상에서는 req.headers.get() 사용
+  const isVercelCron = req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
   
   // 2. 관리자 수동 실행 (MANUAL_CRON_KEY) -> 님이 정한 비번
   const isManualRun = req.query.key === process.env.MANUAL_CRON_KEY;
