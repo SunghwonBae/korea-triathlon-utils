@@ -623,7 +623,7 @@
             
             this.eGui.innerHTML = `
                 <span>관리</span>
-                <button onclick="onAddRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 ml-2 rounded text-xs shadow-sm transition-colors">
+                <button onclick="onAddRow()" class="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 ml-2 rounded text-xs shadow-sm transition-colors">
                     <i class="fas fa-plus mr-1"></i>신규
                 </button>
             `;
@@ -745,9 +745,10 @@
             {
                 headerName: "관리",
                 field: "action",
-                width: 110,
+                width: 100,
+                padding: 8,
                 pinned: 'right', // 오른쪽에 고정
-                editable: false,
+                cellStyle: { 'padding': '8px 10px' },
                 headerComponent: CustomHeader,
                 cellRenderer: addEditButton // 아래에서 정의할 함수
             },
@@ -1042,8 +1043,8 @@
         const original = params.data._original;
         const rowData = params.data;
         // --- [디버깅 로그 시작] ---
-        console.log("======= [수정 요청 디버깅] =======");
-        console.log("1. 파람 데이터(rowData):", rowData);
+        //console.log("======= [수정 요청 디버깅] =======");
+        //console.log("1. 파람 데이터(rowData):", rowData);
 
         // 1. 유효성 검사 (신규일 때 필수값 체크)
         if (rowData._isNew) {
@@ -1086,8 +1087,8 @@
             b: String(original.b),
             n: original.n
         };
-        console.log("2. 원본 데이터(originalData):", originalData);
-        console.log("3. 전송 데이터(cleanData):", cleanData);
+        //console.log("2. 원본 데이터(originalData):", originalData);
+        //console.log("3. 전송 데이터(cleanData):", cleanData);
 
         try {
             const res = await fetch('/api/record/request', {
