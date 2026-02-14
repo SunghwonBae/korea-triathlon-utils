@@ -655,17 +655,30 @@
                 // [중요] _editing 값이 true일 때만 수정 가능하게 설정
                 editable: (params) => params.data._editing, 
                 // [중요] 수정 모드일 때 입력창 스타일(테두리) 적용
-                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
-                filter: 'agTextColumnFilter', cellClass: 'bold-cell', pinned: 'left' },
+                cellClass: (params) => {
+                    const classes = []; 
+                        classes.push('bold-cell');
+                    if (params.data._editing) {
+                        classes.push('cell-editable-look');
+                    }
+                    return classes; // 이렇게 배열로 리턴하면 AG Grid가 알아서 합쳐줍니다.
+                },
+                filter: 'agTextColumnFilter', pinned: 'left' },
         { headerName: "성별", field: "g", width: 80, filter: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
         },
-        { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true, editable: (params) => params.data._editing || params.data._isNew },
+        { headerName: "연령대", field: "d", width: 110, sortable: true, filter: true, 
+            editable: (params) => params.data._editing || params.data._isNew ,
+            cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+        },
         { headerName: "국가/클럽", field: "c", width: 130, sortable: true,                 
-                editable: (params) => params.data._editing, 
-                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '', filter: 'agTextColumnFilter' },
-        { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter', editable: (params) => params.data._editing || params.data._isNew, },
+            editable: (params) => params.data._editing, 
+            cellClass: (params) => params.data._editing ? 'cell-editable-look' : '', filter: 'agTextColumnFilter' },
+        { headerName: "대회명", field: "rn", width: 180, sortable: true, filter: 'agTextColumnFilter', 
+            editable: (params) => params.data._editing || params.data._isNew, 
+            cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
+        },
         { headerName: "Total", field: "to", width: 110, sortable: true, 
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
