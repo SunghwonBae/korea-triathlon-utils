@@ -827,15 +827,8 @@
                 
                 // 편집 종료
                 params.api.stopEditing(true); // true = 변경사항 취소
+                cancelRow(params);
 
-                // 원본 데이터로 복구 (백업해둔 데이터가 있다면)
-                if (params.data._original) {
-                    Object.assign(params.data, params.data._original);
-                }
-
-                // 수정 모드 해제 및 갱신
-                params.data._editing = false;
-                params.api.refreshCells({ rowNodes: [params.node], force: true });
             };
             container.appendChild(cancelBtn);
 
