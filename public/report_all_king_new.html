@@ -612,53 +612,7 @@
 
         return seconds;
     }
-    // [추가] 데이터 로드 및 병합 함수
-    async function loadMergedData() {
-        try {
-            // 1. 원본 JSON 로드
-            const jsonRes = await fetch('/data/all_records_v2.json');
-            let records = await jsonRes.json();
 
-            // 2. DB의 수정 대기(PENDING) 데이터 로드
-            const pendingRes = await fetch('/api/record/pending');
-            const pendingList = await pendingRes.json();
-
-            // 3. 데이터 병합 (JSON + DB)
-            pendingList.forEach(req => {
-                const changes = JSON.parse(req.updatedFields);
-
-                if (changes._isNew) {
-                    // [신규] 배열에 추가
-                    // _isNew 플래그는 그리드 표시용으로는 불필요할 수 있으나 유지해도 무방
-                    records.unshift(changes);
-                } else {
-                    // 식별자로 원본 데이터 찾기
-                    const targetIndex = records.findIndex(r => 
-                        r.rn === req.raceName && 
-                        r.y === req.year && 
-                        r.b === req.bib && 
-                        r.n === req.name
-                    );
-
-                    if (targetIndex !== -1) {
-                        // 원본 데이터에 수정 사항 덮어쓰기 & 상태 표시 추가
-                        records[targetIndex] = { 
-                            ...records[targetIndex], 
-                            ...changes, 
-                            _isPending: true // UI 표시용 플래그
-                        };
-                    } else {
-                        records.unshift(changes);
-                    }
-                }
-            });
-
-            return records;
-        } catch (e) {
-            console.error("데이터 로드 실패", e);
-            return [];
-        }
-    }
     // [추가] 헤더에 [신규] 버튼을 렌더링할 클래스
     class CustomHeader {
         init(params) {
