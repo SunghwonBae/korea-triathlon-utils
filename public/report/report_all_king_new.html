@@ -413,7 +413,13 @@
                 <div id="searchTags" class="search-history"></div>
             </div>
 
-            <div class="filter-panel" id="sliderPanel">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <button id="toggleFilterBtn" style="background:none; border:none; color:#7f8c8d; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-size:0.9rem;">
+                    <i class="fas fa-sliders-h"></i> 상세 기록 필터 (시간 범위 설정) <span id="filterArrow">▲</span>
+                </button>
+            </div>
+
+            <div class="filter-panel" id="filterPanel">
                 <div style="display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;">
                     <div style="flex: 1; min-width: 300px;">
                         <label class="block text-sm font-bold mb-2 text-gray-700"><i class="fas fa-stopwatch mr-1"></i>총 완주시간 (Total)</label>
@@ -1281,6 +1287,26 @@
             tagsContainer.appendChild(tag);
         });
     }
+        // --- 슬라이더 관련 로직 ---
+        const toggleBtn = document.getElementById('toggleFilterBtn');
+        const panel = document.getElementById('filterPanel');
+        const arrow = document.getElementById('filterArrow');
+        
+        toggleBtn.addEventListener('click', () => {
+            const isVisible = panel.style.display !== 'none';
+            if (isVisible) {
+                panel.style.maxHeight = '0';
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                    panel.style.maxHeight = '';
+                }, 500);
+            } else {
+                panel.style.display = 'block';
+                panel.style.maxHeight = '0';
+                setTimeout(() => panel.style.maxHeight = '1000px', 10);
+            }
+            arrow.innerText = isVisible ? '▼' : '▲';
+        });
 
     function setupSectionToggle(btnId, contentId, isDefaultCollapsed) {
         const btn = document.getElementById(btnId);
