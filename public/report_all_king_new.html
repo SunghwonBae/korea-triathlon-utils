@@ -306,6 +306,8 @@
                 <li><b>그리드 차트 연동:</b> 그리드에서 필터링된 데이터가 실시간으로 차트에 반영됩니다.</li>
                 <li><b>차트 확대:</b> 차트 제목을 클릭하여 확대할 수 있습니다.</li>
                 <li><b>T-Memory:</b> 이름 앞에 저장버튼으로 T-Memory에 저장할 수 있습니다.</li>
+                <li><b>수정,신규:</b> 네이버로그인 후 데이터를 수정 또는 추가 할 수 있습니다.</li>
+                <li><b>수정,신규:</b> 수정요청된 데이터는 노란색으로 표시되고, 매일 새벽3시에 배치프로그램으로 반영됩니다.</li>
             </ul>
         </div>
     </div>
@@ -795,7 +797,7 @@
                 if (typeof saveRow === 'function') {
                     saveRow(params); // DB 업데이트 요청
                 } else {
-                    alert("저장 함수가 없습니다.");
+                    showToast("저장 함수가 없습니다.");
                 }
 
                 // 3. 그리드 화면 갱신 (스타일 원상복구)
@@ -861,7 +863,8 @@
             _editing: true, // 바로 수정 모드
             _isNew: true    // 신규 행 플래그
         };
-        
+        showToast('신규 행이 추가는 검색필터가 해제된 상태에서 진행됩니다.');
+        resetSliders();
         // 그리드 최상단에 추가
         gridApi.applyTransaction({ add: [newRow], addIndex: 0 });
     }
@@ -1012,7 +1015,7 @@
         // 1. 로그인 체크 (bbs_layer.js의 함수 활용)
         const user = getUserInfo(); 
         if (!user) {
-            alert('로그인이 필요한 기능입니다.');
+            showToast('로그인이 필요한 기능입니다.');
             // bbs_layer.js의 로그인 팝업 호출
             if(typeof bbsOpenLoginPopup === 'function') bbsOpenLoginPopup();
             return;
@@ -1049,7 +1052,7 @@
         // 1. 유효성 검사 (신규일 때 필수값 체크)
         if (rowData._isNew) {
             if (!rowData.rn || !(rowData.rd||rowData.y)|| !rowData.b || !rowData.n) {
-                alert("신규 등록 시 [대회명, 연도, 배번호, 이름]은 필수 입력 사항입니다.");
+                showToast("신규 등록 시 [대회명, 연도, 배번호, 이름]은 필수 입력 사항입니다.");
                 return;
             }
         }
@@ -1101,7 +1104,7 @@
             });
 
             if (res.ok) {
-                alert(rowData._isNew ? '신규 등록 요청이 접수되었습니다.' : '수정 요청이 접수되었습니다.');
+                showToast(rowData._isNew ? '신규 등록 요청이 접수되었습니다.' : '수정 요청이 접수되었습니다.');
                 
                 // 화면 갱신 (저장 성공 표시)
                 params.data._editing = false;
@@ -1114,11 +1117,11 @@
                 params.api.refreshCells({ rowNodes: [params.node], force: true });
             } else {
                 const errData = await res.json();
-                alert('요청 실패: ' + (errData.message || res.statusText));
+                showToast('요청 실패: ' + (errData.message || res.statusText));
             }
         } catch (err) {
             console.error(err);
-            alert('서버 통신 오류가 발생했습니다.');
+            showToast('서버 통신 오류가 발생했습니다.');
         }
     }
     
@@ -1220,7 +1223,7 @@
         
         } catch(err) {
             console.error("데이터 로드 실패:", err);
-            alert("데이터 파일을 불러오는데 실패했습니다. all_records_v2.json 파일이 있는지 확인해주세요.");
+            showToast("데이터 파일을 불러오는데 실패했습니다. all_records_v2.json 파일이 있는지 확인해주세요.");
         }
     }
 
