@@ -46,19 +46,33 @@ export default async function handler(req, res) {
     const path = "public/data/all_records_v2.json"; // 파일 경로 확인
 
     console.log(`=== [3] GITHUB FETCH DEBUG ===`);
-    console.log(`- Fetching path: ${path}`);
+    console.log(`- Fetching path: ${path} (Large File: 7.51MB)`);
     
-    const { data: fileData } = await octokit.repos.getContent({ owner, repo, path });
-    
-    // Base64 디코딩
-    const originalContent = Buffer.from(fileData.content, "base64").toString("utf-8");
+    // [수정] 대용량 파일을 위해 'raw' 포맷으로 직접 요청합니다.
+    const { data: originalContent } = await octokit.repos.getContent({
+      owner,
+      repo,
+      path,
+      headers: {
+        accept: "application/vnd.github.v3.raw", // 1MB 제한 없이 원본 데이터를 가져옵니다.
+      },
+    });
 
-    // --- [디버깅 로그 추가] ---
-    console.log("GitHub Content Length:", originalContent.length);
-    console.log("GitHub Content Snippet:", originalContent.substring(0, 50));
-    // -----------------------
+    // 주의: raw 헤더를 쓰면 response.data가 곧 파일 내용(string)이 됩니다.
+    console.log(`- Raw Content Length: ${originalContent.length}`);
 
-    let records = JSON.parse(originalContent);
+    let records;
+    try {
+      // 이제 originalContent는 base64가 아닌 일반 문자열입니다.
+      records = JSON.parse(originalContent);
+      console.log(`- Successfully parsed ${records.length} records.`);
+    } catch (parseError) {
+      console.error("- JSON Parse Error:", parseError.message);
+      // 만약 데이터가 너무 커서 잘렸거나 형식이 틀린 경우 확인용
+      console.error("- Content Start:", originalContent.substring(0, 100));
+      throw new Error("GitHub 대용량 JSON 파싱 실패");
+    }
+
 
     // 3. 메모리상에서 데이터 업데이트
     const processedIds = [];
@@ -87,27 +101,33 @@ export default async function handler(req, res) {
       }
     });
 
-    // 4. GitHub에 업데이트된 파일 커밋 (Push)
-    const newContentBase64 = Buffer.from(JSON.stringify(records, null, 2)).toString("base64");
-    
-    await octokit.repos.createOrUpdateFileContents({
-      owner,
-      repo,
-      path,
-      message: `[Cron] Update records: ${processedIds.length} changes processed`,
-      content: newContentBase64,
-      sha: fileData.sha, // 파일 덮어쓰기를 위해 필수
-      branch: 'main' // 브랜치명 확인
-    });
+    // 4. GitHub에 업데이트된 JSON 파일 업로드
+    // 저장할 때는 다시 JSON 문자열로 만들어서 올립니다.
+    if (processedIds.length > 0) {
+      const newContent = JSON.stringify(records, null, 2);
+      const newContentBase64 = Buffer.from(newContent).toString("base64");
+      
+      // 저장 시에는 기존처럼 fileData.sha가 필요할 수 있습니다.
+      // raw로 가져오면 sha를 알 수 없으므로, sha만 따로 가져오는 호출이 필요할 수 있습니다.
+      const { data: meta } = await octokit.repos.getContent({ owner, repo, path });
+      
+      await octokit.repos.createOrUpdateFileContents({
+        owner, repo, path,
+        message: `[Cron] Update records: ${processedIds.length} changes processed`,
+        content: newContentBase64,
+        sha: meta.sha, // 메타데이터에서 가져온 sha 사용
+        branch: 'main'
+      });
 
-    // 5. DB 상태 업데이트 (PENDING -> COMPLETED)
-    await prisma.recordRequest.updateMany({
-      where: { id: { in: processedIds } },
-      data: { 
-        status: 'COMPLETED',
-        processedAt: new Date()
-      }
-    });
+      // 5. DB 상태 업데이트 (PENDING -> COMPLETED)
+      await prisma.recordRequest.updateMany({
+        where: { id: { in: processedIds } },
+        data: { 
+          status: 'COMPLETED',
+          processedAt: new Date()
+        }
+      });
+    }
 
     res.status(200).json({ success: true, processed: processedIds.length });
 
