@@ -1090,7 +1090,7 @@
 
         // 1. 유효성 검사 (신규일 때 필수값 체크)
         if (rowData._isNew) {
-            if (!rowData.rn || !rowData.y || !rowData.b || !rowData.n) {
+            if (!rowData.rn || !(rowData.rd||rowData.y)|| !rowData.b || !rowData.n) {
                 alert("신규 등록 시 [대회명, 연도, 배번호, 이름]은 필수 입력 사항입니다.");
                 return;
             }
@@ -1101,7 +1101,7 @@
         const cleanData = {
             // 식별자 및 기본 정보
             n: rowData.n,
-            y: String(rowData.y), // 연도는 문자열로
+            y: String(rowData.y||rowData.rd), // 연도는 문자열로
             rn: rowData.rn,
             b: String(rowData.b),
             rt: rowData.rt || 'Ironman',
@@ -1125,7 +1125,7 @@
         // 3. 원본 데이터 식별자 (수정 시 사용)
         const originalData = rowData._isNew ? {} : {
             rn: rowData.rn,
-            y: rowData.y,
+            y: rowData.y||rowData.rd,
             b: rowData.b,
             n: rowData.n
         };
