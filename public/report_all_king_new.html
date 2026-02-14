@@ -1188,13 +1188,26 @@
 
             // (2) DB 수정사항 병합
             pendingList.forEach(req => {
-                const changes = JSON.parse(req.updatedFields);
+                const changes = typeof req.updatedFields === 'string' 
+                    ? JSON.parse(req.updatedFields) 
+                    : req.updatedFields;
+
+                // 기존 레코드 찾기 (데이터 타입 안전을 위해 == 사용 또는 String 변환)
                 const target = rawData.find(r => 
-                    r.rn === req.raceName && r.y === req.year && r.b === req.bib && r.n === req.name
+                    String(r.rn) === String(req.raceName) && 
+                    String(r.y) === String(req.year) && 
+                    String(r.b) === String(req.bib) && 
+                    String(r.n) === String(req.name)
                 );
+
                 if (target) {
+                    // [수정] 기존 데이터에 덮어쓰기
                     Object.assign(target, changes);
-                    target._isPending = true; // 표시용
+                    target._isPending = true; 
+                } else if (changes._isNew) {
+                    // [추가] 신규 등록건인 경우 rawData에 추가
+                    changes._isPending = true;
+                    rawData.unshift(changes); 
                 }
             });
 
@@ -1236,7 +1249,9 @@
                     g: gender,
                     fn: finishCounts[d.n] ? finishCounts[d.n] + "회" : "", // "12회" 형식 유지
                     fi: "", // 새 데이터에 완주순 정보 없음 (빈값 처리)
-                    rt: d.rt // 참조용
+                    rt: d.rt, // 참조용
+                    // [중요] 그리드에서 "수정 대기중"임을 알 수 있도록 플래그 전달
+                    isPending: d._isPending || false
                 };
             });
 
