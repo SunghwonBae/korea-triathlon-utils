@@ -1085,6 +1085,7 @@
     }
 
     async function saveRow(params) {
+        const original = params.data._original;
         const rowData = params.data;
         // --- [디버깅 로그 시작] ---
         console.log("======= [수정 요청 디버깅] =======");
@@ -1126,10 +1127,10 @@
 
         // 3. 원본 데이터 식별자 (수정 시 사용)
         const originalData = rowData._isNew ? {} : {
-            rn: rowData.rn,
-            y: rowData.y||rowData.rd,
-            b: rowData.b,
-            n: rowData.n
+            rn: original.rn,
+            y: original.y||original.rd,
+            b: original.b,
+            n: original.n
         };
         console.log("2. 원본 데이터(originalData):", originalData);
         console.log("3. 전송 데이터(cleanData):", cleanData);
