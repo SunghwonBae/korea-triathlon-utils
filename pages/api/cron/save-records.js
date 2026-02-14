@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export default async function handler(req, res) {
 
   // --- [디버깅용 로그 추가] ---
-  console.log("=== CRON AUTH DEBUG ===");
+  console.log("=== [1] CRON AUTH DEBUG ===");
   console.log("1. Header Auth:", req.headers.authorization); // Vercel이 보낸 값
   console.log("2. Env Secret:", process.env.CRON_SECRET);      // 내 서버에 설정된 값
   console.log("3. Manual Key:", req.query.key);                // 수동 실행 키
@@ -32,6 +32,9 @@ export default async function handler(req, res) {
       orderBy: { createdAt: 'asc' }
     });
 
+    console.log(`=== [2] DB DEBUG ===`);
+    console.log(`- Pending Requests Count: ${pendingRequests.length}`);
+
     if (pendingRequests.length === 0) {
       return res.status(200).json({ message: '반영할 내역 없음' });
     }
@@ -42,10 +45,19 @@ export default async function handler(req, res) {
     const repo = "korea-triathlon-utils";   // [수정필요]
     const path = "public/data/all_records_v2.json"; // 파일 경로 확인
 
+    console.log(`=== [3] GITHUB FETCH DEBUG ===`);
+    console.log(`- Fetching path: ${path}`);
+    
     const { data: fileData } = await octokit.repos.getContent({ owner, repo, path });
     
     // Base64 디코딩
     const originalContent = Buffer.from(fileData.content, "base64").toString("utf-8");
+
+    // --- [디버깅 로그 추가] ---
+    console.log("GitHub Content Length:", originalContent.length);
+    console.log("GitHub Content Snippet:", originalContent.substring(0, 50));
+    // -----------------------
+
     let records = JSON.parse(originalContent);
 
     // 3. 메모리상에서 데이터 업데이트
