@@ -168,7 +168,7 @@ const bbsHTML = `
     #bbs-detail-content img { max-width: 100%; height: auto; }
 </style>
 
-<button id="bbs-btn" onclick="bbsToggleLayer()">💬</button>
+<button id="bbs-btn" onclick="bbsToggleLayer()" style="display:none;">💬</button>
 <div id="bbs-overlay-bg" onclick="bbsToggleLayer()"></div>
 
 <div id="bbs-layer">
@@ -721,6 +721,8 @@ async function bbsOpenStatus() {
     const data = await res.json();
     if(!data.open) {
         document.getElementById('bbs-btn').style.display = 'none';
+    }else{
+        document.getElementById('bbs-btn').style.display = 'flex';
     }
 }
 
