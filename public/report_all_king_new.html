@@ -784,7 +784,9 @@
                 editable: (params) => params.data._editing, 
                 cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',
                 filter: 'agTextColumnFilter' },
-        { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' ,editable: (params) => params.data._editing || params.data._isNew,},
+        { headerName: "대회일(년)", field: "rd", width: 110, sortable: true, filter: 'agTextColumnFilter' ,
+                editable: (params) => params.data._editing, 
+                cellClass: (params) => params.data._editing ? 'cell-editable-look' : '',},
         // [추가] 맨 끝에 수정/확인 버튼 컬럼
             {
                 headerName: "관리",
