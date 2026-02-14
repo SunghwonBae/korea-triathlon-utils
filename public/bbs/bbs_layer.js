@@ -716,6 +716,14 @@ if (urlParams.get('bbs_open') === 'true') {
     const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.search.replace(/[\?&]bbs_open=true/, '');
     history.replaceState({}, document.title, newUrl);
 }
+async function bbsOpenStatus() {
+    const res = await fetch('/api/bbs/posts?type=bbsStatus');
+    const data = await res.json();
+    if(!data.open) {
+        document.getElementById('bbs-btn').style.display = 'none';
+    }
+}
 
+bbsOpenStatus();
 bbsLoadCategories();
 bbsLoadPosts(1);

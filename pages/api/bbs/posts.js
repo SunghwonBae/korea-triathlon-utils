@@ -17,6 +17,9 @@ export default async function handler(req, res) {
         });
         return res.json(categories.map(c => c.targetPage));
       }
+       if (req.query.type === 'bbsStatus') {
+        return res.json({ open: process.env.BBS_OPEN === 'OPEN' });
+       }
 
       // [상세 조회] - 상세 화면은 정보가 구체적인 게 좋으므로 'YYYY-MM-DD HH:MM' 유지
       if (req.query.id) {
