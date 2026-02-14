@@ -1205,7 +1205,7 @@
                     fi: "", // 새 데이터에 완주순 정보 없음 (빈값 처리)
                     rt: d.rt, // 참조용
                     // [중요] 그리드에서 "수정 대기중"임을 알 수 있도록 플래그 전달
-                    isPending: d._isPending || false
+                    _isPending: d._isPending || false
                 };
             });
 
