@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>철인3종 대회 기록 비교 분석</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-charts-community@8.2.1/dist/ag-charts-community.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/footerStyle.css">
+    <script src="/menu/menu_full_handler.js" defer></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+        .card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .ag-theme-quartz { height: 600px; width: 100%; border-radius: 0.75rem; overflow: hidden; }
+        .race-chk-item { transition: all 0.2s; border: 1px solid #f1f5f9; }
+        .race-chk-item:hover { background-color: #eff6ff; border-color: #bfdbfe; }
+                /* 데이터 셀 스타일링 */
+        .bold-cell { font-weight: bold; }
+        .swim-cell { color: #3498db; font-weight: bold; }
+        .bike-cell { color: #2ecc71; font-weight: bold; }
+        .run-cell { color: #f39c12; font-weight: bold; }
+        .ag-theme-quartz .ag-header-cell-menu-button {
+            opacity: 1;
+        }
+
+                /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #2563eb; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        /* 모바일 세로모드 최적화 */
+        @media (max-width: 768px) {
+            h1 { padding-left: 30px !important; }
+            body { padding: 1rem !important; }
+            main { padding: 0 !important; margin-top: 1rem !important; }
+            .card { padding: 1.5rem 1rem !important; }
+            h2.text-2xl { font-size: 1.5rem !important; }
+            .slide-menu { width: 85% !important; left: -85% !important; }
+            .slide-menu.is-active { left: 0 !important; }
+            #menuToggle { top: 1.5rem !important; left: 1.5rem !important; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <button id="menuToggle" class="absolute left-6 top-6 z-50 bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-blue-900 shadow-md hover:bg-slate-50 transition-all"><i class="fas fa-bars"></i></button>
+        
+    <div class="max-w-7xl mx-auto space-y-6">
+        <header class="flex flex-col md:flex-row justify-between items-center bg-white text-slate-900 p-6 rounded-2xl gap-4 shadow-lg">
+            <div>
+                <h1 class="text-2xl font-bold italic uppercase tracking-tight"><span class="text-blue-600">Compare & Analyze</span> Triathlons</h1>
+                <p class="text-slate-600 text-sm">대회별 기록 비교 및 상세 데이터 통합 리포트</p>
+            </div>
+        </header>
+
+        <div class="card space-y-4">
+            <div class="flex items-center gap-4 border-b pb-4">
+                <span class="font-bold text-slate-700 text-sm"><i class="fas fa-filter mr-1 text-blue-500"></i> 코스 타입:</span>
+                <select id="typeFilter" class="bg-slate-100 p-2 px-4 rounded-lg text-sm font-bold outline-none border-r-8 border-transparent">
+                    </select>
+                <div class="flex-1 text-right">
+                    <span id="selectionCount" class="text-sm font-bold text-blue-600 mr-4">선택된 대회: 0개</span>
+                </div>
+            </div>
+            
+            <div id="raceList" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-60 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-inner">
+                </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card">
+                <div id="compareChart" style="height: 400px;"></div>
+            </div>
+            <div class="card">
+                <div id="countChart" style="height: 400px;"></div>
+            </div>
+        </div>
+
+        <div id="groupAnalysis" class="hidden space-y-6"></div>
+        <div id="divisionAnalysis" class="hidden space-y-6"></div>
+
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-search text-blue-500"></i> 상세 레코드 검색 및 필터
+                </h3>
+                <button id="toggleSearchBtn" class="text-xs font-bold text-slate-500 hover:text-blue-600">접기 ▲</button>
+            </div>
+            <div id="searchContent" class="space-y-4">
+                <!-- Keyword search -->
+                <div class="flex items-center gap-2">
+                    <button id="logicToggle" class="bg-slate-600 text-white font-bold px-4 py-2 rounded-lg text-sm w-16">AND</button>
+                    <input type="text" id="gridQuickFilter" placeholder="입력 후 Enter (예: 홍길동, 서울, 철인클럽...) AND/OR 선택 후 다중 검색 가능" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div id="searchTags" class="flex flex-wrap gap-2 min-h-[20px]"></div>
+                
+                <!-- Sliders -->
+                <div class="text-center pt-2">
+                    <button id="toggleFilterBtn" class="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1 mx-auto">
+                        <i class="fas fa-sliders-h"></i> 상세 기록 필터 (시간 범위 설정) <span id="filterArrow">▼</span>
+                    </button>
+                </div>
+                <div id="filterPanel" class="hidden pt-6 mt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Total Time</span><span id="valTotal" class="text-red-600 font-mono"></span></div><div id="sliderTotal" class="mx-1"></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Swim</span><span id="valSwim" class="text-blue-600 font-mono"></span></div><div id="sliderSwim" class="mx-1"></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Bike</span><span id="valBike" class="text-green-600 font-mono"></span></div><div id="sliderBike" class="mx-1"></div></div>
+                    <div><div class="flex justify-between text-xs font-bold mb-3"><span class="text-slate-500 uppercase tracking-wider">Run</span><span id="valRun" class="text-orange-600 font-mono"></span></div><div id="sliderRun" class="mx-1"></div></div>
+                    <div class="md:col-span-2 text-center"><button onclick="resetSliders()" class="text-xs text-slate-400 underline hover:text-slate-600 font-bold">필터 초기화</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-list text-blue-500"></i> 상세 레코드
+                </h3>
+                <span id="gridInfo" class="text-xs font-mono text-slate-500"></span>
+            </div>
+            <div id="myGrid" class="ag-theme-quartz shadow-sm"></div>
+        </div>
+    </div>
+
+    <script>
+        const AgChart = window.AgChart || (window.agCharts && window.agCharts.AgChart);
+        
+        let searchFilters = [];
+        let currentLogic = 'AND';
+        let sliders = {};
+
+        let allRecords = [], allMeta = [], gridApi, chart1, chart2;
+        let groupCharts = [];
+        let divisionCharts = [];
+        let activeModalChart = null;
+
+        const formatS = (s) => {
+            if(!s || isNaN(s) || s === 0) return "-";
+            s = Math.round(s);
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        };
+
+        const sToMs = (s) => {
+            if (!s || isNaN(s) || s <= 0) return "00:00";
+            s = Math.round(s);
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        };
+
+        function formatSeconds(sec) {
+            if (!sec) return "00:00";
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            return `${h}:${m.toString().padStart(2, '0')}`;
+        }
+
+        function getRaceDistances(type) {
+            const distances = {
+                'Olympic': { swim: 1.5, bike: 40, run: 10 },
+                'Half': { swim: 1.9, bike: 90, run: 21.1 },
+                'Ironman': { swim: 3.8, bike: 180, run: 42.2 }
+            };
+            return distances[type] || distances['Olympic'];
+        }
+
+        function calculateSpeed(distanceKm, timeSec) {
+            if (!timeSec || timeSec <= 0) return 0;
+            return (distanceKm / (timeSec / 3600)).toFixed(2);
+        }
+
+        function formatPace(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        async function init() {
+            try {
+                const [rRes, mRes] = await Promise.all([
+                    fetch('/data/all_records_v2.json'), 
+                    fetch('/data/race_meta_v2.json')
+                ]);
+                allRecords = await rRes.json();
+                allMeta = await mRes.json();
+
+                // 1. 타입 필터링 설정
+                const types = [...new Set(allMeta.map(m => m.type))];
+                const typeSelect = document.getElementById('typeFilter');
+                types.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t; opt.innerText = t;
+                    typeSelect.appendChild(opt);
+                });
+                typeSelect.onchange = (e) => renderRaceCheckboxes(e.target.value);
+                renderRaceCheckboxes(types[0]);
+
+                const KR_LOCALE = {
+                    contains: '포함',
+                    notContains: '포함하지 않음',
+                    equals: '일치',
+                    notEqual: '일치하지 않음',
+                    startsWith: '시작 단어',
+                    endsWith: '끝 단어',
+                    lessThan: '미만',
+                    greaterThan: '초과',
+                    lessThanOrEqual: '이하',
+                    greaterThanOrEqual: '이상',
+                    inRange: '범위 내',
+                    filterOoo: '검색...',
+                    applyFilter: '확인',
+                    resetFilter: '초기화',
+                    blank: '공백',
+                    notBlank: '공백 아님'
+                };
+                // 2. AG Grid 초기화 (모든 컬럼 누락 없이 배치)
+                const gridOptions = {
+                    columnDefs: [
+                        { field: "n", headerName: "성명",  cellClass: 'bold-cell',  width: 100, pinned: 'left', filter: true },
+                        { field: "y", headerName: "연도", width: 80 },
+                        { field: "rn", headerName: "대회ID", width: 160 },
+                        { field: "t", headerName: "기록", width: 110, valueFormatter: p => formatS(p.value), cellStyle: {fontWeight:'bold', color:'#1d4ed8'} },
+                        { field: "s", headerName: "수영", cellClass: 'swim-cell', width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "t1", headerName: "T1", width: 80, valueFormatter: p => sToMs(p.value) },
+                        { field: "bk", headerName: "바이크", cellClass: 'bike-cell',width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "t2", headerName: "T2", width: 80, valueFormatter: p => sToMs(p.value) },
+                        { field: "r", headerName: "런", cellClass: 'run-cell', width: 95, valueFormatter: p => formatS(p.value) },
+                        { field: "b", headerName: "배번", width: 85 },
+                        { field: "d", headerName: "부문", width: 110 },
+                        { field: "c", headerName: "클럽/국가", width: 150 }
+                    ],
+                    localeText: KR_LOCALE, // 한국어 객체 적용
+                    // 1. 그리드 전체에서 마우스 드래그로 텍스트 선택 가능하게 설정
+                    enableCellTextSelection: true,
+                    defaultColDef: {
+                        resizable: true,
+                        sortable: true,
+                        filterParams: { 
+                            buttons: ['reset', 'apply'],
+                            closeOnApply: true 
+                        }
+                    },
+                    popupParent: document.body,
+                    isExternalFilterPresent: () => searchFilters.length > 0 || isSliderActive(),
+                    doesExternalFilterPass: (node) => {
+                        const data = node.data;
+                        const isFullRange = (slider) => {
+                            if (!slider) return true;
+                            const [currentMin, currentMax] = slider.get().map(Number);
+                            const { min, max } = slider.options.range;
+                            return (Math.abs(currentMin - min) < 0.1 && Math.abs(currentMax - max) < 0.1);
+                        };
+
+                        if (sliders.t && !isFullRange(sliders.t)) { if (data.t < sliders.t.get()[0] || data.t > sliders.t.get()[1]) return false; }
+                        if (sliders.s && !isFullRange(sliders.s)) { if (data.s < sliders.s.get()[0] || data.s > sliders.s.get()[1]) return false; }
+                        if (sliders.bk && !isFullRange(sliders.bk)) { if (data.bk < sliders.bk.get()[0] || data.bk > sliders.bk.get()[1]) return false; }
+                        if (sliders.r && !isFullRange(sliders.r)) { if (data.r < sliders.r.get()[0] || data.r > sliders.r.get()[1]) return false; }
+
+                        if (searchFilters.length === 0) return true;
+                        const rowString = `${data.n} ${data.c} ${data.rn}`.toLowerCase();
+                        return searchFilters.every(filter => rowString.includes(filter.term));
+                    },
+                    onFilterChanged: () => {
+                        if(gridApi) {
+                            document.getElementById('gridInfo').innerText = `TOTAL: ${gridApi.getDisplayedRowCount().toLocaleString()} records`;
+                        }
+                    },
+                    // 가상 스크롤 최적화
+                    rowBuffer: 10,
+                    animateRows: true,
+                    pagination: true,
+                    paginationPageSize: 20,
+                    onGridReady: (params) => {
+                        gridApi = params.api;
+                        updateAnalysis(); // 초기 로드
+                    }
+                };
+                gridApi = agGrid.createGrid(document.querySelector('#myGrid'), gridOptions);
+
+                // 검색 필터 연동
+            } catch (err) { console.error("데이터 로드 실패:", err); }
+        }
+
+        function renderRaceCheckboxes(type) {
+            const listDiv = document.getElementById('raceList');
+            listDiv.innerHTML = "";
+            const filteredMeta = allMeta.filter(m => m.type === type).sort((a,b) => b.year - a.year);
+            
+            filteredMeta.forEach((m, idx) => {
+                const div = document.createElement('div');
+                div.className = "race-chk-item flex items-center gap-2 p-2 rounded-lg cursor-pointer";
+                div.innerHTML = `
+                    <input type="checkbox" id="chk_${m.id}" value="${m.id}" class="race-chk w-4 h-4 cursor-pointer" ${idx < 3 ? 'checked' : ''} onchange="handleSelectionChange()">
+                    <label for="chk_${m.id}" class="text-[11px] font-medium truncate cursor-pointer flex-1 text-slate-600">${m.name || m.id}</label>
+                `;
+                div.onclick = (e) => {
+                    if(e.target.tagName !== 'INPUT') {
+                        const chk = div.querySelector('input');
+                        chk.checked = !chk.checked;
+                        handleSelectionChange();
+                    }
+                };
+                listDiv.appendChild(div);
+            });
+            handleSelectionChange();
+        }
+
+        function handleSelectionChange() {
+            updateSelectedCountLabel();
+            updateAnalysis();
+        }
+
+        function updateSelectedCountLabel() {
+            const cnt = document.querySelectorAll('.race-chk:checked').length;
+            document.getElementById('selectionCount').innerText = `선택된 대회: ${cnt}개`;
+        }
+
+        function updateAnalysis() {
+            if (!gridApi) return;
+
+            const selectedRids = Array.from(document.querySelectorAll('.race-chk:checked')).map(cb => cb.value);
+            if(selectedRids.length === 0) {
+                gridApi.setGridOption('rowData', []);
+                document.getElementById('gridInfo').innerText = `TOTAL: 0 records`;
+                renderCharts([]);
+                performGroupAnalysis([]);
+                performDivisionAnalysis([]);
+                return;
+            }
+
+            const filteredData = allRecords.filter(r => selectedRids.includes(r.rn));
+            initAdvancedFilters(filteredData);
+            gridApi.setGridOption('rowData', filteredData);
+            document.getElementById('gridInfo').innerText = `TOTAL: ${filteredData.length.toLocaleString()} records`;
+
+            // 차트 데이터 생성 (제한 없이 모든 선택 대회 포함)
+            const chartData = selectedRids.map(rid => {
+                const raceRecords = filteredData.filter(r => r.rn === rid);
+                if(raceRecords.length === 0) return null;
+                const meta = allMeta.find(m => m.id === rid);
+                const avg = (key) => {
+                    const valid = raceRecords.filter(r => r[key] > 0);
+                    return valid.length ? Math.floor(valid.reduce((s, c) => s + c[key], 0) / valid.length) : 0;
+                };
+                
+                return {
+                    race: (meta?.name || rid),
+                    swim: avg('s'), bike: avg('bk'), run: avg('r'), count: raceRecords.length
+                };
+            }).filter(d => d !== null);
+
+            renderCharts(chartData);
+            performGroupAnalysis(selectedRids);
+            performDivisionAnalysis(selectedRids);
+        }
+
+        function renderCharts(data) {
+            // [중요] AgChart.create 방식 준수 (글로벌 객체 호출)
+            if (chart1) chart1.destroy();
+            if (chart2) chart2.destroy();
+
+            chart1 = AgChart.create({
+                container: document.getElementById('compareChart'),
+                title: { text: '대회별 평균 기록 비교 (Stacked)', fontSize: 16, fontWeight: 'bold' },
+                data: data,
+                series: [
+                    { type: 'bar', xKey: 'race', yKey: 'swim', yName: '수영', stacked: true, fill: '#60a5fa' },
+                    { type: 'bar', xKey: 'race', yKey: 'bike', yName: '바이크', stacked: true, fill: '#34d399' },
+                    { type: 'bar', xKey: 'race', yKey: 'run', yName: '런', stacked: true, fill: '#f87171' }
+                ],
+                legend: { position: 'bottom' }
+            });
+
+            chart2 = AgChart.create({
+                container: document.getElementById('countChart'),
+                title: { text: '대회별 완주자 수', fontSize: 16, fontWeight: 'bold' },
+                data: data,
+                series: [{ type: 'column', xKey: 'race', yKey: 'count', yName: '완주자수', fill: '#475569' }],
+                legend: { enabled: false }
+            });
+        }
+
+        function performGroupAnalysis(selectedRids) {
+            const container = document.getElementById('groupAnalysis');
+            if (selectedRids.length === 0) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            const raceAnalyses = selectedRids.map(rid => {
+                const raceData = allRecords.filter(r => r.rn === rid && r.t > 0);
+                if (raceData.length === 0) return null;
+                
+                const meta = allMeta.find(m => m.id === rid);
+                const raceName = meta ? meta.name : rid;
+                const raceType = meta ? meta.type : 'Olympic';
+                const distances = getRaceDistances(raceType);
+
+                const sortedData = raceData.sort((a, b) => a.t - b.t);
+                const groupSize = Math.ceil(sortedData.length / 10);
+                const groups = [];
+                for (let i = 0; i < 10; i++) {
+                    const start = i * groupSize;
+                    const end = Math.min((i + 1) * groupSize, sortedData.length);
+                    if (start < sortedData.length) groups.push(sortedData.slice(start, end));
+                }
+
+                const groupAverages = groups.map((group, index) => {
+                    const count = group.length;
+                    if (count === 0) return null;
+                    const avg = (key) => group.reduce((sum, item) => sum + (item[key] || 0), 0) / count;
+                    
+                    const avgTotal = avg('t');
+                    const avgSwim = avg('s');
+                    const avgT1 = avg('t1');
+                    const avgBike = avg('bk');
+                    const avgT2 = avg('t2');
+                    const avgRun = avg('r');
+
+                    return {
+                        group: `${(index + 1) * 10}%`, count,
+                        avgTotal, avgSwim, avgT1, avgBike, avgT2, avgRun,
+                        avgSwimSpeed: parseFloat(calculateSpeed(distances.swim, avgSwim)),
+                        avgBikeSpeed: parseFloat(calculateSpeed(distances.bike, avgBike)),
+                        avgRunSpeed: parseFloat(calculateSpeed(distances.run, avgRun)),
+                        swimPaceSec: avgSwim / (distances.swim * 10),
+                        runPaceSec: avgRun / distances.run
+                    };
+                }).filter(g => g !== null);
+
+                return { raceName, averages: groupAverages };
+            }).filter(a => a !== null);
+
+            renderGroupTables(raceAnalyses);
+        }
+
+        function renderGroupTables(raceAnalyses) {
+            const container = document.getElementById('groupAnalysis');
+            if (raceAnalyses.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            let html = raceAnalyses.map(analysis => `
+                <div class="card">
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg text-center">${analysis.raceName} 그룹별 평균 기록 (10% 구간)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-center border-collapse">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b">
+                                <tr>
+                                    <th class="p-3">Group</th><th class="p-3">Count</th><th class="p-3">Total</th>
+                                    <th class="p-3 text-blue-600">Swim</th><th class="p-3 text-slate-400 hidden md:table-cell">T1</th>
+                                    <th class="p-3 text-green-600">Bike</th><th class="p-3 text-slate-400 hidden md:table-cell">T2</th>
+                                    <th class="p-3 text-orange-600">Run</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${analysis.averages.map(avg => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-3 font-bold text-slate-700">${avg.group}</td>
+                                        <td class="p-3 text-slate-500">${avg.count}</td>
+                                        <td class="p-3 font-bold text-slate-900">${formatS(avg.avgTotal)}</td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgSwim)}</div><div class="text-xs text-blue-500">${formatPace(avg.swimPaceSec)}/100m</div></td>
+                                        <td class="p-3 text-slate-400 hidden md:table-cell">${sToMs(avg.avgT1)}</td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgBike)}</div><div class="text-xs text-green-600">${avg.avgBikeSpeed} km/h</div></td>
+                                        <td class="p-3 text-slate-400 hidden md:table-cell">${sToMs(avg.avgT2)}</td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgRun)}</div><div class="text-xs text-orange-500">${formatPace(avg.runPaceSec)}/km</div></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add Charts Container
+            html += `
+                <div class="card mt-6">
+                    <h3 class="font-bold text-slate-800 mb-6 text-lg text-center">종목별 평균 속도/페이스 비교</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div id="swimChartWrapper"></div>
+                        <div id="bikeChartWrapper"></div>
+                        <div id="runChartWrapper"></div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            container.classList.remove('hidden');
+            renderDisciplineCharts(raceAnalyses);
+        }
+
+        function renderDisciplineCharts(raceAnalyses) {
+            // Destroy existing charts
+            groupCharts.forEach(c => c.destroy());
+            groupCharts = [];
+
+            const groups = ['10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%'];
+            
+            const createData = (key) => groups.map(g => {
+                const row = { group: g };
+                raceAnalyses.forEach(ra => {
+                    const found = ra.averages.find(a => a.group === g);
+                    row[ra.raceName] = found ? found[key] : null;
+                });
+                return row;
+            });
+
+            const createChart = (wrapperId, containerId, title, data, formatter) => {
+                const wrapper = document.getElementById(wrapperId);
+                if (!wrapper) return;
+                wrapper.innerHTML = `
+                    <div class="flex justify-center items-center gap-2 mb-2 cursor-pointer hover:text-blue-600" id="title-${containerId}">
+                        <h4 class="font-bold text-slate-700 text-center text-sm">${title}</h4>
+                        <i class="fas fa-search-plus text-slate-400"></i>
+                    </div>
+                    <div id="${containerId}" style="height: 300px;"></div>
+                `;
+
+                const series = raceAnalyses.map(ra => ({
+                    type: 'line',
+                    xKey: 'group',
+                    yKey: ra.raceName,
+                    yName: ra.raceName,
+                    strokeWidth: 3,
+                    marker: { enabled: true, size: 5 },
+                    tooltip: {
+                        renderer: (params) => ({
+                            title: params.yName,
+                            content: `${params.xValue}: ${formatter ? formatter(params.yValue) : Number(params.yValue).toFixed(1)}`
+                        })
+                    }
+                }));
+
+                const chartOptions = {
+                    container: document.getElementById(containerId),
+                    title: { enabled: false },
+                    data: data,
+                    series: series,
+                    axes: [
+                        { type: 'category', position: 'bottom' },
+                        { 
+                            type: 'number', position: 'left',
+                            label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) }
+                        }
+                    ],
+                    legend: { position: 'bottom' },
+                    padding: { top: 10, right: 20, bottom: 10, left: 10 }
+                };
+
+                const chart = AgChart.create(chartOptions);
+                groupCharts.push(chart);
+                document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions, title);
+            };
+
+            createChart('swimChartWrapper', 'swimChart', '수영 페이스 (min/100m)', createData('swimPaceSec'), formatPace);
+            createChart('bikeChartWrapper', 'bikeChart', '사이클 평속 (km/h)', createData('avgBikeSpeed'), (v) => Number(v).toFixed(1));
+            createChart('runChartWrapper', 'runChart', '런 페이스 (min/km)', createData('runPaceSec'), formatPace);
+        }
+
+        function performDivisionAnalysis(selectedRids) {
+            const container = document.getElementById('divisionAnalysis');
+            if (selectedRids.length === 0) {
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            const divisionAnalyses = selectedRids.map(rid => {
+                const raceData = allRecords.filter(r => r.rn === rid && r.t > 0);
+                if (raceData.length === 0) return null;
+
+                const meta = allMeta.find(m => m.id === rid);
+                const raceName = meta ? meta.name : rid;
+                const raceType = meta ? meta.type : 'Olympic';
+                
+                return analyzeDivisionsForRace(raceName, raceData, raceType);
+            }).filter(a => a !== null);
+
+            renderDivisionTables(divisionAnalyses);
+        }
+
+        function analyzeDivisionsForRace(raceName, raceData, raceType) {
+            const distances = getRaceDistances(raceType);
+            const divisionGroups = {};
+            
+            raceData.forEach(item => {
+                const d = item.d || 'Unknown';
+                if (!divisionGroups[d]) divisionGroups[d] = [];
+                divisionGroups[d].push(item);
+            });
+
+            const divisionAverages = Object.keys(divisionGroups).sort().map(division => {
+                const group = divisionGroups[division];
+                const count = group.length;
+                const avg = (key) => group.reduce((sum, item) => sum + (item[key] || 0), 0) / count;
+
+                const avgTotal = avg('t');
+                const avgSwim = avg('s');
+                const avgBike = avg('bk');
+                const avgRun = avg('r');
+
+                // Calculate speeds/paces
+                const swimPaceSec = avgSwim / (distances.swim * 10);
+                const bikeSpeed = calculateSpeed(distances.bike, avgBike);
+                const runPaceSec = avgRun / distances.run;
+
+                return {
+                    division, count,
+                    avgTotal, avgSwim, avgBike, avgRun,
+                    swimPaceSec, bikeSpeed: parseFloat(bikeSpeed), runPaceSec
+                };
+            });
+
+            return { raceName, averages: divisionAverages };
+        }
+
+        function renderDivisionTables(divisionAnalyses) {
+            const container = document.getElementById('divisionAnalysis');
+            if (divisionAnalyses.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            let html = divisionAnalyses.map((analysis, index) => `
+                <div class="card">
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg text-center">${analysis.raceName} 부문별 평균 기록</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-center border-collapse">
+                            <thead class="bg-slate-50 text-slate-500 font-bold border-b">
+                                <tr>
+                                    <th class="p-3">Division</th><th class="p-3">Count</th><th class="p-3">Total</th>
+                                    <th class="p-3 text-blue-600">Swim</th>
+                                    <th class="p-3 text-green-600">Bike</th>
+                                    <th class="p-3 text-orange-600">Run</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${analysis.averages.map(avg => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="p-3 font-bold text-slate-700">${avg.division}</td>
+                                        <td class="p-3 text-slate-500">${avg.count}</td>
+                                        <td class="p-3 font-bold text-slate-900">${formatS(avg.avgTotal)}</td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgSwim)}</div><div class="text-xs text-blue-500">${formatPace(avg.swimPaceSec)}/100m</div></td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgBike)}</div><div class="text-xs text-green-600">${avg.bikeSpeed} km/h</div></td>
+                                        <td class="p-3"><div class="font-bold text-slate-700">${formatS(avg.avgRun)}</div><div class="text-xs text-orange-500">${formatPace(avg.runPaceSec)}/km</div></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-slate-700 mb-4 text-center">부문별 평균 속도 비교</h4>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div id="divSwimChartWrapper_${index}"></div>
+                            <div id="divBikeChartWrapper_${index}"></div>
+                            <div id="divRunChartWrapper_${index}"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+            container.classList.remove('hidden');
+            renderDivisionCharts(divisionAnalyses); // Call charts rendering after innerHTML is set
+        }
+
+        function renderDivisionCharts(divisionAnalyses) {
+            divisionCharts.forEach(c => c.destroy());
+            divisionCharts = [];
+
+            // The DOM is now ready. We can create the charts directly.
+            divisionAnalyses.forEach((analysis, index) => {
+                 const createChart = (wrapperId, containerId, title, key, formatter) => {
+                        const wrapper = document.getElementById(wrapperId);
+                        if (!wrapper) return;
+                        wrapper.innerHTML = `
+                            <div class="flex justify-center items-center gap-2 mb-2 cursor-pointer hover:text-blue-600" id="title-${containerId}">
+                                <h4 class="font-bold text-slate-700 text-center text-sm">${title}</h4>
+                                <i class="fas fa-search-plus text-slate-400"></i>
+                            </div>
+                            <div id="${containerId}" style="height: 300px;"></div>
+                        `;
+
+                        const data = analysis.averages.map(a => ({ division: a.division, value: a[key] || 0 }));
+
+                        const chartOptions = {
+                            container: document.getElementById(containerId),
+                            title: { enabled: false },
+                            data: data,
+                            series: [{
+                                type: 'line', xKey: 'division', yKey: 'value', yName: title,
+                                stroke: key.includes('Swim') ? '#60a5fa' : (key.includes('Bike') ? '#34d399' : '#f87171'),
+                                strokeWidth: 3, marker: { enabled: true, size: 5 },
+                                tooltip: { renderer: (params) => ({ content: `${params.xValue}: ${formatter ? formatter(params.yValue) : Number(params.yValue).toFixed(1)}` }) }
+                            }],
+                            axes: [
+                                { type: 'category', position: 'bottom', label: { rotation: 45 } },
+                                { type: 'number', position: 'left', label: { formatter: (params) => formatter ? formatter(params.value) : Number(params.value).toFixed(1) } }
+                            ],
+                            legend: { enabled: false },
+                            padding: { top: 10, right: 20, bottom: 10, left: 10 }
+                        };
+
+                        const chart = AgChart.create(chartOptions);
+                        divisionCharts.push(chart);
+                        document.getElementById(`title-${containerId}`).onclick = () => openChartModal(chartOptions, title);
+                    };
+
+                    createChart(`divSwimChartWrapper_${index}`, `divSwimChart_${index}`, '수영 페이스 (min/100m)', 'swimPaceSec', formatPace);
+                    createChart(`divBikeChartWrapper_${index}`, `divBikeChart_${index}`, '사이클 평속 (km/h)', 'bikeSpeed', (v) => Number(v).toFixed(1));
+                    createChart(`divRunChartWrapper_${index}`, `divRunChart_${index}`, '런 페이스 (min/km)', 'runPaceSec', formatPace);
+            });
+        }
+
+        function openChartModal(options, title) {
+            const modal = document.getElementById('chartModal');
+            const titleEl = document.getElementById('modalChartTitle');
+            const container = document.getElementById('modalChartContainer');
+
+            titleEl.innerText = title || "Chart";
+            container.innerHTML = ''; // Clear previous chart
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            activeModalChart = AgChart.create({
+                ...options,
+                container: container,
+                legend: { position: 'bottom' } // 모달에서는 항상 범례를 표시
+            });
+        }
+
+
+        function closeChartModal() {
+            const modal = document.getElementById('chartModal');
+            if (activeModalChart) {
+                activeModalChart.destroy();
+                activeModalChart = null;
+            }
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+
+        function initAdvancedFilters(data) {
+            // Keyword Search
+            const logicBtn = document.getElementById('logicToggle');
+            const input = document.getElementById('gridQuickFilter');
+            const tagsContainer = document.getElementById('searchTags');
+
+            logicBtn.addEventListener('click', () => {
+                currentLogic = currentLogic === 'AND' ? 'OR' : 'AND';
+                logicBtn.innerText = currentLogic;
+                logicBtn.className = `font-bold px-4 py-2 rounded-lg text-sm w-16 text-white ${currentLogic === 'AND' ? 'bg-slate-600' : 'bg-blue-600'}`;
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && input.value.trim() !== '') {
+                    addFilter(input.value.trim(), currentLogic);
+                    input.value = '';
+                }
+            });
+
+            window.addFilter = function(term, logic) {
+                searchFilters.push({ term: term.toLowerCase(), logic });
+                renderTags();
+                gridApi.onFilterChanged();
+            };
+
+            window.removeFilter = function(index) {
+                searchFilters.splice(index, 1);
+                renderTags();
+                gridApi.onFilterChanged();
+            };
+
+            function renderTags() {
+                tagsContainer.innerHTML = searchFilters.map((filter, index) => `
+                    <span class="flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full ${filter.logic === 'AND' ? 'bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-700'}">
+                        ${filter.term}
+                        <button onclick="removeFilter(${index})" class="text-slate-400 hover:text-slate-800">&times;</button>
+                    </span>
+                `).join('');
+            }
+
+            // Sliders
+            createSlider('sliderTotal', 'valTotal', 't', data);
+            createSlider('sliderSwim', 'valSwim', 's', data);
+            createSlider('sliderBike', 'valBike', 'bk', data);
+            createSlider('sliderRun', 'valRun', 'r', data);
+
+            document.getElementById('toggleFilterBtn').onclick = () => {
+                document.getElementById('filterPanel').classList.toggle('hidden');
+                const arrow = document.getElementById('filterArrow');
+                arrow.innerText = arrow.innerText === '▼' ? '▲' : '▼';
+            };
+            document.getElementById('toggleSearchBtn').onclick = (e) => {
+                document.getElementById('searchContent').classList.toggle('hidden');
+                e.target.innerText = e.target.innerText === '접기 ▲' ? '펴기 ▼' : '접기 ▲';
+            };
+        }
+
+        function createSlider(id, valId, key, data) {
+            const el = document.getElementById(id);
+            const values = data.map(x => x[key]).filter(v => v > 0);
+            if (values.length === 0) {
+                if (el.noUiSlider) el.noUiSlider.destroy();
+                return;
+            }
+
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+
+            if (el.noUiSlider) {
+                el.noUiSlider.updateOptions({
+                    range: { 'min': min, 'max': max }
+                });
+                el.noUiSlider.set([min, max]);
+            } else {
+                noUiSlider.create(el, {
+                    start: [min, max], connect: true,
+                    range: { 'min': min, 'max': max },
+                    step: 60, tooltips: false
+                });
+                sliders[key] = el.noUiSlider;
+                el.noUiSlider.on('update', (values) => {
+                    document.getElementById(valId).innerText = `${formatSeconds(parseInt(values[0]))} - ${formatSeconds(parseInt(values[1]))}`;
+                });
+                el.noUiSlider.on('change', () => {
+                    gridApi.onFilterChanged();
+                });
+            }
+        }
+
+        function resetSliders() {
+            searchFilters = [];
+            document.getElementById('searchTags').innerHTML = '';
+            ['t', 's', 'bk', 'r'].forEach(k => {
+                if (sliders[k]) {
+                    const range = sliders[k].options.range;
+                    sliders[k].set([range.min, range.max]);
+                }
+            });
+            gridApi.onFilterChanged();
+        }
+
+        function isSliderActive() {
+            return Object.values(sliders).some(s => s && (s.get()[0] !== s.options.range.min || s.get()[1] !== s.options.range.max));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            // 모달 외부 클릭 시 닫기
+            document.getElementById('chartModal').addEventListener('click', (e) => {
+                if (e.target.id === 'chartModal') {
+                    closeChartModal();
+                }
+            });
+        });
+    </script>
+
+    <div id="chartModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalChartTitle" class="text-xl font-bold"></h3>
+                <button onclick="closeChartModal()" class="text-slate-400 hover:text-slate-800 text-2xl">&times;</button>
+            </div>
+            <div id="modalChartContainer" class="flex-1 relative"></div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://korea-triathlon-utils.vercel.app/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://korea-triathlon-utils.vercel.app/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://korea-triathlon-utils.vercel.app/favicon/favicon-16x16.png">
+    <link rel="manifest" href="https://korea-triathlon-utils.vercel.app/site.webmanifest">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수영 컷오프 계산</title>
+    <link rel="stylesheet" href="/css/bucheonTriStyle.css">
+    <script src="/menu/menu_full_handler.js" defer></script>
+    <script src="/js/back_exit_handler.js" defer></script>
+    
+    <style>
+        :root {
+            --danger-red: #e74c3c;
+            --safe-green: #2ecc71;
+            --swim-dark: #2c3e50;
+            --track-bg: #dfe6e9;
+        }
+
+        .slider-container { margin-bottom: 35px; position: relative; padding: 0 10px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; color: #34495e; }
+        .slider-val { color: var(--danger-red); font-size: 1.2em; font-family: monospace; }
+
+        input[type=range] {
+            width: 100%; cursor: pointer; height: 10px; border-radius: 5px; 
+            background: var(--track-bg); -webkit-appearance: none; appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 24px; height: 24px;
+            background: #fff; border: 3px solid var(--danger-red); border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .summary-box { display: grid; grid-template-columns: 1fr; gap: 10px; background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 2px solid var(--danger-red); }
+        .sum-item span { display: block; font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px; }
+        .sum-item strong { display: block; font-size: 2.2em; color: var(--danger-red); }
+
+        .preset-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .btn-preset { background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 0.85em; cursor: pointer; transition: all 0.2s; }
+        .btn-preset.active { background: var(--swim-dark); color: white; border-color: var(--swim-dark); }
+
+        .alert-panel { background: #fff5f5; border-left: 5px solid var(--danger-red); padding: 15px; border-radius: 8px; font-size: 0.85em; line-height: 1.6; color: #c0392b; margin-bottom: 25px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; text-align: center; background: white; border-radius: 12px; overflow: hidden; }
+        th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #dee2e6; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; font-weight: bold; background: #eee; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1 style="flex:1; margin-left:10px;">🚨 수영 컷오프 마지노선 계산</h1>
+    </div>
+
+    <div class="alert-panel">
+        <strong>⚠️ 컷오프 주의보:</strong> 본 계산기는 대회 공식 컷오프 시간을 기준으로 합니다. 실제 대회에서는 수트 착용 시간과 입수 대기 시간을 고려하여 <strong>계산된 페이스보다 5~10초 더 빠르게</strong> 수영하는 것을 권장합니다.
+    </div>
+
+    <div class="controls" style="background:#fff; padding:25px 15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:20px;">
+        <div style="margin-bottom: 15px; font-weight: bold; color: #34495e;">1. 대회 코스 선택</div>
+        <div class="preset-buttons" id="course-presets">
+            <button class="btn-preset active" data-dist="1500" data-cutoff="50">올림픽<br>(1.5k)</button>
+            <button class="btn-preset" data-dist="1900" data-cutoff="70">하프<br>(1.9k)</button>
+            <button class="btn-preset" data-dist="3800" data-cutoff="140">킹코스<br>(3.8k)</button>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>대회 거리</span><span class="slider-val"><span id="disp-dist">1500</span> m</span></div>
+            <input type="range" id="in-dist" min="500" max="4000" step="100" value="1500">
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>제한 시간 (Cut-off)</span><span class="slider-val" id="disp-cutoff">50분</span></div>
+            <input type="range" id="in-cutoff" min="10" max="180" step="1" value="50">
+        </div>
+    </div>
+
+    <div class="summary-box">
+        <div class="sum-item">
+            <span>컷오프 시간 통과를 위한 마지노선 페이스</span>
+            <strong id="limit-pace">3'20"</strong>
+            <span style="color: var(--danger-red); margin-top:5px; font-weight:bold;">(100m당 페이스)</span>
+        </div>
+    </div>
+
+    <h3 style="margin: 25px 0 15px 5px; color: #2c3e50;">🚩 구간별 체크포인트 (마지노선)</h3>
+    <div class="table-container" style="margin-bottom: 50px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>거리</th>
+                    <th>통과 시간</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody id="checkpoint-table">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const elDist = document.getElementById('in-dist');
+    const elCutoff = document.getElementById('in-cutoff');
+    const dispDist = document.getElementById('disp-dist');
+    const dispCutoff = document.getElementById('disp-cutoff');
+    const limitPace = document.getElementById('limit-pace');
+    const presetBtns = document.querySelectorAll('.btn-preset');
+
+    function formatPace(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.round(seconds % 60);
+        return `${m}'${s.toString().padStart(2, '0')}"`;
+    }
+
+    function formatTotalTime(minutes) {
+        const h = Math.floor(minutes / 60);
+        const m = Math.round(minutes % 60);
+        if (h > 0) return `${h}시간 ${m}분`;
+        return `${m}분`;
+    }
+
+    function formatTableTime(totalMinutes) {
+        const h = Math.floor(totalMinutes / 60);
+        const m = Math.floor(totalMinutes % 60);
+        const s = Math.round((totalMinutes * 60) % 60);
+        if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function update() {
+        const dist = parseInt(elDist.value);
+        const cutoffMin = parseInt(elCutoff.value);
+
+        dispDist.textContent = dist;
+        dispCutoff.textContent = formatTotalTime(cutoffMin);
+
+        // 100m당 페이스 계산: (제한시간(초) / 거리) * 100
+        const paceInSec = (cutoffMin * 60 / dist) * 100;
+        limitPace.textContent = formatPace(paceInSec);
+
+        // 체크포인트 생성 (약 4~5개 구간으로 나눔)
+        const tbody = document.getElementById('checkpoint-table');
+        tbody.innerHTML = '';
+        
+        const step = dist > 2000 ? 1000 : 500;
+        let checkpoints = [];
+        for(let i = step; i < dist; i += step) {
+            checkpoints.push(i);
+        }
+        checkpoints.push(dist);
+
+        checkpoints.forEach((cp, index) => {
+            const cpTime = (paceInSec * (cp / 100)) / 60;
+            const isFinish = cp === dist;
+            
+            const tr = document.createElement('tr');
+            if(isFinish) tr.style.backgroundColor = "#fff9db";
+            
+            tr.innerHTML = `
+                <td>${cp >= 1000 ? (cp/1000).toFixed(1)+'km' : cp+'m'}</td>
+                <td style="font-weight:bold;">${formatTableTime(cpTime)}</td>
+                <td><span class="status-badge" style="${isFinish ? 'background:var(--danger-red); color:white;' : ''}">${isFinish ? 'CUT-OFF' : 'Passing'}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 프리셋 버튼 이벤트
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            presetBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            elDist.value = btn.dataset.dist;
+            elCutoff.value = btn.dataset.cutoff;
+            update();
+        });
+    });
+
+    elDist.oninput = () => {
+        presetBtns.forEach(b => b.classList.remove('active'));
+        update();
+    };
+    elCutoff.oninput = update;
+
+    // 초기 실행
+    update();
+</script>
+</body>
+</html>

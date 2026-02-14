@@ -17,7 +17,7 @@ export default function CyclingAnalyzer() {
   // 메뉴 HTML 로드
   useEffect(() => {
     if (!mounted) return;
-    fetch('/menu_structure.html')
+    fetch('/menu/menu_structure.html')
       .then(res => res.text())
       .then(html => {
         const parser = new DOMParser();
@@ -167,9 +167,9 @@ const closeQrModal = (modalId) => {
       <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>📊 사이클 구간평속 리포트 생성</title>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"/>
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png"/>
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png"/>
         <link rel="manifest" href="/site.webmanifest"/>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="google" content="notranslate" />
@@ -193,7 +193,7 @@ const closeQrModal = (modalId) => {
             <div className="icon-circle">🚴</div>
             <h2>사이클 구간 평속 분석</h2>
             <p className="desc">파일(.xlsx, .csv)을 업로드하면<br/>분석한 html을 다운해드립니다.</p>
-            <a href="/2025_구례IRONMAN_홍길동클럽_싸이클_구간기록.xlsx" download className="sample-link">
+            <a href="/file/2025_구례IRONMAN_홍길동클럽_싸이클_구간기록.xlsx" download className="sample-link">
               📥 샘플 파일 다운로드
             </a>
           </div>
@@ -245,9 +245,9 @@ const closeQrModal = (modalId) => {
           </p>
           <div className="guide-images" style={{marginBottom: '60px'}}>
             <img 
-              src="/upload_sample.PNG" 
+              src="/img/upload_sample.PNG" 
               alt="엑셀 업로드 양식 예시" 
-              onClick={() => setSelectedImage('/upload_sample.PNG')}
+              onClick={() => setSelectedImage('/img/upload_sample.PNG')}
               className="upload-sample-img"
             />
           </div>
@@ -261,11 +261,11 @@ const closeQrModal = (modalId) => {
             <div className="accordion-content">
               <p>업로드 후 생성되는 리포트에는 다음과 같은 분석 차트가 제공됩니다.</p>
               <div className="guide-images report-gallery">
-                <img src="/report_chart_01.PNG" alt="분석 리포트 예시 1" onClick={() => setSelectedImage('/report_chart_01.PNG')} />
-                <img src="/report_chart_02.PNG" alt="분석 리포트 예시 2" onClick={() => setSelectedImage('/report_chart_02.PNG')} />
-                <img src="/report_chart_03.PNG" alt="분석 리포트 예시 3" onClick={() => setSelectedImage('/report_chart_03.PNG')} />
-                <img src="/report_chart_04.PNG" alt="분석 리포트 예시 4" onClick={() => setSelectedImage('/report_chart_04.PNG')} />
-                <img src="/report_chart_05.PNG" alt="분석 리포트 예시 5" onClick={() => setSelectedImage('/report_chart_05.PNG')} />
+                <img src="/img/report_chart_01.PNG" alt="분석 리포트 예시 1" onClick={() => setSelectedImage('/img/report_chart_01.PNG')} />
+                <img src="/img/report_chart_02.PNG" alt="분석 리포트 예시 2" onClick={() => setSelectedImage('/img/report_chart_02.PNG')} />
+                <img src="/img/report_chart_03.PNG" alt="분석 리포트 예시 3" onClick={() => setSelectedImage('/img/report_chart_03.PNG')} />
+                <img src="/img/report_chart_04.PNG" alt="분석 리포트 예시 4" onClick={() => setSelectedImage('/img/report_chart_04.PNG')} />
+                <img src="/img/report_chart_05.PNG" alt="분석 리포트 예시 5" onClick={() => setSelectedImage('/img/report_chart_05.PNG')} />
               </div>
             </div>
           )}
@@ -287,7 +287,7 @@ const closeQrModal = (modalId) => {
       <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
       <div className="donation-btn-group">
         <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss" onClick={(e) => handleTossClick(e, '3333137635297')}>
-          <img src="Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon"/>
+          <img src="/img/Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon"/>
           Toss 후원
         </a>
         <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" className="btn-kakao" onClick={handleKakaoClick}>
@@ -304,7 +304,7 @@ const closeQrModal = (modalId) => {
                 <h3 style={{ color: '#0064FF' }}>Toss로 후원하기</h3>
                 <p>계좌번호가 복사되었습니다!</p>
                 <div className="account-badge toss-bg">카카오뱅크 3333137635297</div>
-                <img src="toss_qr.jpg" alt="Toss QR" className="qr-image"/>
+                <img src="/img/toss_qr.jpg" alt="Toss QR" className="qr-image"/>
                 <button className="qr-btn-close" onClick={() => closeQrModal('tossModal')}>닫기</button>
             </div>
             </div>
@@ -314,7 +314,7 @@ const closeQrModal = (modalId) => {
                 <h3 style={{ color: '#3C1E1E' }}>카카오페이 후원</h3>
                 <p>카톡앱으로 QR코드를 스캔하세요.</p>
                 <div className="account-badge kakao-bg">카카오페이 송금코드</div>
-                <img src="Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
+                <img src="/img/Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
                 <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
             </div>
             </div>

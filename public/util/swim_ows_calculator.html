@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://korea-triathlon-utils.vercel.app/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://korea-triathlon-utils.vercel.app/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://korea-triathlon-utils.vercel.app/favicon/favicon-16x16.png">
+    <link rel="manifest" href="https://korea-triathlon-utils.vercel.app/site.webmanifest">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>풀 vs 오픈워터 기록 변환기</title>
+    <link rel="stylesheet" href="/css/bucheonTriStyle.css">
+    <script src="/menu/menu_full_handler.js" defer></script>
+    <script src="/js/back_exit_handler.js" defer></script>
+    
+    <style>
+        :root {
+            --ows-ocean: #16a085;
+            --wetsuit-gold: #f39c12;
+            --danger-red: #e74c3c;
+            --track-bg: #dfe6e9;
+        }
+
+        .formula-panel { background: #ffffff; border: 1px solid #e1e8ed; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .formula-box { font-family: 'Courier New', monospace; font-size: 1.05em; background: #34495e; color: #fff; padding: 12px; border-radius: 8px; margin: 10px 0; line-height: 1.4; }
+
+        .slider-container { margin-bottom: 30px; position: relative; padding: 0 10px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 10px; color: #34495e; }
+        .slider-val { color: var(--ows-ocean); font-size: 1.1em; font-family: monospace; }
+
+        input[type=range] { width: 100%; cursor: pointer; height: 10px; border-radius: 5px; background: var(--track-bg); -webkit-appearance: none; appearance: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #fff; border: 3px solid var(--ows-ocean); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-round { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider-round:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-round { background-color: var(--wetsuit-gold); }
+        input:checked + .slider-round:before { transform: translateX(30px); }
+
+        .summary-box { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 2px solid var(--ows-ocean); transition: all 0.3s ease; }
+        .summary-box.danger { border-color: var(--danger-red); background-color: #fff5f5; }
+        .sum-item strong { display: block; font-size: 2.5em; color: var(--ows-ocean); }
+        .summary-box.danger strong { color: var(--danger-red); }
+
+        .info-panel { background: #e8f6f3; border-left: 5px solid var(--ows-ocean); padding: 15px; border-radius: 8px; font-size: 0.85em; line-height: 1.6; color: #16a085; margin-bottom: 25px; }
+        .info-panel.danger { background: #fff5f5; border-left-color: var(--danger-red); color: var(--danger-red); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기">☰</button>
+        <h1 style="flex:1; margin-left:10px;">🌊 OWS 기록 변환기</h1>
+    </div>
+
+    <div class="formula-panel">
+        <div style="font-weight: bold; color: #2c3e50; margin-bottom: 8px;">[ OWS 기록 도출 공식 ]</div>
+        <div class="formula-box">
+            최종 속도 = (수영 속도 × 웻수트 계수) + 조류 속도 (Knot환산)
+        </div>
+        <div style="font-size: 0.82em; color: #576574; line-height: 1.5;">
+            • <strong>컷오프 판정:</strong> 올림픽(50분), 하프(70분), 킹코스(140분) 기준 제한 시간 내 완주 가능 여부를 실시간 판단합니다.<br>
+            • <strong>조류 저항:</strong> 역조 1.0노트 이상은 실전에서 전진이 매우 힘든 극한 상황으로 간주됩니다.<br>
+            • <strong>페이스별 웻수트 계수:</strong><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;2:30 이상 : 약 9% 단축 (가장 큰 효과)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;2:10 ~ 2:30 : 약 7% 단축<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;1:50 ~ 2:10 : 약 5% 단축<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;1:35 ~ 1:50 : 약 3% 단축<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;1:35 미만 : 약 2% 단축 (저항 감소 위주)<br>
+        </div>
+    </div>
+
+    <div class="controls" style="background:#fff; padding:25px 15px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); margin-bottom:20px;">
+        <div class="slider-container">
+            <div class="slider-label"><span>수영장 100m 페이스</span><span class="slider-val" id="disp-base-pace">1분 50초</span></div>
+            <input type="range" id="in-base-pace" min="60" max="180" step="1" value="110">
+        </div>
+
+        <div class="toggle-container">
+            <span style="font-weight:bold; color:#34495e;">웻수트(Wetsuit) 착용 여부</span>
+            <label class="switch">
+                <input type="checkbox" id="in-wetsuit" checked>
+                <span class="slider-round"></span>
+            </label>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>조류 강도 (Knot)</span><span class="slider-val" id="disp-tide">0.0 kt</span></div>
+            <input type="range" id="in-tide" min="-1.5" max="1.5" step="0.1" value="0">
+        </div>
+
+        <div class="slider-container">
+            <div class="slider-label"><span>대회 코스 및 거리</span><span class="slider-val" id="disp-dist">1500m</span></div>
+            <select id="in-course" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-weight:bold;">
+                <option value="1500" data-cutoff="3000">올림픽 코스 (1.5km / 50분 컷)</option>
+                <option value="1900" data-cutoff="4200">하프 코스 (1.9km / 70분 컷)</option>
+                <option value="3800" data-cutoff="8400">킹코스 (3.8km / 140분 컷)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="summary-box" id="summary-box">
+        <div class="sum-item">
+            <span id="target-status" style="font-weight:bold; margin-bottom:5px;">완주 가능</span>
+            <strong id="total-time">00:00:00</strong>
+            <div style="margin-top:10px; font-size:0.85em; color:#7f8c8d;">
+                예상 OWS 페이스: <span id="ows-pace">--</span> / 100m
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="analysis-box"></div>
+</div>
+
+<script>
+    const elBasePace = document.getElementById('in-base-pace');
+    const elWetsuit = document.getElementById('in-wetsuit');
+    const elTide = document.getElementById('in-tide');
+    const elCourse = document.getElementById('in-course');
+
+    function formatFullTime(seconds) {
+        if (seconds <= 0 || !isFinite(seconds)) return "계산 불가";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.round(seconds % 60);
+        return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function formatPace(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.round(seconds % 60);
+        return `${m}'${s.toString().padStart(2, '0')}"`;
+    }
+
+function update() {
+        const basePaceSec = parseInt(elBasePace.value);
+        const isWetsuit = elWetsuit.checked;
+        const tideKnot = parseFloat(elTide.value);
+        const dist = parseInt(elCourse.value);
+        const cutoffSec = parseInt(elCourse.options[elCourse.selectedIndex].dataset.cutoff);
+
+        // 1. 수영장 속도 환산 (m/s)
+        let swimSpeed = 100 / basePaceSec;
+
+        /** * 2. 현실적 웻수트 차등 효과 (동호인 통계 기반)
+         * 입문자일수록 자세 교정 효과(부력)가 커서 단축률이 기하급수적으로 높음
+         */
+        // 더욱 보수적이고 정교한 웻수트 보정 로직
+        let wetsuitBonus = 1.0;
+        if (isWetsuit) {
+            if (basePaceSec >= 150) {      // 2:30 이상 (초보)
+                wetsuitBonus = 1.09;       // 9% 단축
+            } else if (basePaceSec >= 130) { // 2:10 ~ 2:30 (중급)
+                wetsuitBonus = 1.07;       // 7% 단축
+            } else if (basePaceSec >= 110) { // 1:50 ~ 2:10 (중상급)
+                wetsuitBonus = 1.05;       // 5% 단축
+            } else if (basePaceSec >= 95) {  // 1:35 ~ 1:50 (상급)
+                wetsuitBonus = 1.03;       // 3% 단축
+            } else {                         // 1:35 미만 (선수급)
+                wetsuitBonus = 1.02;       // 2% 단축 (저항 감소만 반영)
+            }
+        }
+        swimSpeed *= wetsuitBonus;
+
+        // 3. 조류 속도 환산 (1 Knot = 0.5144 m/s)
+        const tideMs = tideKnot * 0.5144;
+        const finalSpeed = swimSpeed + tideMs;
+
+        // UI 업데이트
+        document.getElementById('disp-base-pace').textContent = formatPace(basePaceSec);
+        document.getElementById('disp-tide').textContent = `${tideKnot.toFixed(1)} kt (${tideMs.toFixed(2)} m/s)`;
+        document.getElementById('disp-dist').textContent = dist + "m";
+
+        const totalSeconds = dist / finalSpeed;
+        const owsPace100 = 100 / finalSpeed;
+
+        const summaryBox = document.getElementById('summary-box');
+        const targetStatus = document.getElementById('target-status');
+        const analysisBox = document.getElementById('analysis-box');
+
+        // 4. 판정 로직 (전진 불가 -> 컷오프 통과 불가 -> 완주 순)
+        if (finalSpeed <= 0) {
+            summaryBox.className = "summary-box danger";
+            targetStatus.textContent = "⚠️ 물리적 전진 불가";
+            document.getElementById('total-time').textContent = "--:--:--";
+            document.getElementById('ows-pace').textContent = "측정불가";
+            analysisBox.className = "info-panel danger";
+            analysisBox.innerHTML = `<strong>위험:</strong> 역조 속도가 수영 속도보다 빠릅니다. 해안으로 떠밀려갈 수 있으니 절대 입수 금지입니다.`;
+        } else if (totalSeconds > cutoffSec) {
+            summaryBox.className = "summary-box danger";
+            targetStatus.textContent = "❌ 컷오프 통과 불가";
+            document.getElementById('total-time').textContent = formatFullTime(totalSeconds);
+            document.getElementById('ows-pace').textContent = formatPace(owsPace100);
+            analysisBox.className = "info-panel danger";
+            analysisBox.innerHTML = `<strong>경고:</strong> 예상 완주 시간이 제한 시간을 초과했습니다. 조류 영향으로 평소보다 <strong>${formatPace(owsPace100 - (basePaceSec/wetsuitBonus))}</strong> 더 느린 페이스입니다.`;
+        } else {
+            summaryBox.className = "summary-box";
+            targetStatus.textContent = "✅ 완주 가능 (Safe)";
+            document.getElementById('total-time').textContent = formatFullTime(totalSeconds);
+            document.getElementById('ows-pace').textContent = formatPace(owsPace100);
+            
+            // 숙련도별 맞춤 코멘트
+            let levelLabel = (basePaceSec >= 150) ? "초보" : (basePaceSec >= 130) ? "중급" : (basePaceSec >= 110) ? "중상급" :(basePaceSec >= 95) ? "상급" : "선수급";
+            analysisBox.className = "info-panel";
+            analysisBox.innerHTML = `<strong>분석:</strong> ${levelLabel} 수준의 페이스이며, 웻수트의 ${((wetsuitBonus-1)*100).toFixed(0)}% 보정 효과가 반영되었습니다.`;
+        }
+    }
+
+    [elBasePace, elWetsuit, elTide, elCourse].forEach(el => {
+        el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', update);
+    });
+
+    update();
+</script>
+</body>
+</html>

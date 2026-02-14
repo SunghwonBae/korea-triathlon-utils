@@ -68,28 +68,28 @@ const closeQrModal = (modalId) => {
 
   const menuItems = [
     { icon: "📅", title: "D-Day", desc: "D-Day 관리", url: "/dday.html" },
-    { icon: "🏆", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report_ironman.html" },
-    { icon: "🥇", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report_challenge.html" },
-    { icon: "🏁", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report_triathlon.html" },
-    { icon: "💾", title: "T-Memory", desc: "기록 저장 및 분석", url: "/triathlon_memory.html" },
-    { icon: "🗂️", title: "T-Memory Report", desc: "기록 보고서 생성", url: "/memory_report.html" },
-    { icon: "📈", title: "대회 통계 비교", desc: "여러 대회 기록 비교 분석", url: "/report_all_v2.html" },
-    { icon: "👑", title: "킹코스 완주 기록", desc: "2019년까지 킹완주자 기록", url: "/report_old_king.html" },
-    { icon: "🔍", title: "아이언맨 통합 기록검색기", desc: "아이언맨 대회기록검색", url: "/ironman_records_search_all.html" },
-    { icon: "📸", title: "IM 트래커 캡처기록", desc: "트래커 캡처에서 기록 추출", url: "/ironman_tracker_capture_records.html" },
+    { icon: "🏆", title: "IM CHART", desc: "IRONMAN 대회 기록 분석", url: "/report/report_ironman.html" },
+    { icon: "🥇", title: "Tri-Gram", desc: "챌린지 대회 기록 분석", url: "/report/report_challenge.html" },
+    { icon: "🏁", title: "TRI-ing", desc: "대한철인3종협회 기록 분석", url: "/report/report_triathlon.html" },
+    { icon: "💾", title: "T-Memory", desc: "기록 저장 및 분석", url: "/report/triathlon_memory.html" },
+    { icon: "🗂️", title: "T-Memory Report", desc: "기록 보고서 생성", url: "/report/memory_report.html" },
+    { icon: "📈", title: "대회 통계 비교", desc: "여러 대회 기록 비교 분석", url: "/report/report_all_v2.html" },
+    { icon: "👑", title: "킹코스 완주 기록", desc: "2019년까지 킹완주자 기록", url: "/report/report_old_king.html" },
+    { icon: "🔍", title: "아이언맨 통합 기록검색기", desc: "아이언맨 대회기록검색", url: "/report/ironman_records_search_all.html" },
+    { icon: "📸", title: "IM 트래커 캡처기록", desc: "트래커 캡처에서 기록 추출", url: "/report/ironman_tracker_capture_records.html" },
     { icon: "📊", title: "사이클 구간평속 분석", desc: "사이클 구간별속도 분석", url: "/cyclinganalyzer" },
-    { icon: "⚖️", title: "킹코스 완주시간", desc: "철인3종 예상 기록 계산", url: "/ironman_calculator.html" },
-    { icon: "🍌", title: "보급 계산기", desc: "경기 중 필요한 에너지 보급량", url: "/gelwater_calculator.html" },
-    { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/bike_calculator.html" },
-    { icon: "🏔️", title: "업힐 분석기", desc: "경사도/파워별 기어비 분석", url: "/bike_uphill.html" },
-    { icon: "🚴", title: "GPX to ZWO", desc: "코스 파일을 워크아웃으로 변환", url: "/bike_gpx_zwo.html" },
-    { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/running_calculator.html" },
-    { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/runpace_calculator.html" },
-    { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/run_mileage_calculator.html" },
-    { icon: "🏊", title: "수영 CSS 계산기", desc: "지속 가능한 수영 속도 분석", url: "/swim_css_calculator.html" },
-    { icon: "🏊", title: "수영 SWOLF 분석기", desc: "효율적인 수영을 위한 SWOLF", url: "/swim_swolf_calculator.html" },
-    { icon: "🚨", title: "수영 컷오프 계산기", desc: "대회 컷오프 시간 계산", url: "/swim_cutoff_calculator.html" },
-    { icon: "🌊", title: "수영 오픈워터 변환기", desc: "오픈워터 수영 기록 변환", url: "/swim_ows_calculator.html" },
+    { icon: "⚖️", title: "킹코스 완주시간", desc: "철인3종 예상 기록 계산", url: "/util/ironman_calculator.html" },
+    { icon: "🍌", title: "보급 계산기", desc: "경기 중 필요한 에너지 보급량", url: "/util/gelwater_calculator.html" },
+    { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/util/bike_calculator.html" },
+    { icon: "🏔️", title: "업힐 분석기", desc: "경사도/파워별 기어비 분석", url: "/util/bike_uphill.html" },
+    { icon: "🚴", title: "GPX to ZWO", desc: "코스 파일을 워크아웃으로 변환", url: "/util/bike_gpx_zwo.html" },
+    { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/util/running_calculator.html" },
+    { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/util/runpace_calculator.html" },
+    { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/util/run_mileage_calculator.html" },
+    { icon: "🏊", title: "수영 CSS 계산기", desc: "지속 가능한 수영 속도 분석", url: "/util/swim_css_calculator.html" },
+    { icon: "🏊", title: "수영 SWOLF 분석기", desc: "효율적인 수영을 위한 SWOLF", url: "/util/swim_swolf_calculator.html" },
+    { icon: "🚨", title: "수영 컷오프 계산기", desc: "대회 컷오프 시간 계산", url: "/util/swim_cutoff_calculator.html" },
+    { icon: "🌊", title: "수영 오픈워터 변환기", desc: "오픈워터 수영 기록 변환", url: "/util/swim_ows_calculator.html" },
   ];
 
   const [displayItems, setDisplayItems] = useState(menuItems);
@@ -151,9 +151,9 @@ const closeQrModal = (modalId) => {
       <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>Korea Triathlon Utils</title>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"/>
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"/>
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"/>
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png"/>
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png"/>
         <link rel="manifest" href="/site.webmanifest"/>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -199,7 +199,7 @@ const closeQrModal = (modalId) => {
             <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
             <div className="donation-btn-group">
               <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss" onClick={(e) => handleTossClick(e, '3333137635297')}>
-                <img src="Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon"/>
+                <img src="/img/Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon"/>
                 Toss 후원
               </a>
               <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" className="btn-kakao" onClick={handleKakaoClick}>
@@ -216,7 +216,7 @@ const closeQrModal = (modalId) => {
                 <h3 style={{ color: '#0064FF' }}>Toss로 후원하기</h3>
                 <p>계좌번호가 복사되었습니다!</p>
                 <div className="account-badge toss-bg">카카오뱅크 3333137635297</div>
-                <img src="toss_qr.jpg" alt="Toss QR" className="qr-image"/>
+                <img src="/img/toss_qr.jpg" alt="Toss QR" className="qr-image"/>
                 <button className="qr-btn-close" onClick={() => closeQrModal('tossModal')}>닫기</button>
             </div>
             </div>
@@ -226,7 +226,7 @@ const closeQrModal = (modalId) => {
                 <h3 style={{ color: '#3C1E1E' }}>카카오페이 후원</h3>
                 <p>카톡앱으로 QR코드를 스캔하세요.</p>
                 <div className="account-badge kakao-bg">카카오페이 송금코드</div>
-                <img src="Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
+                <img src="/img/Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
                 <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
             </div>
             </div>

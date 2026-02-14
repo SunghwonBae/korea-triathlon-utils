@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ironman 70.3 Records Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/footerStyle.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        :root {
+            --primary-blue: #0A317E;  
+            --border-light: #eee;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+        .card { background: white; border-radius: 1.5rem; padding: 2.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; position: relative; }
+        .btn-red { background-color: #ef4444; color: white; font-weight: bold; transition: all 0.2s; }
+        .btn-red:hover { background-color: #dc2626; transform: translateY(-1px); }
+        .table-container { width: 100%; overflow-x: auto; border-radius: 1rem; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f1f5f9; padding: 1rem; font-size: 0.875rem; font-weight: 700; color: #475569; }
+        td { padding: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.875rem; vertical-align: middle; }
+        .year-badge { 
+            display: inline-flex; 
+            align-items: center;
+            padding: 0.25rem 0.5rem; 
+            margin: 0.2rem; 
+            background-color: #fee2e2; 
+            color: #b91c1c; 
+            border-radius: 0.5rem; 
+            font-size: 0.75rem; 
+            font-weight: 600;
+        }
+        .search-input {
+            width: 60px;
+            padding: 0.2rem;
+            border: 1px solid #fca5a5;
+            border-radius: 0.3rem;
+            font-size: 0.7rem;
+            margin-left: 0.4rem;
+            outline: none;
+        }
+        .search-btn {
+            background: #ef4444;
+            color: white;
+            padding: 0.25rem 0.4rem;
+            border-radius: 0.3rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; border-radius: 1rem; max-width: 800px; width: 90%; }
+        /* 슬라이드 메뉴 스타일 */
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: var(--primary-blue); /* 기존 테마 색상 */ }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #dc2626; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; border-radius: 1.5rem; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #ef4444; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .table-top{ display: block; font-weight: bold; margin-bottom: 1rem; color: #475569; }
+        @media (max-width: 768px) {
+            body { padding: 1rem !important; }
+            .card { padding: 1.25rem; border-radius: 1rem; }
+            h1 { font-size: 1.5rem !important; }
+            .table-container { border-radius: 0.5rem; }
+            th, td { padding: 0.75rem 0.5rem; font-size: 0.8rem; }
+            .search-input { width: 50px; }
+            #menuToggle { top: 1rem; left: 1rem; }
+            .table-top{ font-size: 0.9rem; }
+            .font-medium { font-size: 0.85rem;}
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 lg:p-12">
+    <button id="menuToggle" class="fixed top-6 left-6 z-[100] bg-white border border-slate-300 rounded-lg w-10 h-10 flex justify-center items-center text-xl text-slate-700 shadow-md hover:bg-slate-50 hover:text-red-600 transition-all"><i class="fas fa-bars"></i></button>
+    <div class="max-w-7xl mx-auto">
+        <div class="card w-full text-center mb-8">
+            <div class="mb-6">
+                <h1 class="text-3xl font-black text-slate-800 mb-2">Ironman 70.3 결과 검색기</h1>
+                <p class="text-slate-500 font-medium">
+                https://www.coachcox.co.uk/ 사이트에서 전체 대회목록을 크롤링해서 한화면에서 검색하기 편하게 만들어봤습니다.<br>
+                대회목록은 주기적으로 업데이트 예정이며, 선수 검색시 CoachCox 사이트의 API를 직접 호출하므로 <br>
+                CoachCox에서 차단이나 로그인 필요로 변경하게 되면 작동하지 않을 수도 있습니다.
+            </p>
+            </div>
+        </div>
+
+        <div id="resultArea" class="card w-full">
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+            </div>
+            <span class="table-top">연도별결과 및 선수검색 (이름or배번 입력후 🔍클릭)</span>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 200px;">대회명</th>
+                            <th>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <button id="goseongBtn" disabled onclick="document.getElementById('Goseong-race').scrollIntoView({ behavior: 'smooth' });" class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600 mr-2 disabled:opacity-50 disabled:cursor-not-allowed">고성바로가기</button>
+                                        <button id="downloadJsonBtn" disabled onclick="downloadJson()" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fas fa-download mr-1"></i> 대회목록 JSON 다운</button>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="raceTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">검색 결과</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-black text-xl">&times;</button>
+            </div>
+            <div id="modalBody" class="overflow-x-auto">
+                </div>
+        </div>
+    </div>
+    <script src="/menu/menu_full_handler.js" defer></script>
+    <script>
+        let crawledData = [];
+
+        async function loadInitialData() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const goseongBtn = document.getElementById('goseongBtn');
+            const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+
+            try {
+                const res = await fetch('/data/ironman_70.3_races.json');
+                if (res.ok) {
+                    crawledData = await res.json();
+                    renderTable(crawledData);
+                }
+            } catch (e) {
+                console.log('초기 데이터 로드 실패:', e);
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                goseongBtn.disabled = false;
+                downloadJsonBtn.disabled = false;
+            }
+        }
+
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
+            el.innerText = msg;
+            document.body.appendChild(el);
+            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => el.remove(), 300);
+            }, 3000);
+        }
+
+        // 초 단위를 HH:MM:SS로 변환하는 헬퍼 함수
+        const formatSeconds = (seconds) => {
+            if (!seconds || seconds === "0" || isNaN(seconds)) return "-";
+            const s = parseInt(seconds);
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const rs = s % 60;
+            return [h, m, rs].map(v => v < 10 ? "0" + v : v).join(":");
+        };
+
+
+
+        function renderTable(data) {
+            const tbody = document.getElementById('raceTableBody');
+            tbody.innerHTML = '';
+            data.forEach((item, index) => {
+                let yearHtml = item.years.map(y => `
+                    <div class="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-1 m-1 shadow-sm">
+                        <span class="text-xs font-bold text-gray-700 px-2">${y.year}</span>
+                        <input type="text" placeholder="이름or배번" id="name_${index}_${y.year}" 
+                            class="w-20 text-[10px] p-1 border rounded bg-white outline-none focus:ring-1 focus:ring-red-400"
+                            onkeypress="if(event.keyCode==13) searchPlayer('${y.resultUrl}', '${index}', '${y.year}')">
+                        <button onclick="searchPlayer('${y.resultUrl}', '${index}', '${y.year}')" class="ml-1 bg-red-500 text-white p-1 rounded">
+                            <i class="fas fa-search text-[10px]"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                const guryeId = item.name.includes('Goseong') ? 'id="Goseong-race"' : '';
+                const row = `
+                    <tr ${guryeId}>
+                    <tr>
+                        <td class="text-slate-400 text-center text-xs">${index + 1}</td>
+                        <td><div class="font-bold text-slate-800 text-sm">${item.name}</div></td>
+                        <td><div class="flex flex-wrap">${yearHtml || '<span class="text-gray-300">No data</span>'}</div></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function downloadJson() {
+            if (!crawledData || crawledData.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+            const blob = new Blob([JSON.stringify(crawledData, null, 2)], {type: 'application/json'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ironman_70.3races_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        
+        async function searchPlayer(resultUrl, index, year) {
+            const playerName = document.getElementById(`name_${index}_${year}`).value;
+
+            if (!resultUrl || !playerName) {
+                showToast("URL과 이름을 입력해주세요.");
+                return;
+            }
+
+            // 1. Race ID 추출
+            const raceIdMatch = resultUrl.match(/race\/(\d+)\//);
+            const raceId = raceIdMatch ? raceIdMatch[1] : null;
+            
+            // 2. 브라우저에서 직접 호출할 API 주소 (v1.90)
+            const apiUrl = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/race/results/${raceId}`;
+
+            try {
+                // 관리자 브라우저 권한으로 직접 요청
+                const response = await fetch(apiUrl);
+                const allData = await response.json(); // 이미지에서 확인한 '배열' 데이터
+
+                // 3. 필터링 (아이템 구조: n=이름, bi=배번, di=연령대, ot=전체시간, st=수영, bt=자전거, rt=런)
+                const filtered = allData.filter(item => {
+                    //console.log("검사 중:", item.n);
+                    const cleanName = (item.n || "").replace(/<[^>]*>?/gm, '').trim();
+                    return cleanName.toLowerCase().includes(playerName.toLowerCase().trim())|| (item.bi && item.bi.toString() === playerName.trim());
+                });
+
+                if (filtered.length === 0) {
+                    showToast("검색 결과가 없습니다.");
+                    return;
+                }
+
+                // 4. 결과 테이블 생성 (팝업)
+                showResultModal(filtered);
+
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                showToast("데이터를 가져오는데 실패했습니다. CoachCox 사이트 로그인이 필요하거나 CORS 차단일 수 있습니다.");
+            }
+        }
+
+        function showResultModal(results) {
+            const modalBody = document.getElementById('modalBody');
+    /* 예시 데이터 구조
+    {
+        "aid": "1099033",
+        "bi": "472",
+        "n": "Thomas De Montmarin",
+        "c": "France",
+        "g": "Male",
+        "di": "M45-49",
+        "kd": "M45-49",
+        "rid": "2460",
+        "rty": "im",
+        "st": "4451",
+        "sr": "77",
+        "sdr": "16",
+        "sgr": "71",
+        "bt": "18289",
+        "br": "70",
+        "bdr": "18",
+        "bgr": "69",
+        "rt": "14967",
+        "rr": "191",
+        "rdr": "44",
+        "rgr": "177",
+        "ot": "38472",
+        "or": "105",
+        "odr": "24",
+        "ogr": "99",
+        "kdr": "24",
+        "t1t": "510",
+        "t1r": "446",
+        "t1dr": "94",
+        "t1gr": "400",
+        "t2t": "255",
+        "t2r": "162",
+        "t2dr": "32",
+        "t2gr": "141",
+        "fs": "FIN",
+        "aq": 0
+    },
+    */
+            let html = `
+                <div class="mb-2 font-bold text-slate-700">검색 결과: ${results.length}건</div>
+                <table style="width:100%; border-collapse:collapse; text-align:center;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="border:1px solid #e2e8f0; padding:8px;">Bib</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">이름</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">소속</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">연령대</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">전체기록</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">수영</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">T1</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">사이클</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">T2</th>
+                            <th style="border:1px solid #e2e8f0; padding:8px;">런</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach(p => {
+                html += `
+                    <tr>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${p.bi}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${p.n.replace(/<[^>]*>?/gm, '').trim()}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${p.c || '-'}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${p.di || '-'}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${p.fs === "DNF" ? "DNF" : formatSeconds(p.ot)}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${formatSeconds(p.st)}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${formatSeconds(p.t1t)}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${formatSeconds(p.bt)}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${formatSeconds(p.t2t)}</td>
+                        <td style="border:1px solid #e2e8f0; padding:8px;">${formatSeconds(p.rt)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            modalBody.innerHTML = html;
+            document.getElementById('resultModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').style.display = 'none';
+        }
+
+        // 모달 배경 클릭 시 닫기
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('resultModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        window.onload = loadInitialData;
+    </script>
+</body>
+</html>
