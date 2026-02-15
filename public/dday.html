@@ -6,8 +6,10 @@
     <title>D-Day</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/footerStyle.css">
+    <script src="/js/ui_utils.js"></script>
     <script src="/menu/menu_full_handler.js" defer></script>
     <script src="/js/back_exit_handler.js" defer></script>
+    <script src="/bbs/bbs_layer.js" defer></script>
     <style>
         :root { 
             --primary: #0070f3; /* public */
@@ -397,19 +399,6 @@
         <div id="calendarGrid" class="calendar"></div>
     </div>
 
-    <!-- 확인 모달 -->
-    <div id="confirmModal" class="modal-overlay" style="z-index: 200;">
-        <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
-            <div style="margin-bottom: 20px;">
-                <i class="fas fa-exclamation-circle" style="font-size: 40px; color: #ff4d4f;"></i>
-            </div>
-            <h4 style="margin:0 0 25px 0; font-size: 16px; color: #333; font-weight: bold;" id="confirmMessage">정말 삭제하시겠습니까?</h4>
-            <div style="display: flex; justify-content: center; gap: 10px;">
-                <button onclick="closeConfirm()" style="flex: 1; padding: 12px 0; background: #f1f1f1; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; color: #555; font-weight: bold;">취소</button>
-                <button id="confirmOkBtn" style="flex: 1; padding: 12px 0; background: #ff4d4f; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">삭제</button>
-            </div>
-        </div>
-    </div>
 
     <!-- 알림 모달 (확인 버튼만 있음) -->
     <div id="alertModal" class="modal-overlay" style="z-index: 210;">
@@ -447,27 +436,6 @@
         function closeAlert() {
             alertModal.style.display = 'none';
         }
-
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmMessage = document.getElementById('confirmMessage');
-        const confirmOkBtn = document.getElementById('confirmOkBtn');
-        let confirmCallback = null;
-
-        function showConfirm(msg, callback) {
-            confirmMessage.innerText = msg;
-            confirmCallback = callback;
-            confirmModal.style.display = 'flex';
-        }
-
-        function closeConfirm() {
-            confirmModal.style.display = 'none';
-            confirmCallback = null;
-        }
-        
-        confirmOkBtn.onclick = function() {
-            if (confirmCallback) confirmCallback();
-            closeConfirm();
-        };
 
         // 1. 모달 제어
         function openModal() { 
@@ -1137,17 +1105,7 @@
             reader.readAsText(file);
         }
 
-        function showToast(msg) {
-            const el = document.createElement('div');
-            el.className = 'toast-notification';
-            el.innerText = msg;
-            document.body.appendChild(el);
-            requestAnimationFrame(() => el.classList.add('show'));
-            setTimeout(() => {
-                el.classList.remove('show');
-                setTimeout(() => el.remove(), 300);
-            }, 3000);
-        }
+
 
         // 초기 실행
         (async function() {
