@@ -9,8 +9,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="stylesheet" href="/css/bucheonTriStyle.css">
+    <script src="/js/ui_utils.js"></script>
     <script src="/menu/menu_full_handler.js" defer></script>
     <script src="/js/back_exit_handler.js" defer></script>
+    <script src="/bbs/bbs_layer.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/fit-file-writer@1.0.0/dist/index.min.js"></script>
     
     <style>
@@ -346,7 +348,7 @@
         const FitWriter = window.FitFileWriter || (window.default && window.default.FitFileWriter);
         
         if (!FitWriter) {
-            alert("라이브러리 로드 실패. CSV 기능을 이용해주세요.");
+            showToast("라이브러리 로드 실패. CSV 기능을 이용해주세요.");
             return;
         }
 
@@ -368,7 +370,7 @@
             link.click();
         } catch (e) {
             console.error(e);
-            alert("FIT 파일 생성 중 오류 발생: " + e.message);
+            showToast("FIT 파일 생성 중 오류 발생: " + e.message);
         }
     }
 
@@ -405,7 +407,7 @@
 
     function startRecognition() {
         if (!('webkitSpeechRecognition' in window)) {
-            alert("이 브라우저는 음성 인식을 지원하지 않습니다. (Chrome 권장)");
+            showToast("이 브라우저는 음성 인식을 지원하지 않습니다. (Chrome 권장)");
             return;
         }
 
