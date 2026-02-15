@@ -136,7 +136,10 @@ const closeQrModal = (modalId) => {
 
 
   const handleUpload = async () => {
-    if (!file) return alert("엑셀 파일을 선택해주세요.");
+    if (!file) {
+      if (typeof window.showToast === 'function') return window.showToast("엑셀 파일을 선택해주세요.");
+      return alert("엑셀 파일을 선택해주세요.");
+    }
     setLoading(true);
     const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
     const formData = new FormData();
@@ -154,7 +157,8 @@ const closeQrModal = (modalId) => {
       a.click();
       a.remove();
     } catch (e) {
-      alert(e.message);
+      if (typeof window.showToast === 'function') window.showToast(e.message);
+      else alert(e.message);
     } finally {
       setLoading(false);
     }
@@ -164,6 +168,8 @@ const closeQrModal = (modalId) => {
 
   return (
     <div className="min-h-screen bg-[#f4f7f9]">
+      <Script src="/js/ui_utils.js" strategy="afterInteractive" />
+      <Script src="/bbs/bbs_layer.js" strategy="afterInteractive" />
       <Script src="/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>📊 사이클 구간평속 리포트 생성</title>

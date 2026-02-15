@@ -15,8 +15,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
     <link rel="stylesheet" href="/css/footerStyle.css">
+    <script src="/js/ui_utils.js"></script>
     <script src="/menu/menu_full_handler.js" defer></script>
     <script src="/js/back_exit_handler.js" defer></script>
+    <script src="/bbs/bbs_layer.js" defer></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
@@ -525,17 +527,6 @@
             if(rLabel) rLabel.innerText = `(min/km @${raceDistances.run}k)`;
         }
 
-        function showToast(msg) {
-            const el = document.createElement('div');
-            el.className = 'fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 text-white px-6 py-3 rounded-full shadow-2xl z-[9999] transition-all duration-300 opacity-0 font-bold text-sm backdrop-blur-sm transform translate-y-4';
-            el.innerText = msg;
-            document.body.appendChild(el);
-            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
-            setTimeout(() => {
-                el.classList.add('opacity-0', 'translate-y-4');
-                setTimeout(() => el.remove(), 300);
-            }, 3000);
-        }
 
         // 로컬 파일 로드 체크
         window.onload = async () => {
