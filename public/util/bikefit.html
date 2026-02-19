@@ -83,6 +83,42 @@
             .header h1 { font-size: 1.5rem; margin-top: 10px; }
             .slide-menu { width: 85%; left: -85%; }
             .slide-menu.is-active { left: 0; }
+
+            body {
+                padding: 10px;
+            }
+            .controls {
+                padding: 15px;
+            }
+            .control-btns {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .sample-links {
+                flex-direction: column;
+                align-items: flex-start;
+                border-left: none;
+                padding-left: 0;
+                gap: 8px;
+            }
+
+            #main-layout {
+                grid-template-columns: 1fr;
+            }
+            #debug-log {
+                height: 250px;
+            }
+            #input-video {
+                width: 100px;
+            }
+
+            .section-box, .card-body {
+                padding: 15px;
+            }
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
