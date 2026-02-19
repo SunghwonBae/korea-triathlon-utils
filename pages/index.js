@@ -231,6 +231,13 @@ const closeQrModal = (modalId) => {
                 <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
             </div>
             </div>
+            <div style={{textAlign: 'center', margin: '30px 0', padding: '0 10px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                <p style={{marginBottom: '10px', fontSize: '0.9rem'}}>대회요강 URL : <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">https://cafe.naver.com/swimbikerun/3944</a></p>
+                <p style={{marginBottom: '10px', fontSize: '0.9rem'}}>참가신청 URL : <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank">https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA</a></p>
+                <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
+                    <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style={{maxWidth: '100%', height: 'auto', borderRadius: '12px', maxHeight: '500px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}}/>
+                </a>
+            </div>
         <p className="copyright">
           2026 Korea Triathlon Utils.<br className="mobile-br"/> 
            🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
