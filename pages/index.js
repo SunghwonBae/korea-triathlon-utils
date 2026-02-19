@@ -83,6 +83,7 @@ const closeQrModal = (modalId) => {
     { icon: "🚴", title: "기어비 케이던스", desc: "자전거 기어비 및 속도 계산", url: "/util/bike_calculator.html" },
     { icon: "🏔️", title: "업힐 분석기", desc: "경사도/파워별 기어비 분석", url: "/util/bike_uphill.html" },
     { icon: "🚴", title: "GPX to ZWO", desc: "코스 파일을 워크아웃으로 변환", url: "/util/bike_gpx_zwo.html" },
+    { icon: "🚴", title: "AI 바이크핏 분석", desc: "AI 기반 바이크핏 분석", url: "/util/bikefit.html" },
     { icon: "🏃", title: "런 보폭/회전수", desc: "달리기 케이던스 및 보폭 계산", url: "/util/running_calculator.html" },
     { icon: "🏃", title: "런 페이스", desc: "목표 기록을 위한 페이스표", url: "/util/runpace_calculator.html" },
     { icon: "🏃", title: "런 마일리지", desc: "주간/월간 마일리지 관리", url: "/util/run_mileage_calculator.html" },
@@ -148,7 +149,7 @@ const closeQrModal = (modalId) => {
           </div>
         </div>
       )}
-      <Script src="/back_exit_handler.js" strategy="afterInteractive" />
+      <Script src="/js/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>Korea Triathlon Utils</title>
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"/>

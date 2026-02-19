@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bike Fit</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/footerStyle.css">
+    <script src="/js/ui_utils.js"></script>
+    <script src="/menu/menu_full_handler.js" defer></script>
+    <script src="/js/back_exit_handler.js" defer></script>
+    <script src="/bbs/bbs_layer.js" defer></script>
+    <style>
+        /* [화이트 모드 복구] */
+        body { font-family: 'Pretendard', sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f4f7f9; color: #333; }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { font-weight: 800; letter-spacing: -1px; }
+        
+        /* [버튼 정돈 및 컨트롤 박스] */
+        .controls { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #e1e4e8; }
+        .control-btns { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; }
+        
+        .sample-links { font-size: 13px; color: #666; display: flex; gap: 10px; align-items: center; border-left: 2px solid #eee; padding-left: 20px; }
+        .sample-links a { padding: 6px 14px; background: #f1f3f5; color: #495057; border-radius: 20px; text-decoration: none; border: 1px solid #dee2e6; transition: 0.2s; font-weight: 500; }
+        .sample-links a:hover { background: #e9ecef; border-color: #adb5bd; color: #0070f3; }
+
+        .guide-box { background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #666; border: 1px solid #e9ecef; }
+        .guide-box a { color: #0070f3; font-weight: bold; text-decoration: none; border-bottom: 1px solid #0070f3; }
+
+        .btn { padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; font-size: 14px; }
+        .btn-primary { background: #0070f3; }
+        .btn-danger { background: #d90429; }
+        .btn-success { background: #28a745 !important; cursor: default; }
+        .btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+
+        /* [레이아웃 구성] */
+        #main-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; margin-bottom: 30px; }
+        #canvas-container { position: relative; width: 100%; background: #000; border-radius: 12px; overflow: hidden; border: 2px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        canvas { width: 100%; height: auto; display: block; }
+        #input-video { position: absolute; bottom: 10px; right: 10px; width: 140px; border: 2px solid #0070f3; z-index: 20; background: #000; border-radius: 6px; }
+
+        /* [로그 영역 디자인] */
+        #debug-log { background: #1a1c1e; color: #00ff00; padding: 20px; border-radius: 12px; font-family: 'Consolas', 'Monaco', monospace; height: 500px; overflow-y: auto; font-size: 12px; border: 1px solid #333; line-height: 1.6; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .log-time { color: #888; margin-right: 8px; }
+        .log-tag-sys { color: #0070f3; font-weight: bold; }
+        .log-tag-cap { color: #ff00ff; font-weight: bold; }
+
+        #report-section { display: none; margin-top: 30px; }
+        .section-box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e1e4e8; }
+        .section-title { color: #0070f3; font-size: 20px; font-weight: bold; border-bottom: 2px solid #f1f3f5; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; }
+        .section-title::before { content: '●'; margin-right: 12px; font-size: 12px; }
+
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .report-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; transition: 0.3s; }
+        .report-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .report-card img { width: 100%; height: auto; display: block; background: #000; border-bottom: 1px solid #eee; }
+        .card-body { padding: 20px; }
+        .expert-box { background: #f0f7ff; padding: 15px; border-radius: 8px; font-size: 13.5px; line-height: 1.6; border-left: 4px solid #0070f3; color: #333; }
+        .formula-box { background: #fff9db; padding: 20px; border-radius: 8px; font-size: 14px; color: #856404; line-height: 1.8; border: 1px solid #ffeeba; }
+
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 30; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0070f3; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* [메뉴 버튼 및 슬라이드 메뉴 스타일] */
+        #menuToggle { position: absolute; top: 20px; left: 20px; z-index: 100; background: white; border: 1px solid #ddd; border-radius: 8px; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: #333; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s; }
+        #menuToggle:hover { background: #f8f9fa; color: #0070f3; }
+        
+        .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .menu-overlay.is-active { opacity: 1; visibility: visible; }
+        .slide-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: 0.3s; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; display: flex; flex-direction: column; }
+        .slide-menu.is-active { left: 0; }
+        .menu-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; color: white; background-color: #0070f3; }
+        .menu-header h2 { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .menu-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-link { display: block; padding: 15px 20px; text-decoration: none; color: #333; font-weight: 500; border-bottom: 1px solid #f8f9fa; transition: 0.2s; }
+        .menu-link:hover { background: #f8f9fa; color: #0070f3; }
+        .submenu-list .menu-link { padding-left: 40px; font-size: 0.95rem; background: #fcfcfc; }
+        
+        @media (max-width: 768px) {
+            #menuToggle { top: 15px; left: 15px; }
+            .header h1 { font-size: 1.5rem; margin-top: 10px; }
+            .slide-menu { width: 85%; left: -85%; }
+            .slide-menu.is-active { left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <button id="menuToggle"><i class="fas fa-bars"></i></button>
+
+    <div class="header"><h1>Bike Fit <span style="color:#0070f3;">AI 분석</span></h1></div>
+    
+    <div class="controls">
+        <div class="control-btns">
+            <label for="video-upload" id="upload-label" class="btn btn-primary">비디오 선택 및 분석 시작</label>
+            <input type="file" id="video-upload" accept="video/*" style="display:none;">
+            
+            <div class="sample-links">
+                <span>샘플 영상 다운 클릭 :</span>
+                <a href="../file/test.mp4" download>test.mp4 (전진형)</a>
+                <a href="../file/test2.mp4" download>test2.mp4 (후퇴형)</a>
+            </div>
+
+            <button id="reset-btn" class="btn btn-danger" style="display:none;">초기화</button>
+        </div>
+        
+        <div class="guide-box">
+            💡 <strong>영상이 분석되지 않나요?</strong> <a href="https://cloudconvert.com/" target="_blank">CloudConvert</a>에서 <strong>H.264 코덱</strong>으로 변환 후 다시 업로드해 주세요. <br>
+            
+            10초 이내 측면 영상을 업로드해 주세요.<br>
+            사용자 브라우져에서 분석이 진행됩니다. 사용자 컴퓨터 사양에 따라 분석 속도가 느려질 수 있습니다.<br>
+            한번에 1개의 영상만 분석 가능합니다. 분석이 완료되면 결과 리포트가 아래에 표시됩니다. <br>
+            초기화 버튼으로 다른 영상 분석을 시작할 수 있습니다. <br>
+            <b>AI분석은 정확하지 않습니다. 참고만 해주시고 전문가와 상의 하시길 바랍니다.<br>
+            현재 페이지 기능에 아이디어 주신 강승규 교수님 핏팅을 추천드립니다.<br></b>
+            추천 : <a href="https://cafe.naver.com/ktsbikefit" target="_blank">https://cafe.naver.com/ktsbikefit</a>
+        </div>
+    </div>
+
+    <div id="main-layout">
+        <div id="canvas-container">
+            <div id="loading-overlay">
+                <div class="spinner"></div>
+                <p style="margin-top:15px; font-weight: bold; color: #0070f3;">AI 분석 엔진 가동 중...</p>
+            </div>
+            <video id="input-video" muted playsinline></video>
+            <canvas id="output-canvas"></canvas>
+        </div>
+        <div id="side-panel">
+            <div id="debug-log"><div>> 분석 대기 중... 파일을 선택하세요.</div></div>
+        </div>
+    </div>
+
+    <div id="report-section">
+        <div class="section-box">
+            <div class="section-title">3-Point 타겟 정밀 분석 리포트</div>
+            <div id="report-grid" class="report-grid"></div>
+        </div>
+
+        <div class="section-box">
+            <div class="section-title">교정 수치 산출 근거 (Logic Guide)</div>
+            <div class="formula-box">
+                <b>1. 안장 높이 보정 로직</b>: (현재 무릎 각도 - 목표 141도) x 1.6mm (최대 15mm 제한)<br>
+                <b>2. 리치 보정 로직</b>: (현재 어깨 각도 - 목표 72.5도) x 5.5mm - 10mm (최대 15mm 제한)<br>
+                * 모든 조정값은 신체 적응을 위해 1회 최대 <b>15mm</b>로 안전 제한이 적용됩니다.
+            </div>
+        </div>
+
+        <div class="section-box" style="background: #f1f3f5; border: 1px solid #d1d9e0;">
+            <div class="section-title" style="color: #444;">시스템 기술 아키텍처 (Technical Stack)</div>
+            <div style="font-size: 13px; line-height: 1.7; color: #555;">
+                <ul style="padding-left: 20px;">
+                    <li><b>AI Engine:</b> <strong>Google MediaPipe Pose Landmarker</strong>를 사용하여 실시간 33개의 3D 관절 포인트를 추적합니다. pose_landmarker_heavy 모델을 적용하여 페달링 중 발생하는 미세한 떨림까지 정밀하게 감지합니다.</li>
+                    <li><b>Vision Processing:</b> <strong>WebGL 및 GPU 가속</strong>을 활용하여 브라우저 환경에서도 끊김 없는 실시간 골격 렌더링 및 프레임 분석을 수행합니다.</li>
+                    <li><b>Geometric Logic:</b> 삼각함수를 기반으로 한 <strong>Vector 수학 엔진</strong>을 구현하여 엉덩이(Hip)-무릎(Knee)-발목(Ankle) 사이의 각도 데이터를 산출합니다.</li>
+                    <li><b>Expert System:</b> 단순 각도 계산을 넘어, 어깨 각도(Shoulder Angle)에 따른 <strong>리치(Reach) 연동형 조치 알고리즘</strong>을 적용하여 안장의 전후 이동과 높이 변화의 상관관계를 자동으로 계산합니다.</li>
+                    <li><b>Client-Side Privacy:</b> 모든 분석은 사용자의 브라우저 내부에서만 수행됩니다. 영상 데이터가 서버로 전송되지 않는 <strong>개인정보 보호 중심(Privacy-First)</strong> 설계를 따릅니다.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/bikefit.js"></script>
+</body>
+</html>

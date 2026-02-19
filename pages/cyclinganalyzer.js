@@ -170,7 +170,7 @@ const closeQrModal = (modalId) => {
     <div className="min-h-screen bg-[#f4f7f9]">
       <Script src="/js/ui_utils.js" strategy="afterInteractive" />
       <Script src="/bbs/bbs_layer.js" strategy="afterInteractive" />
-      <Script src="/back_exit_handler.js" strategy="afterInteractive" />
+      <Script src="/js/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>📊 사이클 구간평속 리포트 생성</title>
         <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"/>
