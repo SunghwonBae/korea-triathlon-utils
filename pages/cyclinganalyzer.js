@@ -177,6 +177,13 @@ const closeQrModal = (modalId) => {
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png"/>
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png"/>
         <link rel="manifest" href="/site.webmanifest"/>
+        {/* ⬇️ 파비콘 경로를 참고하여 추가할 OG 태그 ⬇️ */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Korea Triathlon Utils" />
+        <meta property="og:description" content="철인3종 훈련과 경기력 향상을 위한 스마트한 분석 도구 모음" />
+        {/* 파비콘 중 가장 큰 이미지를 우선 사용합니다 */}
+        <meta property="og:image" content="/favicon/apple-touch-icon.png" /> 
+        <meta property="og:url" content="https://korea-triathlon-utils.vercel.app/" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="google" content="notranslate" />
       </Head>
