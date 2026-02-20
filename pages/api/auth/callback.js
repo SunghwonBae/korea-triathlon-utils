@@ -22,7 +22,14 @@ export default async function handler(req, res) {
     const userImage = naverUser.profile_image || '';
 
     // 관리자 확인
-    const adminList = (process.env.ADMIN_NAVER_ID || '').split(',');
+    // [수정] 중복 선언 오류를 수정하고, 빈 문자열이 있어도 안전하게 처리하도록 filter(Boolean)을 유지합니다.
+    const adminList = (process.env.ADMIN_NAVER_ID || '').split(',').map(id => id.trim()).filter(Boolean);
+    
+    // 디버깅을 위한 콘솔 로그
+    //console.log('Raw ADMIN_NAVER_ID from env:', process.env.ADMIN_NAVER_ID);
+    //console.log('Processed Admin List:', adminList);
+    //console.log('User Unique ID:', uniqueId);
+
     const isAdmin = adminList.includes(uniqueId);
 
     // 3. DB 저장 (Upsert)

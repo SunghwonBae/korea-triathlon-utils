@@ -222,7 +222,7 @@ async function loadAndInitializeMenu() {
                 <button class="qr-btn-close" onclick="closeQrModal('kakaoModal')">닫기</button>
             </div>
             </div>
-            <div style="text-align: center; margin: 30px 0; padding: 0 10px;">
+            <div style="text-align: center; margin: 30px 0; padding: 0 10px; display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
                     <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style="padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">📋 대회요강 보기</a>
                     <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">✅ 참가신청 하기</a>

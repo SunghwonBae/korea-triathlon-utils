@@ -719,11 +719,12 @@ if (urlParams.get('bbs_open') === 'true') {
 async function bbsOpenStatus() {
     const res = await fetch('/api/bbs/posts?type=bbsStatus');
     const data = await res.json();
-    if(!data.open) {
-        document.getElementById('bbs-btn').style.display = 'none';
-    }else{
-        document.getElementById('bbs-btn').style.display = 'flex';
-    }
+     if(!data.open) {
+         document.getElementById('bbs-btn').style.display = 'none';
+     }else{
+         document.getElementById('bbs-btn').style.display = 'flex';
+     }
+    //document.getElementById('bbs-btn').style.display = 'flex'; 
 }
 
 bbsOpenStatus();
