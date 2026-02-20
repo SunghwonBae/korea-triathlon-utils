@@ -12,6 +12,12 @@ export default async function handler(req, res) {
   console.log("2. Env Secret:", process.env.CRON_SECRET);      // 내 서버에 설정된 값
   console.log("3. Manual Key:", req.query.key);                // 수동 실행 키
   console.log("=======================");
+
+  // [안전장치] 필수 환경 변수 확인
+  if (!process.env.CRON_SECRET || !process.env.MANUAL_CRON_KEY || !process.env.GITHUB_TOKEN) {
+    console.error("Missing required environment variables.");
+    return res.status(500).json({ error: 'Server Configuration Error: Missing Env Vars' });
+  }
   // -------------------------
 // 1. Vercel Cron 자동 실행 (CRON_SECRET)
   //const isVercelCron = req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`; // Next.js 13 이상에서는 req.headers.get() 사용
@@ -41,8 +47,8 @@ export default async function handler(req, res) {
 
     // 2. GitHub에서 최신 all_records_v2.json 가져오기
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-    const owner = "SunghwonBae"; // [수정필요]
-    const repo = "korea-triathlon-utils";   // [수정필요]
+    const owner = process.env.GITHUB_OWNER || "SunghwonBae"; 
+    const repo = process.env.GITHUB_REPO || "korea-triathlon-utils";
     const path = "public/data/all_records_v2.json"; // 파일 경로 확인
 
     console.log(`=== [3] GITHUB FETCH DEBUG ===`);
@@ -76,6 +82,7 @@ export default async function handler(req, res) {
 
     // 3. 메모리상에서 데이터 업데이트
     const processedIds = [];
+    const failedIds = []; // 추가: 실패한 요청 ID를 추적할 배열
     
     pendingRequests.forEach(req => {
       const changes = JSON.parse(req.updatedFields);
@@ -97,6 +104,10 @@ export default async function handler(req, res) {
         if (targetIndex !== -1) {
           records[targetIndex] = { ...records[targetIndex], ...changes };
           processedIds.push(req.id);
+        } else {
+          // 일치하는 레코드를 찾지 못한 경우
+          console.log(`- Record not found for request ID ${req.id}. Marking as FAILED.`);
+          failedIds.push(req.id);
         }
       }
     });
@@ -128,8 +139,23 @@ export default async function handler(req, res) {
         }
       });
     }
+    
+    // 6. (추가) 실패한 요청 상태 업데이트 (PENDING -> FAILED)
+    if (failedIds.length > 0) {
+      await prisma.recordRequest.updateMany({
+        where: { id: { in: failedIds } },
+        data: {
+          status: 'FAILED', // 'FAILED' 상태는 Prisma 스키마에 정의되어 있어야 합니다.
+          processedAt: new Date()
+        }
+      });
+    }
 
-    res.status(200).json({ success: true, processed: processedIds.length });
+    res.status(200).json({ 
+      success: true, 
+      processed: processedIds.length,
+      failed: failedIds.length // 응답에 실패 카운트 추가
+    });
 
   } catch (error) {
     console.error("Cron Error:", error);
