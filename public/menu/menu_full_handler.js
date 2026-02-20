@@ -223,8 +223,10 @@ async function loadAndInitializeMenu() {
             </div>
             </div>
             <div style="text-align: center; margin: 30px 0; padding: 0 10px;">
-                <p style="margin-bottom: 10px; font-size: 0.9rem;">대회요강 URL : <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">https://cafe.naver.com/swimbikerun/3944</a></p>
-                <p style="margin-bottom: 10px; font-size: 0.9rem;">참가신청 URL : <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank">https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA</a></p>
+                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style="padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">📋 대회요강 보기</a>
+                    <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">✅ 참가신청 하기</a>
+                </div>
                 <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
                     <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style="max-width: 100%; height: auto; border-radius: 12px; max-height: 500px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                 </a>
