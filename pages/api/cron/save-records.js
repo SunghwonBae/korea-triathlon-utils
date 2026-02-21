@@ -97,7 +97,7 @@ export default async function handler(req, res) {
         const targetIndex = records.findIndex(r => 
           r.rn === req.raceName && 
           r.y === req.year && 
-          r.b === req.bib && 
+          String(r.b) === String(req.bib) && 
           r.n === req.name
         );
 
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
     // 4. GitHub에 업데이트된 JSON 파일 업로드
     // 저장할 때는 다시 JSON 문자열로 만들어서 올립니다.
     if (processedIds.length > 0) {
-      const newContent = JSON.stringify(records, null, 2);
+      const newContent = JSON.stringify(records);
       const newContentBase64 = Buffer.from(newContent).toString("base64");
       
       // 저장 시에는 기존처럼 fileData.sha가 필요할 수 있습니다.
