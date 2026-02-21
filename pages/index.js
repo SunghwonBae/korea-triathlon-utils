@@ -24,11 +24,11 @@ export default function MainIndex() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    
+
     // 설치 팝업 표시
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
     }
@@ -41,30 +41,30 @@ export default function MainIndex() {
   };
 
   // 모바일 기기 체크 공통 함수
-const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-// 토스 클릭 핸들러
-const handleTossClick = (event, accountNo) => {
-  if (!isMobile()) {
-    event.preventDefault();
-    navigator.clipboard.writeText(accountNo).then(() => {
-      document.getElementById('tossModal').style.display = 'flex';
-    });
+  // 토스 클릭 핸들러
+  const handleTossClick = (event, accountNo) => {
+    if (!isMobile()) {
+      event.preventDefault();
+      navigator.clipboard.writeText(accountNo).then(() => {
+        document.getElementById('tossModal').style.display = 'flex';
+      });
+    }
   }
-}
 
-// 카카오페이 클릭 핸들러
-const handleKakaoClick = (event) => {
-  if (!isMobile()) {
-    event.preventDefault();
-    document.getElementById('kakaoModal').style.display = 'flex';
+  // 카카오페이 클릭 핸들러
+  const handleKakaoClick = (event) => {
+    if (!isMobile()) {
+      event.preventDefault();
+      document.getElementById('kakaoModal').style.display = 'flex';
+    }
   }
-}
 
-// 모달 닫기 공통 함수
-const closeQrModal = (modalId) => {
-  document.getElementById(modalId).style.display = 'none';
-}
+  // 모달 닫기 공통 함수
+  const closeQrModal = (modalId) => {
+    document.getElementById(modalId).style.display = 'none';
+  }
 
   const menuItems = [
     { icon: "📅", title: "D-Day", desc: "D-Day 관리", url: "/dday.html" },
@@ -144,7 +144,7 @@ const closeQrModal = (modalId) => {
             <button className="close-btn" onClick={closeLayer}>&times;</button>
             <span className="install-icon">📲</span>
             <h3>KTriUtils 설치</h3>
-            <p>홈 화면에 추가하면 브라우저 주소창 없이<br/>앱처럼 쾌적하게 사용할 수 있습니다.</p>
+            <p>홈 화면에 추가하면 브라우저 주소창 없이<br />앱처럼 쾌적하게 사용할 수 있습니다.</p>
             <button className="install-action-btn" onClick={handleInstallClick}>홈 화면에 추가하기</button>
           </div>
         </div>
@@ -152,16 +152,16 @@ const closeQrModal = (modalId) => {
       <Script src="/js/back_exit_handler.js" strategy="afterInteractive" />
       <Head>
         <title>Korea Triathlon Utils</title>
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"/>
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png"/>
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png"/>
-        <link rel="manifest" href="/site.webmanifest"/>
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         {/* ⬇️ 파비콘 경로를 참고하여 추가할 OG 태그 ⬇️ */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Korea Triathlon Utils" />
         <meta property="og:description" content="철인3종 훈련과 경기력 향상을 위한 스마트한 분석 도구 모음" />
         {/* 파비콘 중 가장 큰 이미지를 우선 사용합니다 */}
-        <meta property="og:image" content="/favicon/apple-touch-icon.png" /> 
+        <meta property="og:image" content="/favicon/apple-touch-icon.png" />
         <meta property="og:url" content="https://korea-triathlon-utils.vercel.app/" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -169,7 +169,7 @@ const closeQrModal = (modalId) => {
       <header className="hero-header">
         <div className="header-content">
           <h1>KOREA TRIATHLON UTILS</h1>
-          <p className="subtitle">철인3종 훈련과 경기력 향상을 위한<br className="mobile-br"/> 스마트한 분석 도구 모음</p>
+          <p className="subtitle">철인3종 훈련과 경기력 향상을 위한<br className="mobile-br" /> 스마트한 분석 도구 모음</p>
         </div>
       </header>
 
@@ -207,49 +207,49 @@ const closeQrModal = (modalId) => {
             <p className="donation-text">⚡ 더 나은 서비스를 위해 파워젤 한개 후원하기</p>
             <div className="donation-btn-group">
               <a href="Supertoss://send?amount=0&bank=%EC%B9%B4%EC%B9%B4%EC%98%A4%EB%B1%85%ED%81%AC&accountNo=3333137635297&origin=qr" className="btn-toss" onClick={(e) => handleTossClick(e, '3333137635297')}>
-                <img src="/img/Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon"/>
+                <img src="/img/Toss_Symbol_Primary.png" width="20" height="20" alt="Toss" className="btn-icon" />
                 Toss 후원
               </a>
               <a href="https://qr.kakaopay.com/Ej8KxM6os" target="_blank" className="btn-kakao" onClick={handleKakaoClick}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#3C1E1E" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3c-5.5 0-10 3.6-10 8 0 3 2 5.5 4.9 7l-1.2 4.5c-.1.4.3.7.6.5l5.4-3.5c.1 0 .3 0 .4 0 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/>
+                  <path d="M12 3c-5.5 0-10 3.6-10 8 0 3 2 5.5 4.9 7l-1.2 4.5c-.1.4.3.7.6.5l5.4-3.5c.1 0 .3 0 .4 0 5.5 0 10-3.6 10-8s-4.5-8-10-8z" />
                 </svg>
                 카카오페이
               </a>
             </div>
           </div>
         </div>
-          <div id="tossModal" className="qr-modal-overlay" onClick={() => closeQrModal('tossModal')}>
-            <div className="qr-modal-content" onclick="event.stopPropagation()">
-                <h3 style={{ color: '#0064FF' }}>Toss로 후원하기</h3>
-                <p>계좌번호가 복사되었습니다!</p>
-                <div className="account-badge toss-bg">카카오뱅크 3333137635297</div>
-                <img src="/img/toss_qr.jpg" alt="Toss QR" className="qr-image"/>
-                <button className="qr-btn-close" onClick={() => closeQrModal('tossModal')}>닫기</button>
-            </div>
-            </div>
+        <div id="tossModal" className="qr-modal-overlay" onClick={() => closeQrModal('tossModal')}>
+          <div className="qr-modal-content" onclick="event.stopPropagation()">
+            <h3 style={{ color: '#0064FF' }}>Toss로 후원하기</h3>
+            <p>계좌번호가 복사되었습니다!</p>
+            <div className="account-badge toss-bg">카카오뱅크 3333137635297</div>
+            <img src="/img/toss_qr.jpg" alt="Toss QR" className="qr-image" />
+            <button className="qr-btn-close" onClick={() => closeQrModal('tossModal')}>닫기</button>
+          </div>
+        </div>
 
-            <div id="kakaoModal" className="qr-modal-overlay" onClick={() => closeQrModal('kakaoModal')}>
-            <div className="qr-modal-content" onclick="event.stopPropagation()">
-                <h3 style={{ color: '#3C1E1E' }}>카카오페이 후원</h3>
-                <p>카톡앱으로 QR코드를 스캔하세요.</p>
-                <div className="account-badge kakao-bg">카카오페이 송금코드</div>
-                <img src="/img/Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image"/>
-                <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
-            </div>
-            </div>
-            <div style={{textAlign: 'center', margin: '30px 0', padding: '0 10px' ,display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <div style={{display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
-                    <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style={{padding: '10px 20px', backgroundColor: '#0070f3', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'}}>📋 대회요강 보기</a>
-                    <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style={{padding: '10px 20px', backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'}}>✅ 참가신청 하기</a>
-                </div>
-                <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
-                    <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style={{maxWidth: '100%', height: 'auto', borderRadius: '12px', maxHeight: '500px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}}/>
-                </a>
-            </div>
+        <div id="kakaoModal" className="qr-modal-overlay" onClick={() => closeQrModal('kakaoModal')}>
+          <div className="qr-modal-content" onclick="event.stopPropagation()">
+            <h3 style={{ color: '#3C1E1E' }}>카카오페이 후원</h3>
+            <p>카톡앱으로 QR코드를 스캔하세요.</p>
+            <div className="account-badge kakao-bg">카카오페이 송금코드</div>
+            <img src="/img/Kakaopay_qr.png" alt="KakaoPay QR" className="qr-image" />
+            <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', margin: '30px 0', padding: '0 10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style={{ padding: '10px 20px', backgroundColor: '#0070f3', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>📋 대회요강 보기</a>
+            <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>✅ 참가신청 하기</a>
+          </div>
+          <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
+            <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style={{ maxWidth: '100%', height: 'auto', borderRadius: '12px', maxHeight: '500px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
+          </a>
+        </div>
         <p className="copyright">
-          2026 Korea Triathlon Utils.<br className="mobile-br"/> 
-           🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
+          2026 Korea Triathlon Utils.<br className="mobile-br" />
+          🄯 Copyleft. Powered by <a href='https://cafe.naver.com/swimbikerun' target="_blank">부천트라이</a> 배성훤.
         </p>
         <p className="special-link">
           특별링크!! 내란대장경 : <a href="https://mhrk.campaignus.me/rebellion" target="_blank">https://mhrk.campaignus.me/rebellion</a>
@@ -263,14 +263,16 @@ const closeQrModal = (modalId) => {
           font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
         }
         .hero-header {
-          background: linear-gradient(135deg, #0A317E 0%, #1e40af 100%);
+          background: radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.8) 0%, transparent 50%),
+                      radial-gradient(circle at 15% 80%, rgba(30, 58, 138, 0.8) 0%, transparent 50%),
+                      linear-gradient(135deg, #0f172a 0%, #172554 100%);
           color: white;
           padding: 80px 20px 120px;
           text-align: center;
           position: relative;
           border-bottom-left-radius: 30px;
           border-bottom-right-radius: 30px;
-          box-shadow: 0 10px 30px rgba(10, 49, 126, 0.2);
+          box-shadow: 0 15px 40px rgba(15, 23, 42, 0.4);
           z-index: 1;
         }
         .header-content h1 {
@@ -303,37 +305,47 @@ const closeQrModal = (modalId) => {
           gap: 20px;
         }
         .menu-card {
-          background: white;
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(12px);
           padding: 30px 20px;
-          border-radius: 20px;
+          border-radius: 24px;
           text-decoration: none;
-          color: #333;
+          color: #1e293b;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-          border: 1px solid rgba(255,255,255,0.5);
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+          border: none;
           cursor: pointer;
           user-select: none;
           -webkit-tap-highlight-color: transparent;
-          /* 수정됨: Flexbox/Grid 아이템이 내부 컨텐츠에 의해 늘어나는 것을 방지 */
           min-width: 0;
         }
         .menu-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-          border-color: #e0e7ff;
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 24px 48px -12px rgba(59, 130, 246, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 1);
+          background: #ffffff;
         }
         .menu-card:active {
           transform: scale(0.98);
-          background-color: #f3f4f6;
         }
         .card-icon {
-          font-size: 3rem;
-          margin-bottom: 15px;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+          font-size: 2.8rem;
+          width: 76px;
+          height: 76px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+          border-radius: 22px;
+          margin-bottom: 20px;
+          box-shadow: 0 8px 16px -4px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,1);
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .menu-card:hover .card-icon {
+          transform: scale(1.1) rotate(5deg);
         }
         .card-text {
           display: flex;
@@ -465,20 +477,21 @@ const closeQrModal = (modalId) => {
           /* 수정됨 */
           .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
           .menu-card {
-            flex-direction: column;
-            text-align: center;
-            padding: 20px 10px;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 150px;
+            padding: 24px 16px;
+            border-radius: 20px;
+            min-height: 140px;
           }
           .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            margin-bottom: 16px;
             margin-right: 0;
+            filter: none;
           }
-          .card-title { font-size: 1rem; margin-bottom: 6px; word-break: keep-all; }
-          .card-desc { font-size: 0.75rem; line-height: 1.3; color: #6b7280; }
+          .card-title { font-size: 1.05rem; margin-bottom: 6px; word-break: keep-all; }
+          .card-desc { font-size: 0.8rem; line-height: 1.3; color: #6b7280; }
         }
 
         /* 모바일 가로모드 (Landscape) 최적화 */
@@ -507,44 +520,56 @@ const closeQrModal = (modalId) => {
             gap: 12px;
           }
           .menu-card {
-            flex-direction: column;
-            text-align: center;
-            padding: 15px 10px;
-            align-items: center;
+            padding: 20px 10px;
+            border-radius: 20px;
+            min-height: auto;
           }
           .card-icon {
-            font-size: 2rem;
-            margin-bottom: 8px;
+            font-size: 1.8rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            margin-bottom: 12px;
             margin-right: 0;
+            filter: none;
           }
           .card-title { font-size: 0.95rem; }
           .card-desc { font-size: 0.8rem; line-height: 1.3; }
         }
         .dday-card {
-          background: linear-gradient(135deg, #fff9e6, #fff2d1);
-          border: 1px solid #ffe0b2;
+          background: linear-gradient(135deg, #FFFAEE, #FFF2D6);
+          box-shadow: 0 10px 30px -5px rgba(255, 152, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+          border: none;
           align-items: center;
           text-align: center;
-          padding: 20px;
+          padding: 30px 20px;
           justify-content: center;
         }
         .dday-card:hover {
-          border-color: #ffc107;
+          box-shadow: 0 24px 48px -12px rgba(255, 152, 0, 0.25), inset 0 0 0 1px #FFE0B2;
+          background: linear-gradient(135deg, #FFFCF5, #FFF0CA);
         }
         .dday-header {
           margin-bottom: 25px;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dday-card:hover .dday-header {
+           transform: translateY(-5px) scale(1.05);
         }
         .dday-tag {
-          background-color: #ff9800;
+          background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
           color: white;
           font-weight: 900;
-          padding: 16px 20px;
-          border-radius: 100px;
-          font-size: 1.5rem;
-          display: inline-block;
-          box-shadow: 0 10px 6px rgba(255, 152, 0, 0.3);
-          min-width: 100px;
-          min-height: 70px;
+          padding: 16px 24px;
+          border-radius: 20px;
+          font-size: 1.6rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 12px 24px -6px rgba(234, 88, 12, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+          min-width: 110px;
+          min-height: auto;
+          letter-spacing: -0.02em;
         }
         .dday-card .card-text {
           text-align: center;
