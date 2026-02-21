@@ -4,5 +4,16 @@
       "path": "/api/cron/save-records",
       "schedule": "0 18 * * *"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*).(html|js|css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
   ]
 }
