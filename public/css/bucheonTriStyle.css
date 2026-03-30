@@ -1410,44 +1410,58 @@ h1 {
     }
 }
 
+/* --- 게시판 목록 가로 사이즈 완벽 고정 --- */
 
-/* --- 게시판 목록 가로 스크롤 완벽 해결 --- */
-
-/* 1. Flex 컨테이너의 무한 확장 억제 (가장 중요) */
+/* 1. 리스트 컨테이너가 절대 넓어지지 못하게 묶음 */
 #bbs-view-list {
-    width: 100%;
-    min-width: 0; /* ⭐️ Flex 자식의 기본 확장 성질을 강제로 차단합니다 */
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box; /* 패딩을 너비에 포함시킴 */
     overflow-x: hidden; 
+    display: flex;
+    flex-direction: column; /* 가로 배열 성질을 완전히 제거 */
 }
 
-/* 2. 테이블 레이아웃 강제 고정 */
+/* 2. 테이블이 부모 너비를 초과하지 않도록 강제 제한 */
 .bbs-table {
-    width: 100%;
-    table-layout: fixed !important; 
-}
-.bbs-table td {
-    overflow: hidden;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important; /* 각 열의 너비를 강제로 고정 */
+    box-sizing: border-box !important;
+    border-collapse: collapse; /* 테이블 테두리가 너비를 차지하지 않게 함 */
 }
 
-/* 3. 글 제목과 댓글수를 한 줄에 예쁘게 배치하기 위해 Flex 사용 */
+/* 3. 각 셀(td) 안의 여백을 줄이고 내용물이 표를 밀어내지 못하게 함 */
+.bbs-table th, 
+.bbs-table td {
+    padding-left: 5px !important;  /* 모바일 환경에 맞춰 좌우 여백을 약간 줄임 */
+    padding-right: 5px !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
+    word-break: break-all; /* 영어/숫자가 길면 무조건 줄바꿈 처리 */
+}
+
+/* 4. 제목과 댓글수를 묶는 Flex 요소가 영역을 벗어나지 않게 제어 */
 .bbs-list-title {
     display: flex;
     align-items: center;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-/* 4. 실제 텍스트 영역에 말줄임(...) 적용 */
+/* 5. 긴 제목이 찌그러지지 않고 말줄임표(...) 되도록 강제 */
 .bbs-list-title-text {
-    flex: 1; /* 남은 가용 영역을 모두 채우되 */
-    min-width: 0; /* ⭐️ 텍스트 길이에 의해 컨테이너가 찢어지는 것을 방지 */
+    flex: 1;
+    min-width: 0 !important; /* ⭐️ 가장 중요: Flex 안에서 텍스트가 컨테이너를 찢는 것을 방지 */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* 5. (선택) 댓글수 영역 보호 */
+/* 6. 댓글수 영역 보호 */
 .bbs-comment-count {
-    flex-shrink: 0; /* 제목이 아무리 길어져도 댓글수는 찌그러지지 않게 보호 */
+    flex-shrink: 0; 
     margin-left: 5px;
 }
 
