@@ -1409,3 +1409,28 @@ h1 {
         top: 4px;          /* 상단 위치 미세 조정 */
     }
 }
+
+/* --- 게시판 본문 내용 스타일 보정 --- */
+
+/* 1. 리스트 들여쓰기 복구 및 줄간격 확보 */
+#bbs-detail-content ul,
+#bbs-detail-content ol {
+    padding-left: 25px; /* 점 기호가 들어갈 왼쪽 공간 확보 (원하는 만큼 조절) */
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+/* 2. 리스트 항목(li) 간의 간격 띄우기 */
+#bbs-detail-content li {
+    margin-bottom: 8px; /* 각 항목들이 너무 붙지 않게 조절 */
+}
+
+/* 3. 에디터가 생성한 li 내부의 p 태그 여백 초기화 (선택사항) */
+#bbs-detail-content li p {
+    margin: 0; /* p 태그의 기본 마진 때문에 텍스트가 위아래로 붕 뜨는 것 방지 */
+}
+
+/* 4. 컨테이너 자체의 좌우 여유 공간 확보 (선택사항) */
+#bbs-detail-content {
+    padding: 0 5px; /* 모바일 패널에서 글씨가 양옆 벽에 너무 딱 붙지 않도록 */
+}
