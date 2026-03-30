@@ -183,6 +183,16 @@ async function loadAndInitializeMenu() {
         const menuHtml = await response.text(); 
         document.body.insertAdjacentHTML('beforeend', menuHtml);
         
+            // <div style="text-align: center; margin: 30px 0; padding: 0 10px; display: flex; flex-direction: column; align-items: center;">
+            //     <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            //         <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style="padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">📋 대회요강 보기</a>
+            //         <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">✅ 참가신청 하기</a>
+            //     </div>
+            //     <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
+            //         <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style="max-width: 100%; height: auto; border-radius: 12px; max-height: 500px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            //     </a>
+            // </div>
+
         // --- 푸터 자동 주입 코드 시작 ---
         const footerHtml = `
         <footer class="main-footer">
@@ -212,7 +222,6 @@ async function loadAndInitializeMenu() {
                 <button class="qr-btn-close" onclick="closeQrModal('tossModal')">닫기</button>
             </div>
             </div>
-
             <div id="kakaoModal" class="qr-modal-overlay" onclick="closeQrModal('kakaoModal')">
             <div class="qr-modal-content" onclick="event.stopPropagation()">
                 <h3 style="color: #3C1E1E;">카카오페이 후원</h3>
@@ -221,15 +230,6 @@ async function loadAndInitializeMenu() {
                 <img src="/img/Kakaopay_qr.png" alt="KakaoPay QR" class="qr-image" style="display:block; margin: 15px auto;">
                 <button class="qr-btn-close" onclick="closeQrModal('kakaoModal')">닫기</button>
             </div>
-            </div>
-            <div style="text-align: center; margin: 30px 0; padding: 0 10px; display: flex; flex-direction: column; align-items: center;">
-                <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style="padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">📋 대회요강 보기</a>
-                    <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style="padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">✅ 참가신청 하기</a>
-                </div>
-                <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
-                    <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style="max-width: 100%; height: auto; border-radius: 12px; max-height: 500px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                </a>
             </div>
             <p class="copyright">
             2026 Korea Triathlon Utils.<br class="mobile-br"/> 

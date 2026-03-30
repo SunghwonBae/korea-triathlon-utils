@@ -331,7 +331,7 @@ const closeQrModal = (modalId) => {
                 <button className="qr-btn-close" onClick={() => closeQrModal('kakaoModal')}>닫기</button>
             </div>
             </div>
-            <div style={{textAlign: 'center', margin: '30px 0', padding: '0 10px' ,display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            {/* <div style={{textAlign: 'center', margin: '30px 0', padding: '0 10px' ,display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                 <div style={{display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
                     <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank" style={{padding: '10px 20px', backgroundColor: '#0070f3', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'}}>📋 대회요강 보기</a>
                     <a href="https://form.naver.com/response/Qz6Btxvu03pWAu9vYPCfZA" target="_blank" style={{padding: '10px 20px', backgroundColor: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'}}>✅ 참가신청 하기</a>
@@ -339,7 +339,7 @@ const closeQrModal = (modalId) => {
                 <a href="https://cafe.naver.com/swimbikerun/3944" target="_blank">
                     <img src="/img/bucheon_tri_trailrun.png" alt="부천 트라이 트레일런 2026" style={{maxWidth: '100%', height: 'auto', borderRadius: '12px', maxHeight: '500px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'}}/>
                 </a>
-            </div>
+            </div> */}
 
         <p className="copyright">
           2026 Korea Triathlon Utils.<br className="mobile-br"/> 
