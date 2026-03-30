@@ -1410,26 +1410,45 @@ h1 {
     }
 }
 
-/* --- 게시판 본문 내용 스타일 보정 --- */
 
-/* 1. 테이블 크기 고정 및 내용물에 의한 확장 방지 */
+/* --- 게시판 목록 가로 스크롤 완벽 해결 --- */
+
+/* 1. Flex 컨테이너의 무한 확장 억제 (가장 중요) */
+#bbs-view-list {
+    width: 100%;
+    min-width: 0; /* ⭐️ Flex 자식의 기본 확장 성질을 강제로 차단합니다 */
+    overflow-x: hidden; 
+}
+
+/* 2. 테이블 레이아웃 강제 고정 */
 .bbs-table {
     width: 100%;
-    table-layout: fixed; /* ⭐️ 핵심: 테이블 셀 너비를 고정시켜 텍스트에 의해 늘어나지 않게 함 */
+    table-layout: fixed !important; 
 }
-
-/* 2. 긴 제목을 한 줄로 만들고 넘치면 말줄임표(...) 처리 */
-.bbs-list-title {
-    display: block; /* a 태그가 영역을 다 차지하도록 블록 처리 */
-    width: 100%;
-    white-space: nowrap; /* 글자가 길어도 밑으로 줄바꿈 되지 않게 함 */
-    overflow: hidden; /* 넘치는 글자는 숨김 */
-    text-overflow: ellipsis; /* 잘린 부분에 ... 표시 */
-}
-
-/* 3. 테이블 내에서 텍스트 말줄임이 작동하기 위한 필수 조건 */
 .bbs-table td {
-    overflow: hidden; /* 셀 바깥으로 내용이 튀어나가는 것 방지 */
+    overflow: hidden;
+}
+
+/* 3. 글 제목과 댓글수를 한 줄에 예쁘게 배치하기 위해 Flex 사용 */
+.bbs-list-title {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* 4. 실제 텍스트 영역에 말줄임(...) 적용 */
+.bbs-list-title-text {
+    flex: 1; /* 남은 가용 영역을 모두 채우되 */
+    min-width: 0; /* ⭐️ 텍스트 길이에 의해 컨테이너가 찢어지는 것을 방지 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 5. (선택) 댓글수 영역 보호 */
+.bbs-comment-count {
+    flex-shrink: 0; /* 제목이 아무리 길어져도 댓글수는 찌그러지지 않게 보호 */
+    margin-left: 5px;
 }
 
 /* 1. 리스트 들여쓰기 복구 및 줄간격 확보 */
