@@ -835,6 +835,7 @@
             // 다운로드된 파일에서 JS 로드 전 상호작용 방지를 위해 동적 컨텐츠 초기화
             if (clone.querySelector('#athleteList')) clone.querySelector('#athleteList').innerHTML = '';
             if (clone.querySelector('#recordBody')) clone.querySelector('#recordBody').innerHTML = '';
+            if (clone.querySelector('.main-footer')) clone.querySelector('.main-footer').remove();
 
             const dataScript = `<script>window.embeddedData=${JSON.stringify(raceData)};window.embeddedMe=${JSON.stringify(me)};window.embeddedCompetitors=${JSON.stringify(competitors)};window.embeddedDistances=${JSON.stringify(raceDistances)};window.isDownloaded=true;<\/script>`;            const finalHtml = clone.outerHTML.replace('<\/body>', dataScript + '<\/body>');
             const blob = new Blob([finalHtml], { type: 'text/html' });
