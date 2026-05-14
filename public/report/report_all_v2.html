@@ -381,21 +381,22 @@
             if (chart1) chart1.destroy();
             if (chart2) chart2.destroy();
 
+            // 🔥수정된 부분: type을 'bar'에서 'column'으로 변경🔥
             chart1 = AgChart.create({
                 container: document.getElementById('compareChart'),
                 title: { text: '대회별 평균 기록 비교 (Stacked)', fontSize: 16, fontWeight: 'bold' },
                 data: data,
                 series: [
                     { 
-                        type: 'bar', xKey: 'race', yKey: 'swim', yName: '수영', stacked: true, fill: '#60a5fa',
+                        type: 'column', xKey: 'race', yKey: 'swim', yName: '수영', stacked: true, fill: '#60a5fa',
                         tooltip: { renderer: (params) => ({ title: params.yName, content: formatS(params.yValue) }) }
                     },
                     { 
-                        type: 'bar', xKey: 'race', yKey: 'bike', yName: '바이크', stacked: true, fill: '#34d399',
+                        type: 'column', xKey: 'race', yKey: 'bike', yName: '바이크', stacked: true, fill: '#34d399',
                         tooltip: { renderer: (params) => ({ title: params.yName, content: formatS(params.yValue) }) }
                     },
                     { 
-                        type: 'bar', xKey: 'race', yKey: 'run', yName: '런', stacked: true, fill: '#f87171',
+                        type: 'column', xKey: 'race', yKey: 'run', yName: '런', stacked: true, fill: '#f87171',
                         tooltip: { renderer: (params) => ({ title: params.yName, content: formatS(params.yValue) }) }
                     }
                 ],
