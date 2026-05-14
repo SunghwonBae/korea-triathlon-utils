@@ -3,7 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
-// 1. 스피드칩 복호화 알고리즘 (난독화된 기록을 평문으로 변환)
+// 1. 스피드칩 복호화 알고리즘
 function decryptData(secret) {
     if (!secret) return "";
     const _k = [154,152,159,156,239,236,159,146,153,157,152,233,158,159,157,233,147,154,232,146,159,233,152,155];
@@ -16,7 +16,7 @@ function decryptData(secret) {
     return text;
 }
 
-// 2. 배열을 특정 크기로 쪼개는 유틸리티 함수 (병렬 처리용)
+// 2. 배열 청크 분할 함수 (병렬 처리용)
 function chunkArray(array, size) {
     const chunked = [];
     for (let i = 0; i < array.length; i += size) {
@@ -28,12 +28,12 @@ function chunkArray(array, size) {
 // ============================================================================
 // 설정 변수
 // ============================================================================
-const EXCEL_FILE_PATH = '2026참가자명단홈페이지.xlsx'; // 원본 명단 파일명
-const RESULT_FILE_NAME = '2026대구대회_기록결과.xlsx';   // 저장될 결과 파일명
-const COMPETITION_ID = '202650000086';                 // 대회 고유 ID
+const EXCEL_FILE_PATH = '2026참가자명단홈페이지.xlsx'; 
+const RESULT_EXCEL_NAME = '2026대구대회_기록결과.xlsx';   
+const RESULT_JSON_NAME = '대구대회_2026.json';
+const COMPETITION_ID = '202650000086';                 
 
 // [주의] 브라우저 개발자 도구에서 복사한 가장 최신 쿠키 값을 여기에 넣어주세요.
-// 실행 중 에러가 계속 발생하면 세션이 만료된 것이니 새 쿠키로 갱신해야 합니다.
 const SPEEDCHIP_COOKIE = "ASPSESSIONIDCGCDDCDC=FOPKBENBPHLHANKOLPCCEMNG; _fwb=67pseHZHB6kVozB2mHCMXC.1778676074959; wcs_bt=19e5bb1326386e0:1778676080";
 // ============================================================================
 
@@ -48,16 +48,13 @@ const participants = xlsx.utils.sheet_to_json(worksheet);
 console.log(`총 ${participants.length}명의 명단을 확인했습니다. 기록 조회를 시작합니다.\n`);
 
 async function fetchResults() {
-    // 한 번에 동시에 처리할 인원 수 (서버 차단 방지를 위해 10명 권장)
     const BATCH_SIZE = 10; 
     const batches = chunkArray(participants, BATCH_SIZE);
-
     let processedCount = 0;
 
     for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
         
-        // Promise.all을 사용하여 10명을 동시에 비동기 처리
         await Promise.all(batch.map(async (p) => {
             const bibNumber = p['배번'];
             const name = p['이름'];
@@ -76,7 +73,7 @@ async function fetchResults() {
                         "cookie": SPEEDCHIP_COOKIE,
                         "Referer": `https://smartchip.co.kr/Search_Ballyno.html?usedata=${COMPETITION_ID}`
                     },
-                    timeout: 5000 // 5초 무응답 시 에러 처리 (무한 대기 방지)
+                    timeout: 5000 
                 });
 
                 const html = response.data;
@@ -90,7 +87,6 @@ async function fetchResults() {
                 }
                 
                 p['종합기록'] = totalTime;
-                console.log(`[${bibNumber}] ${name} - 종합기록: ${totalTime}`);
 
                 // 4. 구간별 기록 추출 (Swim, T1, Bike, T2, Run)
                 $('details').each((idx, el) => {
@@ -101,8 +97,6 @@ async function fetchResults() {
                         const stageName = decryptData(titleSecret);
                         const stageTime = decryptData(timeSecret);
                         p[stageName] = stageTime; 
-                        // 너무 길어지지 않게 구간 기록 로그는 생략하려면 아래 줄을 주석 처리하세요
-                        console.log(`  └ ${stageName}: ${stageTime}`); 
                     }
                 });
             } catch (error) {
@@ -112,25 +106,81 @@ async function fetchResults() {
         }));
 
         processedCount += batch.length;
-        console.log(`=========================================`);
         console.log(`[진행 상황] ${processedCount} / ${participants.length} 명 처리 완료...`);
-        console.log(`=========================================`);
 
-        // 다음 10명을 처리하기 전에 서버 보호를 위해 1초 대기
+        // 다음 배치를 처리하기 전 1초 대기 (서버 차단 방지)
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     console.log('\n모든 기록 조회가 완료되었습니다.');
 
-    // 5. 결과를 새로운 엑셀 파일로 저장
-    console.log(`결과를 [${RESULT_FILE_NAME}] 파일에 저장합니다...`);
+    // ============================================================================
+    // 5. JSON 데이터 가공 로직 추가 (요청하신 형식에 맞춤)
+    // ============================================================================
+    console.log('JSON 데이터를 생성하는 중입니다...');
+    
+    // ① 3종 및 T1, T2 기록이 모두 존재하는 선수만 필터링
+    const validParticipants = participants.filter(p => 
+        p['Swim'] && p['T1'] && p['Bike'] && p['T2'] && p['Run'] && 
+        p['종합기록'] && p['종합기록'] !== '기록없음' && p['종합기록'] !== '조회실패'
+    );
+
+    // ② 신청부(카테고리)별로 그룹화
+    const groupedByCategory = {};
+    validParticipants.forEach(p => {
+        const category = p['신청부'] || '기타';
+        if (!groupedByCategory[category]) {
+            groupedByCategory[category] = [];
+        }
+        groupedByCategory[category].push(p);
+    });
+
+    const finalJsonData = [];
+
+    // ③ 카테고리별로 정렬, 순위 부여, sPartId 부여
+    for (const category in groupedByCategory) {
+        const group = groupedByCategory[category];
+        
+        // 카테고리별 임의의 5자리 숫자 생성 (10000 ~ 99999)
+        const randomSPartId = Math.floor(10000 + Math.random() * 90000).toString();
+
+        // 종합기록(HH:MM:SS)을 기준으로 오름차순 정렬
+        group.sort((a, b) => a['종합기록'].localeCompare(b['종합기록']));
+
+        // 형식에 맞게 매핑하여 최종 배열에 푸시
+        group.forEach((p, index) => {
+            finalJsonData.push({
+                category: category,
+                rank: (index + 1).toString(), // 1등부터 순차적으로 부여
+                n: p['이름'],
+                b: p['배번'].toString(),
+                c: p['팀명'] || '',
+                s: p['Swim'],
+                t1: p['T1'],
+                b1: p['Bike'],
+                t2: p['T2'],
+                r: p['Run'],
+                t: p['종합기록'],
+                sPartId: randomSPartId // 동일 카테고리는 같은 값 부여됨
+            });
+        });
+    }
+
+    // JSON 파일로 저장
+    fs.writeFileSync(RESULT_JSON_NAME, JSON.stringify(finalJsonData, null, 2), 'utf-8');
+    console.log(`[성공] JSON 파일 저장 완료: ${RESULT_JSON_NAME} (총 ${finalJsonData.length}명)`);
+
+
+    // ============================================================================
+    // 6. 결과를 새로운 엑셀 파일로 저장
+    // ============================================================================
+    console.log(`결과를 엑셀 파일에 저장합니다...`);
     const newWorksheet = xlsx.utils.json_to_sheet(participants);
     const newWorkbook = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, "기록결과");
     
-    xlsx.writeFile(newWorkbook, RESULT_FILE_NAME);
-    
-    console.log(`성공적으로 저장되었습니다!`);
+    xlsx.writeFile(newWorkbook, RESULT_EXCEL_NAME);
+    console.log(`[성공] 엑셀 파일 저장 완료: ${RESULT_EXCEL_NAME}`);
 }
 
 // 스크립트 실행
