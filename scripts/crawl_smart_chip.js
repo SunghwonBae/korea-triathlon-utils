@@ -16,6 +16,7 @@ function decryptData(secret) {
     return text;
 }
 
+
 // 2. 배열 청크 분할 함수 (병렬 처리용)
 function chunkArray(array, size) {
     const chunked = [];

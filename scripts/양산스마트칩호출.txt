@@ -1,0 +1,19 @@
+fetch("https://smartchip.co.kr/return_data_livephoto.asp?nameorbibno=1&usedata=202650000101", {
+  "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "accept-language": "ko,en-US;q=0.9,en;q=0.8",
+    "priority": "u=0, i",
+    "sec-ch-ua": "\"Chromium\";v=\"148\", \"Google Chrome\";v=\"148\", \"Not/A)Brand\";v=\"99\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "iframe",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "same-origin",
+    "sec-fetch-user": "?1",
+    "upgrade-insecure-requests": "1",
+    "cookie": "_fwb=67pseHZHB6kVozB2mHCMXC.1778676074959; %5FscDev=826617F56C23CFF3EBCAA7F; ASPSESSIONIDAGCDDADD=PBJKOHDAOBKJFBKHCKMCOKNO; wcs_bt=19e5bb1326386e0:1779018985",
+    "Referer": "https://smartchip.co.kr/Search_Ballyno.html?usedata=202650000101"
+  },
+  "body": null,
+  "method": "GET"
+});
