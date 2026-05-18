@@ -33,6 +33,15 @@ export default async function handler(req, res) {
 
     // 2. 각 sPart 별 데이터 수집
     for (const [sPartId, sPartName] of sPartMap) {
+        
+        // ==========================================
+        // [추가된 로직] 엘리트, 고등부, 중등부 그룹 크롤링 제외
+        // ==========================================
+        if (sPartName.includes('엘리트') || sPartName.includes('고등부') || sPartName.includes('중등부')) {
+            console.log(`[스킵] ${sPartName} 카테고리는 배번 중복 방지를 위해 수집에서 제외합니다.`);
+            continue;
+        }
+
         console.log(`[시작] ${sPartName} 수집 중...`);
         
         for (let page = 1; page <= 15; page++) {
@@ -49,23 +58,29 @@ export default async function handler(req, res) {
                     const bib = $(cols[2]).text().trim(); // 배번
                     const rank = $(cols[0]).text().trim();
 
-                    // 유효한 데이터이고, 아직 수집되지 않은 배번일 때만 Map에 추가
-                    if (rank && !isNaN(rank) && bib && !resultsMap.has(bib)) {
-                        resultsMap.set(bib, {
-                            category: sPartName,
-                            rank: rank,
-                            n: $(cols[1]).text().trim(),
-                            b: bib,
-                            c: $(cols[3]).text().trim(),
-                            s: $(cols[4]).text().trim(),
-                            t1: $(cols[5]).text().trim(),
-                            b1: $(cols[6]).text().trim(),
-                            t2: $(cols[7]).text().trim(),
-                            r: $(cols[8]).text().trim(),
-                            t: $(cols[9]).text().trim(),
-                            sPartId: sPartId
-                        });
+                    // 유효한 데이터(기록이 있는 행)인지 먼저 확인
+                    if (rank && !isNaN(rank) && bib) {
+                        
+                        // 중복 저장 여부와 무관하게 페이지 내에 유효한 데이터가 있음을 기록 (페이징 조기 종료 방지)
                         foundInPage++;
+                        
+                        // 아직 수집되지 않은 배번일 때만 Map에 추가
+                        if (!resultsMap.has(bib)) {
+                            resultsMap.set(bib, {
+                                category: sPartName,
+                                rank: rank,
+                                n: $(cols[1]).text().trim(),
+                                b: bib,
+                                c: $(cols[3]).text().trim(),
+                                s: $(cols[4]).text().trim(),
+                                t1: $(cols[5]).text().trim(),
+                                b1: $(cols[6]).text().trim(),
+                                t2: $(cols[7]).text().trim(),
+                                r: $(cols[8]).text().trim(),
+                                t: $(cols[9]).text().trim(),
+                                sPartId: sPartId
+                            });
+                        }
                     }
                 }
             });
