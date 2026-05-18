@@ -18,24 +18,36 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const randomDelay = (min, max) => sleep(Math.floor(Math.random() * (max - min + 1)) + min);
 
 // [업데이트됨] 양산대회용 디코딩 알고리즘
-function decryptData(secret) {
-    if (!secret) return "";
-    const _k = [146,158,233,157,154,147,236,153,232,147,238,154,158,147,235,157,147,232,232,159,153,236,158,238];
-    let text = "";
-    let _s = 0, _i = 0, _c = 0, _kCode = 0;
+    function decryptData(secret) {
+        if (!secret) return "";
+        const _k = [157,152,155,159,158,233,157,153,155,154,147,146,158,146,147,239,235,236,232,155,239,154,239,156];
+        let text = "";
+        let _s = 0, _i = 0, _c = 0, _kCode = 0;
 
-    if (_k.length > 0) {
-        while(_s !== 99) {
-            switch(_s) {
-                case 0: _s = (_i < secret.length) ? 1 : 99; break;
-                case 1: _c = parseInt(secret.substr(_i, 4), 16); _s = 2; break;
-                case 2: _kCode = _k[(_i / 4) % _k.length] ^ 170; _s = 3; break;
-                case 3: text += String.fromCharCode(_c ^ _kCode); _i += 4; _s = 0; break;
+        if (_k.length > 0) {
+            while(_s !== 99) {
+                switch(_s) {
+                    case 0:
+                        _s = (_i < secret.length) ? 1 : 99;
+                        break;
+                    case 1:
+                        _c = parseInt(secret.substr(_i, 4), 16);
+                        _s = 2;
+                        break;
+                    case 2:
+                        _kCode = _k[(_i / 4) % _k.length] ^ 170;
+                        _s = 3;
+                        break;
+                    case 3:
+                        text += String.fromCharCode(_c ^ _kCode);
+                        _i += 4;
+                        _s = 0;
+                        break;
+                }
             }
         }
+        return text;
     }
-    return text;
-}
 
 async function selectFile(ext, description) {
     const files = fs.readdirSync(__dirname).filter(file => file.endsWith(ext) && !file.includes('_기록결과'));
