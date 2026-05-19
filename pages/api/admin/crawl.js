@@ -6,7 +6,8 @@ export default async function handler(req, res) {
   // 결과물을 담을 Map (Key: 배번, Value: 선수정보 객체)
   const resultsMap = new Map();
   
-  const agent = new https.Agent({ rejectUnauthorized: false });
+  // keepAlive 옵션을 추가하여 다중 요청 시 연결을 재사용(속도 향상)
+  const agent = new https.Agent({ rejectUnauthorized: false, keepAlive: true });
   const protocol = req.headers['x-forwarded-proto'] || 'http';
   const fullUrl = new URL(req.url, `${protocol}://${req.headers.host}`);
   const tourcd = req.query.tourcd || fullUrl.searchParams.get('tourcd');
@@ -31,39 +32,51 @@ export default async function handler(req, res) {
         if (match && match[1]) sPartMap.set(match[1], name);
     });
 
-    // 2. 각 sPart 별 데이터 수집
+    // 2. 각 sPart 별 데이터 수집 (카테고리 간에는 서버 부하를 고려해 순차 진행)
     for (const [sPartId, sPartName] of sPartMap) {
         
-        // ==========================================
-        // [추가된 로직] 엘리트, 고등부, 중등부 그룹 크롤링 제외
-        // ==========================================
+        // [엘리트, 고등부, 중등부 그룹 크롤링 제외]
         if (sPartName.includes('엘리트') || sPartName.includes('고등부') || sPartName.includes('중등부')) {
-            console.log(`[스킵] ${sPartName} 카테고리는 배번 중복 방지를 위해 수집에서 제외합니다.`);
+            console.log(`[스킵] ${sPartName} 카테고리는 제외합니다.`);
             continue;
         }
 
         console.log(`[시작] ${sPartName} 수집 중...`);
         
+        // 🚀 개선점: 1~15페이지를 순차적으로 기다리지 않고 '동시에' 요청 (병렬 처리)
+        const pagePromises = [];
         for (let page = 1; page <= 15; page++) {
             const targetUrl = `https://www.triathlon.or.kr/results/results/record/?mode=record&tourcd=${tourcd}&page=${page}&sYear=${sYear}&sPart=${sPartId}`;
-            const response = await axios.get(targetUrl, { httpsAgent: agent, timeout: 10000 });
-            const $ = cheerio.load(response.data);
             
-            const rows = $('table tr');
-            let foundInPage = 0;
+            // Promise를 배열에 담아둠 (아직 await 하지 않음)
+            const requestPromise = axios.get(targetUrl, { httpsAgent: agent, timeout: 15000 })
+                .then(response => ({ page, data: response.data }))
+                .catch(err => {
+                    console.error(`[경고] ${sPartName} - ${page}페이지 로드 실패 (무시됨):`, err.message);
+                    return { page, data: null }; // 에러가 나도 전체가 멈추지 않도록 처리
+                });
+                
+            pagePromises.push(requestPromise);
+        }
 
+        // 15개의 페이지 요청을 한 번에 실행하고 모두 완료될 때까지 대기
+        const pagesResponses = await Promise.all(pagePromises);
+
+        // 응답받은 데이터들을 순회하며 크롤링 처리
+        for (const { data } of pagesResponses) {
+            if (!data) continue; // 로드 실패한 페이지 건너뛰기
+            
+            const $ = cheerio.load(data);
+            const rows = $('table tr');
+            
             rows.each((_, el) => {
                 const cols = $(el).find('td');
                 if (cols.length === 10) {
                     const bib = $(cols[2]).text().trim(); // 배번
                     const rank = $(cols[0]).text().trim();
 
-                    // 유효한 데이터(기록이 있는 행)인지 먼저 확인
+                    // 유효한 데이터인지 확인
                     if (rank && !isNaN(rank) && bib) {
-                        
-                        // 중복 저장 여부와 무관하게 페이지 내에 유효한 데이터가 있음을 기록 (페이징 조기 종료 방지)
-                        foundInPage++;
-                        
                         // 아직 수집되지 않은 배번일 때만 Map에 추가
                         if (!resultsMap.has(bib)) {
                             resultsMap.set(bib, {
@@ -84,8 +97,6 @@ export default async function handler(req, res) {
                     }
                 }
             });
-
-            if (foundInPage === 0) break; 
         }
     }
 
