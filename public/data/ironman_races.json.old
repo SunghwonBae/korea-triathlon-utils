@@ -1,5 +1,5 @@
 [
-  {
+    {
     "name": "Kona (Women)",
     "seriesId": "12",
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/12/",
@@ -9,112 +9,20 @@
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2203/results/"
       },
       {
-        "year": 2025,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2202/results/"
-      },
-      {
-        "year": 2024,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2173/results/"
-      },
-      {
         "year": 2024,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2180/results/"
       },
       {
         "year": 2023,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2185/results/"
-      },
-      {
-        "year": 2023,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2186/results/"
-      },
-      {
-        "year": 2022,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1879/results/"
-      },
-      {
-        "year": 2022,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/1803/results/"
-      },
-      {
-        "year": 2019,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/502/results/"
-      },
-      {
-        "year": 2018,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/459/results/"
-      },
-      {
-        "year": 2017,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/408/results/"
-      },
-      {
-        "year": 2016,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/346/results/"
-      },
-      {
-        "year": 2015,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/312/results/"
-      },
-      {
-        "year": 2014,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/257/results/"
-      },
-      {
-        "year": 2013,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/222/results/"
-      },
-      {
-        "year": 2012,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/12/results/"
-      },
-      {
-        "year": 2011,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/173/results/"
-      },
-      {
-        "year": 2010,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/172/results/"
-      },
-      {
-        "year": 2009,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/171/results/"
-      },
-      {
-        "year": 2008,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/170/results/"
-      },
-      {
-        "year": 2007,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/169/results/"
-      },
-      {
-        "year": 2006,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/168/results/"
-      },
-      {
-        "year": 2005,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/167/results/"
-      },
-      {
-        "year": 2004,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/166/results/"
-      },
-      {
-        "year": 2003,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/165/results/"
-      }
-    ]
-  },
+      }]
+    },
   {
     "name": "Nice (Men)",
     "seriesId": "12",
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/12/",
     "years": [
-      {
-        "year": 2025,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2203/results/"
-      },
+
       {
         "year": 2025,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2202/results/"
@@ -123,18 +31,19 @@
         "year": 2024,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2173/results/"
       },
-      {
-        "year": 2024,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2180/results/"
-      },
-      {
-        "year": 2023,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2185/results/"
-      },
+
       {
         "year": 2023,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2186/results/"
-      },
+      }
+    ]
+  },
+  {
+    "name": "Kona (Old)",
+    "seriesId": "12",
+    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/12/",
+    "years": [
+
       {
         "year": 2022,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/1879/results/"
@@ -735,17 +644,6 @@
     ]
   },
   {
-    "name": "Ironman Jacksonville",
-    "seriesId": "403",
-    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/403/",
-    "years": [
-      {
-        "year": 2026,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2668/results/"
-      }
-    ]
-  },
-  {
     "name": "Ironman Lake Placid",
     "seriesId": "13",
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/13/",
@@ -1130,10 +1028,6 @@
     "seriesId": "25",
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/25/",
     "years": [
-      {
-        "year": 2026,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2665/results/"
-      },
       {
         "year": 2025,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2199/results/"
@@ -2802,10 +2696,6 @@
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/19/",
     "years": [
       {
-        "year": 2026,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2663/results/"
-      },
-      {
         "year": 2025,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2183/results/"
       },
@@ -2896,17 +2786,6 @@
     ]
   },
   {
-    "name": "Ironman Penghu",
-    "seriesId": "401",
-    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/401/",
-    "years": [
-      {
-        "year": 2026,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2664/results/"
-      }
-    ]
-  },
-  {
     "name": "Ironman Philippines",
     "seriesId": "64",
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/64/",
@@ -2961,17 +2840,6 @@
       {
         "year": 2015,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/275/results/"
-      }
-    ]
-  },
-  {
-    "name": "Ironman Vietnam",
-    "seriesId": "402",
-    "seriesUrl": "https://www.coachcox.co.uk/imstats/series/402/",
-    "years": [
-      {
-        "year": 2026,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2667/results/"
       }
     ]
   },
@@ -3192,10 +3060,6 @@
     "seriesId": "21",
     "seriesUrl": "https://www.coachcox.co.uk/imstats/series/21/",
     "years": [
-      {
-        "year": 2026,
-        "resultUrl": "https://www.coachcox.co.uk/imstats/race/2666/results/"
-      },
       {
         "year": 2025,
         "resultUrl": "https://www.coachcox.co.uk/imstats/race/2197/results/"
