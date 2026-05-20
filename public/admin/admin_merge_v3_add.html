@@ -7,7 +7,7 @@
 </head>
 <body class="bg-gray-100 p-10">
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
-        <h1 class="text-2xl font-bold mb-4 text-gray-800">대회 데이터 통합 도구 V3 (CoachCox 지원)</h1>
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">대회 데이터 통합 도구 V3 (CoachCox & Ironman API 지원)</h1>
         
         <div class="grid grid-cols-2 gap-4 mb-6">
             <div class="p-4 border rounded-lg bg-blue-50">
@@ -88,25 +88,22 @@
                     
                     // 파일명에서 연도 추출 및 확장자 제거
                     let year = file.name.match(/\d{4}/)?.[0] || new Date().getFullYear().toString();
-                    let fileNameClean = file.name.replace('.json', ''); 
-                    let rawName = fileNameClean.split('_')[0]; 
                     
-                    let raceKo = rawName === 'hankook' ? "한국철인" : rawName === 'naju' ? "나주" : rawName === 'sun' ? "태양" : rawName;
-                    let rid = `${raceKo}_${year}`;
+                    // 파일명 전체를 기반으로 고유한 대회 ID 생성 (중복 덮어쓰기 방지)
+                    let fileNameClean = file.name.replace('.json', ''); 
+                    let rid = fileNameClean;
 
                     data.forEach(item => {
-                        // 1. CoachCox 데이터의 HTML 태그 제거 및 이름 정제
                         let parsedName = (item.n || item.name_ko || item.name || "").replace(/<[^>]*>?/gm, '').trim();
 
-                        // 2. rt 필드 충돌 해결 (CoachCox rt는 런 기록 숫자, 기존 rt는 코스 타입)
                         let isCoachCoxRunTime = item.rt !== undefined && !isNaN(item.rt) && item.rt !== "";
                         let runTimeVal = isCoachCoxRunTime ? item.rt : (item.run || item.r);
 
-                        // 3. 코스 타입 자동 매핑 (CoachCox rty 우선 적용)
+                        // 코스 타입 식별 (him 추가)
                         let raceTypeVal = defaultRaceType;
                         if (item.rty === 'im') raceTypeVal = 'Ironman';
-                        else if (item.rty === '70.3' || item.rty === 'half') raceTypeVal = 'Half';
-                        else if (item.rt && isNaN(item.rt)) raceTypeVal = item.rt; // 문자열인 경우 기존 데이터 타입 적용
+                        else if (item.rty === '70.3' || item.rty === 'half' || item.rty === 'him') raceTypeVal = 'Half';
+                        else if (item.rt && isNaN(item.rt)) raceTypeVal = item.rt; 
 
                         let rec = {
                             n: parsedName,
@@ -116,7 +113,7 @@
                             r: timeToSec(item.r !== undefined ? item.r : runTimeVal),
                             t1: timeToSec(item.t1 !== undefined ? item.t1 : item.t1t),
                             t2: timeToSec(item.t2 !== undefined ? item.t2 : item.t2t),
-                            rn: item.rn || rid,
+                            rn: item.rn || rid, // 각 파일의 고유한 ID 적용
                             y: item.y || year,
                             rt: raceTypeVal,
                             b: String(item.bi || item.b || item.number || ""),
@@ -130,7 +127,9 @@
                     // 메타 정보 업데이트
                     const finalRid = data[0]?.rn || rid;
                     if (!metaIds.has(finalRid)) {
-                        let finalRaceType = data[0]?.rty === 'im' ? 'Ironman' : data[0]?.rty === '70.3' ? 'Half' : (data[0]?.rt && isNaN(data[0]?.rt)) ? data[0]?.rt : defaultRaceType;
+                        let rty = data[0]?.rty;
+                        let finalRaceType = (rty === 'im') ? 'Ironman' : (rty === '70.3' || rty === 'half' || rty === 'him') ? 'Half' : (data[0]?.rt && isNaN(data[0]?.rt)) ? data[0]?.rt : defaultRaceType;
+                        
                         raceMeta.push({ id: finalRid, name: finalRid, year: year, type: finalRaceType });
                         metaIds.add(finalRid);
                         log(`[신규 메타] ${finalRid} 등록 (타입: ${finalRaceType})`);
@@ -139,7 +138,6 @@
 
                 log(`통합 완료! 총 ${allRecords.length}개의 레코드가 준비되었습니다.`);
                 
-                // 공백 없는 압축 형식으로 다운로드
                 download(allRecords, 'all_records_v2.json');
                 setTimeout(() => download(raceMeta, 'race_meta_v2.json'), 800);
 
