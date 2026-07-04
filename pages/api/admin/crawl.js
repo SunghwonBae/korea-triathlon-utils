@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     for (const [sPartId, sPartName] of sPartMap) {
         
         // [엘리트, 고등부, 중등부 그룹 크롤링 제외]
-        if (sPartName.includes('엘리트') || sPartName.includes('고등부') || sPartName.includes('중등부')) {
+        if (sPartName.includes('엘리트') || sPartName.includes('초등부') || sPartName.includes('고등부') || sPartName.includes('중등부')) {
             console.log(`[스킵] ${sPartName} 카테고리는 제외합니다.`);
             continue;
         }
