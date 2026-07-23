@@ -703,7 +703,7 @@
                     }
 
                     // --- 💡 FamilyName과 FirstName을 합치는 로직 추가 ---
-                    let rawName = item[map.n] || (item.FamilyName ? item.FamilyName + (item.FirstName || '') : "");
+                    let rawName = item.FamilyName ? (item.FamilyName + (item.FirstName || '')) : (item[map.n] || "");
                     let parsedName = (typeof rawName === 'string' ? rawName.replace(/<[^>]*>?/gm, '').trim() : "");
 
                     return {

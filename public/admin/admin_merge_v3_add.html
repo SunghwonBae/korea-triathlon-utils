@@ -97,7 +97,7 @@
                         //let parsedName = (item.n || item.name_ko || item.name || "").replace(/<[^>]*>?/gm, '').trim();
 
                         // 이름 합치기 로직 추가 (FamilyName + FirstName)
-                        let rawName = item.n || item.name_ko || item.name || (item.FamilyName ? item.FamilyName + item.FirstName : "");
+                        let rawName = item.FamilyName ? (item.FamilyName + (item.FirstName || '')) : (item.n || item.name_ko || item.name || "");
                         let parsedName = rawName.replace(/<[^>]*>?/gm, '').trim();
 
                         let isCoachCoxRunTime = item.rt !== undefined && !isNaN(item.rt) && item.rt !== "";
