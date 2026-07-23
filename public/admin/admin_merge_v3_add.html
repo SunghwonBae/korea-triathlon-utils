@@ -94,7 +94,11 @@
                     let rid = fileNameClean;
 
                     data.forEach(item => {
-                        let parsedName = (item.n || item.name_ko || item.name || "").replace(/<[^>]*>?/gm, '').trim();
+                        //let parsedName = (item.n || item.name_ko || item.name || "").replace(/<[^>]*>?/gm, '').trim();
+
+                        // 이름 합치기 로직 추가 (FamilyName + FirstName)
+                        let rawName = item.n || item.name_ko || item.name || (item.FamilyName ? item.FamilyName + item.FirstName : "");
+                        let parsedName = rawName.replace(/<[^>]*>?/gm, '').trim();
 
                         let isCoachCoxRunTime = item.rt !== undefined && !isNaN(item.rt) && item.rt !== "";
                         let runTimeVal = isCoachCoxRunTime ? item.rt : (item.run || item.r);
@@ -107,16 +111,16 @@
 
                         let rec = {
                             n: parsedName,
-                            t: timeToSec(item.t !== undefined ? item.t : (item.ot || item.total_record || item.total || item.finish)),
-                            s: timeToSec(item.s !== undefined ? item.s : (item.st || item.swim)),
-                            bk: timeToSec(item.bk !== undefined ? item.bk : (item.bt || item.b1 || item.bike)),
+                            t: timeToSec(item.t !== undefined ? item.t : (item.ot || item.total_record || item.total || item.finish || item.RaceTime)),
+                            s: timeToSec(item.s !== undefined ? item.s : (item.st || item.swim || item.Swim)),
+                            bk: timeToSec(item.bk !== undefined ? item.bk : (item.bt || item.b1 || item.bike || item.Bike)),
                             r: timeToSec(item.r !== undefined ? item.r : runTimeVal),
-                            t1: timeToSec(item.t1 !== undefined ? item.t1 : item.t1t),
-                            t2: timeToSec(item.t2 !== undefined ? item.t2 : item.t2t),
-                            rn: item.rn || rid, // 각 파일의 고유한 ID 적용
+                            t1: timeToSec(item.t1 !== undefined ? item.t1 : (item.t1t || item.T1)),
+                            t2: timeToSec(item.t2 !== undefined ? item.t2 : (item.t2t || item.T2)),
+                            rn: item.rn || rid,
                             y: item.y || year,
                             rt: raceTypeVal,
-                            b: String(item.bi || item.b || item.number || ""),
+                            b: String(item.bi || item.b || item.number || item.Bib || ""),
                             d: item.di || item.d || item.gender || item.category || "",
                             c: item.c || item.location || "",
                             q: item.fs || item.q || item.status || item.note || ""

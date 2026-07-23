@@ -702,10 +702,14 @@
                         t = hmsToS(item[map.t]);
                     }
 
+                    // --- 💡 FamilyName과 FirstName을 합치는 로직 추가 ---
+                    let rawName = item[map.n] || (item.FamilyName ? item.FamilyName + (item.FirstName || '') : "");
+                    let parsedName = (typeof rawName === 'string' ? rawName.replace(/<[^>]*>?/gm, '').trim() : "");
+
                     return {
-                        b: item[map.b],
-                        n: item[map.n],
-                        d: item[map.d],
+                        b: item[map.b] || item.Bib, // Bib 키도 직접 체크하도록 보완
+                        n: parsedName,              // 합쳐진 이름 적용
+                        d: item[map.d] || item.category, // category 키 직접 체크 추가
                         s: s,
                         c: item[map.c],
                         t1: t1,
