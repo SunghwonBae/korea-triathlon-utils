@@ -101,7 +101,7 @@
                         let parsedName = rawName.replace(/<[^>]*>?/gm, '').trim();
 
                         let isCoachCoxRunTime = item.rt !== undefined && !isNaN(item.rt) && item.rt !== "";
-                        let runTimeVal = isCoachCoxRunTime ? item.rt : (item.run || item.r);
+                        let runTimeVal = isCoachCoxRunTime ? item.rt : (item.run || item.r || item.Run );
 
                         // 코스 타입 식별 (him 추가)
                         let raceTypeVal = defaultRaceType;
