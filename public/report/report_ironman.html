@@ -1797,9 +1797,9 @@
                 // 2. 검색어 체크
                 if (searchVal) {
                     // 배번 검색
-                    if (p.b.toLowerCase().includes(searchVal)) return true;
+                    if (p.b && String(p.b).toLowerCase().includes(searchVal)) return true;
                     // 영문 이름 검색
-                    if (p.n.toLowerCase().includes(searchVal)) return true;
+                    if (p.n && String(p.n).toLowerCase().includes(searchVal)) return true;
                     // 한글 발음 검색
                     if (koRegex && koRegex.test(p.n)) return true;
                     
