@@ -1641,12 +1641,12 @@
 
                 // 2. 검색어 체크
                 if (searchVal) {
-                    // 배번 검색
-                    if (p.b.toLowerCase().includes(searchVal)) return true;
-                    // 단체명 검색
-                    if (p.c.toLowerCase().includes(searchVal)) return true;
-                    // 영문 이름 검색
-                    if (p.n.toLowerCase().includes(searchVal)) return true;
+                    // 배번 검색 (숫자형일 수도 있으므로 String 변환 및 방어 로직 추가)
+                    if (p.b && String(p.b).toLowerCase().includes(searchVal)) return true;
+                    // 단체명 검색 (undefined 대비 방어 로직 추가)
+                    if (p.c && String(p.c).toLowerCase().includes(searchVal)) return true;
+                    // 영문/한글 이름 검색 (undefined 대비 방어 로직 추가)
+                    if (p.n && String(p.n).toLowerCase().includes(searchVal)) return true;
                     // 한글 발음 검색
                     if (koRegex && koRegex.test(p.n)) return true;
                     
