@@ -48,9 +48,21 @@ export default async function handler(req, res) {
         }
 
         // 평균 계산
+        // 평균 계산 (거리 비례 가중 평균 / 총 거리 / 총 시간 방식)
         players.forEach(p => {
-            const valid = p.data.filter(v => v > 0);
-            p.avg = valid.length ? Number((valid.reduce((a, b) => a + b) / valid.length).toFixed(2)) : 0;
+            let totalDistance = 0;
+            let totalTime = 0;
+
+            p.data.forEach((speed, index) => {
+                const dist = Number(distances[index]) || 0;
+                if (speed > 0 && dist > 0) {
+                    totalDistance += dist;
+                    totalTime += dist / speed; // 시간 = 거리 / 속도
+                }
+            });
+
+            // 총 거리 / 총 시간으로 정확한 전체 평속 계산
+            p.avg = totalTime > 0 ? Number((totalDistance / totalTime).toFixed(2)) : 0;
         });
 
         // HTML 생성
