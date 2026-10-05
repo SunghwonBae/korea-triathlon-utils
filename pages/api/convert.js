@@ -34,39 +34,48 @@ export default async function handler(req, res) {
 
         // 데이터 파싱
         const playerNames = rows[0].slice(1);
-        const distances = [];
+        const cumulativeDistances = [];
         const players = playerNames.map(name => ({ name, data: [], avg: 0 }));
 
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
             if (!row || row[0] === undefined) continue;
             
-            distances.push(row[0]); // 첫 열: 거리
+            cumulativeDistances.push(Number(row[0]) || 0); // 첫 열: 누적 거리
             for (let j = 1; j <= playerNames.length; j++) {
                 players[j - 1].data.push(Number(row[j]) || 0);
             }
         }
 
-        // 평균 계산
-        // 평균 계산 (거리 비례 가중 평균 / 총 거리 / 총 시간 방식)
+        // 🔥 누적 거리를 바탕으로 각 구간의 실제 거리(Segment Distance) 계산
+        const segmentDistances = [];
+        for (let i = 0; i < cumulativeDistances.length; i++) {
+            if (i === 0) {
+                segmentDistances.push(cumulativeDistances[0]); // 첫 구간은 누적값 그대로
+            } else {
+                segmentDistances.push(cumulativeDistances[i] - cumulativeDistances[i - 1]);
+            }
+        }
+
+        // 🔥 총 거리 / 총 시간 (거리 비례 가중 평균) 방식으로 정확한 평속 계산
         players.forEach(p => {
             let totalDistance = 0;
             let totalTime = 0;
 
             p.data.forEach((speed, index) => {
-                const dist = Number(distances[index]) || 0;
-                if (speed > 0 && dist > 0) {
-                    totalDistance += dist;
-                    totalTime += dist / speed; // 시간 = 거리 / 속도
+                const segDist = segmentDistances[index] || 0;
+                if (speed > 0 && segDist > 0) {
+                    totalDistance += segDist;
+                    totalTime += segDist / speed; // 시간 = 거리 / 속도
                 }
             });
 
-            // 총 거리 / 총 시간으로 정확한 전체 평속 계산
+            // 총 이동 거리 / 총 소요 시간으로 전체 평균 속도 산출
             p.avg = totalTime > 0 ? Number((totalDistance / totalTime).toFixed(2)) : 0;
         });
 
         // HTML 생성
-        const htmlContent = generateHtml({ distances, players, title });
+        const htmlContent = generateHtml({ distances: cumulativeDistances, players, title });
 
         // 파일 다운로드 응답
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
