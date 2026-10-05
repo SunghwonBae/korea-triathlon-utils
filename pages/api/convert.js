@@ -37,10 +37,24 @@ export default async function handler(req, res) {
         const cumulativeDistances = [];
         const players = playerNames.map(name => ({ name, data: [], avg: 0 }));
 
+        let officialAvgs = null; // 엑셀 하단에 전체 평균 행이 있을 경우 저장할 변수
+
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
             if (!row || row[0] === undefined) continue;
             
+            // 첫 번째 열이 '전체 평균' 또는 유사한 문자열인 경우 오피셜 평속으로 추출
+            const firstColStr = String(row[0]).trim();
+            if (firstColStr.includes("전체") || firstColStr.includes("평균") || firstColStr.includes("Average")) {
+                officialAvgs = [];
+                for (let j = 1; j <= playerNames.length; j++) {
+                    // "30.53 km/h" 형태의 문자열이거나 숫자일 수 있으므로 파싱
+                    const valStr = String(row[j] || "").replace(/[^0-9.]/g, "");
+                    officialAvgs.push(Number(valStr) || 0);
+                }
+                continue; // 거리 행이 아니므로 누적 거리 배열에는 추가하지 않음
+            }
+
             cumulativeDistances.push(Number(row[0]) || 0); // 첫 열: 누적 거리
             for (let j = 1; j <= playerNames.length; j++) {
                 players[j - 1].data.push(Number(row[j]) || 0);
@@ -51,27 +65,30 @@ export default async function handler(req, res) {
         const segmentDistances = [];
         for (let i = 0; i < cumulativeDistances.length; i++) {
             if (i === 0) {
-                segmentDistances.push(cumulativeDistances[0]); // 첫 구간은 누적값 그대로
+                segmentDistances.push(cumulativeDistances[0]);
             } else {
                 segmentDistances.push(cumulativeDistances[i] - cumulativeDistances[i - 1]);
             }
         }
 
-        // 🔥 총 거리 / 총 시간 (거리 비례 가중 평균) 방식으로 정확한 평속 계산
-        players.forEach(p => {
-            let totalDistance = 0;
-            let totalTime = 0;
+        // 🔥 전체 평균 처리: 엑셀에 오피셜 평균값이 있으면 그대로 적용, 없으면 기존 가중 평균 계산
+        players.forEach((p, idx) => {
+            if (officialAvgs && officialAvgs[idx] > 0) {
+                p.avg = officialAvgs[idx]; // 구글 시트와 100% 일치하는 공식 전체 평속 적용
+            } else {
+                let totalDistance = 0;
+                let totalTime = 0;
 
-            p.data.forEach((speed, index) => {
-                const segDist = segmentDistances[index] || 0;
-                if (speed > 0 && segDist > 0) {
-                    totalDistance += segDist;
-                    totalTime += segDist / speed; // 시간 = 거리 / 속도
-                }
-            });
+                p.data.forEach((speed, index) => {
+                    const segDist = segmentDistances[index] || 0;
+                    if (speed > 0 && segDist > 0) {
+                        totalDistance += segDist;
+                        totalTime += segDist / speed; 
+                    }
+                });
 
-            // 총 이동 거리 / 총 소요 시간으로 전체 평균 속도 산출
-            p.avg = totalTime > 0 ? Number((totalDistance / totalTime).toFixed(2)) : 0;
+                p.avg = totalTime > 0 ? Number((totalDistance / totalTime).toFixed(2)) : 0;
+            }
         });
 
         // HTML 생성
