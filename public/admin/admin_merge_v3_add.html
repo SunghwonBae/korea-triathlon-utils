@@ -109,6 +109,16 @@
                         else if (item.rty === '70.3' || item.rty === 'half' || item.rty === 'him') raceTypeVal = 'Half';
                         else if (item.rt && isNaN(item.rt)) raceTypeVal = item.rt; 
 
+                        // 👇 [수정됨] rn 필드가 숫자인지 문자인지 판별하는 로직 추가
+                        let raceIdVal = rid; 
+                        if (item.rn !== undefined) {
+                            if (typeof item.rn === 'number' || !isNaN(Number(item.rn))) {
+                                runTimeVal = item.rn; // 숫자인 경우 달리기 기록으로 사용
+                            } else {
+                                raceIdVal = item.rn;  // 문자열인 경우 기존처럼 대회 ID로 사용
+                            }
+                        }
+
                         let rec = {
                             n: parsedName,
                             t: timeToSec(item.t !== undefined ? item.t : (item.ot || item.total_record || item.total || item.finish || item.RaceTime)),
@@ -117,7 +127,7 @@
                             r: timeToSec(item.r !== undefined ? item.r : runTimeVal),
                             t1: timeToSec(item.t1 !== undefined ? item.t1 : (item.t1t || item.T1)),
                             t2: timeToSec(item.t2 !== undefined ? item.t2 : (item.t2t || item.T2)),
-                            rn: item.rn || rid,
+                            rn: raceIdVal, // 👇 [수정됨] 기존 item.rn || rid 대신 raceIdVal 사용
                             y: item.y || year,
                             rt: raceTypeVal,
                             b: String(item.bi || item.b || item.number || item.Bib || ""),
@@ -129,7 +139,12 @@
                     });
 
                     // 메타 정보 업데이트
-                    const finalRid = data[0]?.rn || rid;
+                    // 👇 [수정됨] 메타 정보 업데이트 시에도 rn이 숫자일 경우를 방어
+                    let finalRid = rid;
+                    if (data[0]?.rn !== undefined && isNaN(Number(data[0].rn))) {
+                        finalRid = data[0].rn;
+                    }
+                    
                     if (!metaIds.has(finalRid)) {
                         let rty = data[0]?.rty;
                         let finalRaceType = (rty === 'im') ? 'Ironman' : (rty === '70.3' || rty === 'half' || rty === 'him') ? 'Half' : (data[0]?.rt && isNaN(data[0]?.rt)) ? data[0]?.rt : defaultRaceType;
